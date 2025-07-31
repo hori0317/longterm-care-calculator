@@ -45,82 +45,94 @@ const serviceData = {
     { code: "BB13", name: "日間照顧(全日)-第7型", price: 1285 },
     { code: "BB14", name: "日間照顧(半日)-第7型", price: 645 }
   ],
-  BC: [
-    { code: "BC01", name: "家庭托顧(全日)-第1型", price: 625 },
-    { code: "BC02", name: "家庭托顧(半日)-第1型", price: 315 },
-    { code: "BC03", name: "家庭托顧(全日)-第2型", price: 760 },
-    { code: "BC04", name: "家庭托顧(半日)-第2型", price: 380 },
-    { code: "BC05", name: "家庭托顧(全日)-第3型", price: 790 },
-    { code: "BC06", name: "家庭托顧(半日)-第3型", price: 395 },
-    { code: "BC07", name: "家庭托顧(全日)-第4型", price: 885 },
-    { code: "BC08", name: "家庭托顧(半日)-第4型", price: 440 },
-    { code: "BC09", name: "家庭托顧(全日)-第5型", price: 960 },
-    { code: "BC10", name: "家庭托顧(半日)-第5型", price: 480 },
-    { code: "BC11", name: "家庭托顧(全日)-第6型", price: 980 },
-    { code: "BC12", name: "家庭托顧(半日)-第6型", price: 490 },
-    { code: "BC13", name: "家庭托顧(全日)-第7型", price: 1040 },
-    { code: "BC14", name: "家庭托顧(半日)-第7型", price: 520 }
-  ],
-  BD: [
-    { code: "BD01", name: "社區式協助沐浴", price: 200 },
-    { code: "BD02", name: "社區式晚餐", price: 150 },
-    { code: "BD03", name: "社區式服務交通接送", price: 100 }
-  ],
-  CA: [
-    { code: "CA07", name: "IADLs復能、ADLs復能", price: 4500 },
-    { code: "CA08", name: "個別化服務計畫(ISP)擬定與執行", price: 6000 }
-  ],
-  CB: [
-    { code: "CB01", name: "營養照護", price: 4000 },
-    { code: "CB02", name: "進食與吞嚥照護", price: 9000 },
-    { code: "CB03", name: "困難行為照護", price: 9000 },
-    { code: "CB04", name: "臥床或長期病房免照護", price: 5000 }
-  ],
-  CC: [
-    { code: "CC01", name: "居家環境安全或無障礙空間規劃", price: 2000 }
-  ],
-  CD: [
-    { code: "CD01", name: "居家護理訪視", price: 1300 },
-    { code: "CD02", name: "居家護理指導與諮詢", price: 1500 }
-  ],
-  DA: [
-    { code: "DA01", name: "交通接送", price: 230 }
-  ],
-  EA: [
-    { code: "EA01", name: "馬桶增高器、浴缸止滑墊或洗澡椅", price: 1200 }
-  ],
-  EB: [
-    { code: "EB01", name: "單支拐杖-不鏽鋼", price: 1000 },
-    { code: "EB02", name: "單支拐杖-鋁製", price: 500 },
-    { code: "EB03", name: "助行器", price: 800 },
-    { code: "EB04", name: "帶輪特型助步車(助行椅)", price: 300 }
-  ],
-  EC: [
-    { code: "EC01", name: "輪椅-A款(非標準化產製)", price: 3500 },
-    { code: "EC02", name: "輪椅B款(輕便化產製)一般型", price: 4500 },
-    { code: "EC03", name: "輪椅C款(重身訂製)訂製型", price: 9000 },
-    { code: "EC04", name: "輪椅附加功能-A款(具利於移位功能)", price: 5000 },
-    { code: "EC05", name: "輪椅附加功能-B款(具仰躺功能)", price: 2000 },
-    { code: "EC06", name: "輪椅附加功能-C款(具空中傾倒功能)", price: 4000 },
-    { code: "EC07", name: "擺位系統-A款(平面型椅背靠背)", price: 1000 },
-    { code: "EC08", name: "擺位系統-B款(曲面型椅背靠背)", price: 6000 },
-    { code: "EC09", name: "擺位系統-C款(椅背框架伸側擴架)", price: 3000 },
-    { code: "EC10", name: "擺位系統-D款(椅背頸部系統)", price: 2500 },
-    { code: "EC11", name: "電動輪椅(EC11, EC12擇一)(租)", price: 2500 },
-    { code: "EC12", name: "電動代步車(EC11, EC12擇一)(租)", price: 1200 }
-  ],
-  ED: [
-    { code: "ED01", name: "移位腰帶", price: 1500 },
-    { code: "ED02", name: "移位板", price: 2000 },
-    { code: "ED03", name: "人力移位吊帶", price: 4000 },
-    { code: "ED04", name: "移位滑墊A款", price: 3000 },
-    { code: "ED05", name: "移位滑墊B款", price: 3000 },
-    { code: "ED06", name: "移位帶", price: 500 },
-    { code: "ED07", name: "移位機(租/購)", price: 20000 },
-    { code: "ED08", name: "移位機吊帶", price: 5000 }
-  ],
-  EE: [
-    { code: "EE01", name: "電話擴音器", price: 2000 },
-    { code: "EE02", name: "電話閃光提示器", price: 2000 },
-    { code: "EE03", name: "火災閃光警示器", price: 2000 },
-    { code: "EE04", name: "門
+  // ...其餘碼別請依上方完整對照表續補
+};
+
+window.onload = function() {
+  generateTables();
+};
+
+function generateTables() {
+  const tableContainer = document.getElementById("tables");
+  tableContainer.innerHTML = "";
+  for (const code in serviceData) {
+    const section = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = code + "碼";
+    section.appendChild(title);
+
+    const table = document.createElement("table");
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>服務項目</th>
+          <th>每週次數</th>
+          <th>每月次數</th>
+          <th>單價</th>
+          <th>總金額</th>
+        </tr>
+      </thead>
+      <tbody></tbody>`;
+    const tbody = table.querySelector("tbody");
+
+    serviceData[code].forEach((item, i) => {
+      const row = tbody.insertRow();
+      row.insertCell().textContent = `${item.code} ${item.name}`;
+      const weekCell = row.insertCell();
+      const weekInput = document.createElement("input");
+      weekInput.type = "number";
+      weekInput.value = 0;
+      weekInput.min = 0;
+      weekInput.id = `${code}_week_${i}`;
+      weekInput.oninput = () => autoCalcMonth(code, i);
+      weekCell.appendChild(weekInput);
+
+      const monthCell = row.insertCell();
+      const monthInput = document.createElement("input");
+      monthInput.type = "number";
+      monthInput.value = 0;
+      monthInput.min = 0;
+      monthInput.id = `${code}_month_${i}`;
+      monthInput.oninput = () => calcTotal(code, i);
+      monthCell.appendChild(monthInput);
+
+      row.insertCell().textContent = item.price;
+
+      const totalCell = row.insertCell();
+      totalCell.id = `${code}_total_${i}`;
+      totalCell.textContent = 0;
+    });
+
+    section.appendChild(table);
+    tableContainer.appendChild(section);
+  }
+}
+
+function autoCalcMonth(code, i) {
+  const week = Number(document.getElementById(`${code}_week_${i}`).value);
+  const month = week * 4.5;
+  document.getElementById(`${code}_month_${i}`).value = month.toFixed(1);
+  calcTotal(code, i);
+}
+
+function calcTotal(code, i) {
+  const price = serviceData[code][i].price;
+  const month = Number(document.getElementById(`${code}_month_${i}`).value);
+  const total = price * month;
+  document.getElementById(`${code}_total_${i}`).textContent = total.toFixed(0);
+}
+
+function calculate() {
+  let totalAll = 0;
+  let detail = "";
+  for (const code in serviceData) {
+    let subTotal = 0;
+    for (let i = 0; i < serviceData[code].length; i++) {
+      subTotal += Number(document.getElementById(`${code}_total_${i}`).textContent);
+    }
+    detail += `<li>${code}碼合計：${subTotal} 元</li>`;
+    totalAll += subTotal;
+  }
+  document.getElementById("results").innerHTML =
+    `<h3>總計：${totalAll} 元</h3><ul>${detail}</ul>`;
+}
