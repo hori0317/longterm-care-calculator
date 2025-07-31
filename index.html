@@ -1,147 +1,50 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>長照額度試算</title>
-  <link rel="stylesheet" href="style.css">
+  <title>長照額度試算</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-<h1>長照額度試算</h1>
+  <h1>長照額度試算</h1>
 
-  <!-- 案主條件 -->
-  <section>
   <section class="condition">
-<h2>案主條件</h2>
-<label>長照等級：
-<select id="cms_level">
-@@ -38,124 +37,12 @@ <h2>案主條件</h2>
-</label>
-</section>
+    <h2>案主條件</h2>
+    <label>長照等級：
+      <select id="cms_level">
+        <option value="2">2級</option>
+        <option value="3">3級</option>
+        <option value="4">4級</option>
+        <option value="5">5級</option>
+        <option value="6">6級</option>
+        <option value="7">7級</option>
+        <option value="8">8級</option>
+      </select>
+    </label>
+    <label>身分別：
+      <select id="identity">
+        <option value="0.16">一般戶</option>
+        <option value="0.05">中低收入戶</option>
+        <option value="0">低收入戶</option>
+      </select>
+    </label>
+    <label>外籍看護：
+      <select id="foreign_caregiver">
+        <option value="0">無</option>
+        <option value="1">有</option>
+      </select>
+    </label>
+  </section>
 
-  <!-- 服務安排表格 -->
-<section>
-<h2>服務安排</h2>
-    
-    <!-- B碼 -->
-    <h3>B碼（照顧服務）</h3>
-    <table id="bTable">
-      <thead>
-        <tr>
-          <th>代碼</th>
-          <th>每週次數</th>
-          <th>每月次數</th>
-          <th>單價</th>
-          <th>總金額</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('bTable', bServices)">新增B碼項目</button>
-
-    <!-- C碼 -->
-    <h3>C碼（專業服務）</h3>
-    <table id="cTable">
-      <thead>
-        <tr>
-          <th>代碼</th>
-          <th>每週次數</th>
-          <th>每月次數</th>
-          <th>單價</th>
-          <th>總金額</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('cTable', cServices)">新增C碼項目</button>
-
-    <!-- D碼 -->
-    <h3>D碼（交通接送）</h3>
-    <table id="dTable">
-      <thead>
-        <tr>
-          <th>代碼</th>
-          <th>每週次數</th>
-          <th>每月次數</th>
-          <th>單價</th>
-          <th>總金額</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('dTable', dServices)">新增D碼項目</button>
-
-    <!-- E碼 -->
-    <h3>E碼（輔具補助）</h3>
-    <table id="eTable">
-      <thead>
-        <tr>
-          <th>代碼</th>
-          <th>每週次數</th>
-          <th>每月次數</th>
-          <th>單價</th>
-          <th>總金額</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('eTable', eServices)">新增E碼項目</button>
-
-    <!-- F碼 -->
-    <h3>F碼（居家環境改善）</h3>
-    <table id="fTable">
-      <thead>
-        <tr>
-          <th>代碼</th>
-          <th>每週次數</th>
-          <th>每月次數</th>
-          <th>單價</th>
-          <th>總金額</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('fTable', fServices)">新增F碼項目</button>
-
-    <!-- G碼 -->
-    <h3>G碼（喘息服務）</h3>
-    <table id="gTable">
-      <thead>
-        <tr>
-          <th>代碼</th>
-          <th>每週次數</th>
-          <th>每月次數</th>
-          <th>單價</th>
-          <th>總金額</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('gTable', gServices)">新增G碼項目</button>
-
-    <!-- S碼 -->
-    <h3>S碼（短期替代照顧）</h3>
-    <table id="sTable">
-      <thead>
-        <tr>
-          <th>代碼</th>
-          <th>每週次數</th>
-          <th>每月次數</th>
-          <th>單價</th>
-          <th>總金額</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('sTable', sServices)">新增S碼項目</button>
+  <section>
+    <h2>服務安排</h2>
     <div id="tables"></div>
-</section>
+  </section>
 
-  <button onclick="calculate()">計算</button>
   <button class="calculate-btn" onclick="calculate()">計算</button>
-<div id="results"></div>
+  <div id="results"></div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
