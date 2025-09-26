@@ -236,22 +236,23 @@ function renderServiceTable(){
     const tr = document.createElement('tr');
 
     const td0 = document.createElement('td');
-    td0.style.textAlign = 'left';
-    td0.innerHTML = `<div><strong>${item.code}</strong> ${item.name}</div>`;
+    td0.innerHTML = `<strong>${item.code}</strong> ${item.name}`;
     tr.appendChild(td0);
 
     const td1 = document.createElement('td');
     td1.textContent = item.price.toLocaleString();
     tr.appendChild(td1);
 
-    const td2 = document.createElement('td'); // 週次（整數）
+    // 週次（整數、步進1、最小值1；可以留空表示未填）
+    const td2 = document.createElement('td');
     const w = document.createElement('input');
-    w.type='number'; w.min='0'; w.step='1'; w.value='0';
-    w.id = `w_${item.code}_${idx}`;
+    w.type='number'; w.min='1'; w.step='1'; w.value='';
+    w.placeholder='1'; w.id = `w_${item.code}_${idx}`;
     w.addEventListener('input', ()=>weekToMonth(item.code, idx));
     td2.appendChild(w); tr.appendChild(td2);
 
-    const td3 = document.createElement('td'); // 月次（整數）
+    // 月次（整數、步進1、可為0）
+    const td3 = document.createElement('td');
     const m = document.createElement('input');
     m.type='number'; m.min='0'; m.step='1'; m.value='0';
     m.id = `m_${item.code}_${idx}`;
@@ -270,21 +271,33 @@ function renderServiceTable(){
   });
 }
 
-/* 互算＆更新（整數＋無條件進位） */
+/* 互算＆更新（無條件進位） */
+// 週 → 月：月 = ceil(週 × 4.5)，週欄為空 = 不使用（視為 0）
 function weekToMonth(code, idx){
-  let w = parseInt(document.getElementById(`w_${code}_${idx}`).value || '0', 10);
+  const wEl = document.getElementById(`w_${code}_${idx}`);
+  let w = parseInt(wEl.value || '0', 10);
   if (isNaN(w) || w < 0) w = 0;
-  const m = Math.ceil(w * WEEKS_PER_MONTH);
+  // 顯示為整數（若使用者清空，可保持空白）
+  if (wEl.value !== '') wEl.value = String(w);
+
+  const m = (w <= 0) ? 0 : Math.ceil(w * WEEKS_PER_MONTH);
   document.getElementById(`m_${code}_${idx}`).value = String(m);
   calcRow(code, idx);
 }
+
+// 月 → 週：週 = ceil(月 ÷ 4.5)；月=0 → 週=0
 function monthToWeek(code, idx){
-  let m = parseInt(document.getElementById(`m_${code}_${idx}`).value || '0', 10);
+  const mEl = document.getElementById(`m_${code}_${idx}`);
+  let m = parseInt(mEl.value || '0', 10);
   if (isNaN(m) || m < 0) m = 0;
-  const w = Math.ceil(m / WEEKS_PER_MONTH);
-  document.getElementById(`w_${code}_${idx}`).value = String(w);
+  mEl.value = String(m);
+
+  const w = (m <= 0) ? 0 : Math.ceil(m / WEEKS_PER_MONTH);
+  const wEl = document.getElementById(`w_${code}_${idx}`);
+  wEl.value = w === 0 ? '' : String(w); // 0 時改成空白，好讓「最小1」不會卡住清空
   calcRow(code, idx);
 }
+
 function calcRow(code, idx){
   const m = parseInt(document.getElementById(`m_${code}_${idx}`).value || '0', 10) || 0;
   document.getElementById(`t_${code}_${idx}`).textContent = String(m);
@@ -303,7 +316,6 @@ function calcRow(code, idx){
 
 /* 統計/額度/自付 */
 function updateCapsAndSummary(){
-  // 使用額度總和
   let used = 0;
   document.querySelectorAll('[id^="u_"]').forEach(td=>{
     used += +(td.textContent.replace(/,/g,'')) || 0;
@@ -325,7 +337,8 @@ function updateCapsAndSummary(){
 /* 重置 */
 function resetAll(){
   document.querySelectorAll('input[type="number"]').forEach(i=>{
-    if(i.id.startsWith('w_')||i.id.startsWith('m_')) i.value='0';
+    if(i.id.startsWith('w_')) i.value = '';
+    if(i.id.startsWith('m_')) i.value = '0';
   });
   document.querySelectorAll('[id^="t_"],[id^="u_"]').forEach(td=>td.textContent='0');
   document.getElementById('reservedBudget').value = '0';
