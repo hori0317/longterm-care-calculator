@@ -178,18 +178,11 @@ const serviceData = {
   ]
 };
 
-/* 常用月上限（可改成你單位版本） */
-const capsByCMS = {
-  2: 20000,
-  3: 32000,
-  4: 36000,
-  5: 44000,
-  6: 56000,
-  7: 70000,
-  8: 90000
-};
+/* 月上限（可依單位調整） */
+const capsByCMS = { 2:20000, 3:32000, 4:36000, 5:44000, 6:56000, 7:70000, 8:90000 };
 
-const WEEKS_PER_MONTH = 4.33;
+/* 規則：整數、4.5 週／月、無條件進位 */
+const WEEKS_PER_MONTH = 4.5;
 
 let currentCopayRate = 0.16;
 let currentCMS = 2;
@@ -235,11 +228,8 @@ function renderServiceTable(){
 
   const allRows = [];
   Object.keys(serviceData).forEach(group=>{
-    serviceData[group].forEach(item=>{
-      allRows.push({ group, ...item });
-    });
+    serviceData[group].forEach(item=> allRows.push({ group, ...item }));
   });
-  // 依代碼排序（BA01、BA02…）
   allRows.sort((a,b)=> a.code.localeCompare(b.code, 'zh-Hant'));
 
   allRows.forEach((item, idx)=>{
@@ -250,63 +240,63 @@ function renderServiceTable(){
     td0.innerHTML = `<div><strong>${item.code}</strong> ${item.name}</div>`;
     tr.appendChild(td0);
 
-    const td1 = document.createElement('td');      // 價格
+    const td1 = document.createElement('td');
     td1.textContent = item.price.toLocaleString();
     tr.appendChild(td1);
 
-    const td2 = document.createElement('td');      // 週次
+    const td2 = document.createElement('td'); // 週次（整數）
     const w = document.createElement('input');
-    w.type='number'; w.min='0'; w.step='0.1'; w.value='0';
+    w.type='number'; w.min='0'; w.step='1'; w.value='0';
     w.id = `w_${item.code}_${idx}`;
     w.addEventListener('input', ()=>weekToMonth(item.code, idx));
     td2.appendChild(w); tr.appendChild(td2);
 
-    const td3 = document.createElement('td');      // 月次
+    const td3 = document.createElement('td'); // 月次（整數）
     const m = document.createElement('input');
-    m.type='number'; m.min='0'; m.step='0.1'; m.value='0';
+    m.type='number'; m.min='0'; m.step='1'; m.value='0';
     m.id = `m_${item.code}_${idx}`;
     m.addEventListener('input', ()=>monthToWeek(item.code, idx));
     td3.appendChild(m); tr.appendChild(td3);
 
-    const td4 = document.createElement('td');      // 總次數（=月次）
-    td4.id = `t_${item.code}_${idx}`;
-    td4.textContent = '0';
+    const td4 = document.createElement('td'); // 總次數（=月次）
+    td4.id = `t_${item.code}_${idx}`; td4.textContent = '0';
     tr.appendChild(td4);
 
-    const td5 = document.createElement('td');      // 使用額度
-    td5.id = `u_${item.code}_${idx}`;
-    td5.textContent = '0';
+    const td5 = document.createElement('td'); // 使用額度
+    td5.id = `u_${item.code}_${idx}`; td5.textContent = '0';
     tr.appendChild(td5);
 
     tbody.appendChild(tr);
   });
 }
 
-/* 互算＆更新 */
+/* 互算＆更新（整數＋無條件進位） */
 function weekToMonth(code, idx){
-  const w = +document.getElementById(`w_${code}_${idx}`).value || 0;
-  const m = (w * WEEKS_PER_MONTH);
-  document.getElementById(`m_${code}_${idx}`).value = m.toFixed(1);
+  let w = parseInt(document.getElementById(`w_${code}_${idx}`).value || '0', 10);
+  if (isNaN(w) || w < 0) w = 0;
+  const m = Math.ceil(w * WEEKS_PER_MONTH);
+  document.getElementById(`m_${code}_${idx}`).value = String(m);
   calcRow(code, idx);
 }
 function monthToWeek(code, idx){
-  const m = +document.getElementById(`m_${code}_${idx}`).value || 0;
-  const w = (m / WEEKS_PER_MONTH);
-  document.getElementById(`w_${code}_${idx}`).value = w.toFixed(1);
+  let m = parseInt(document.getElementById(`m_${code}_${idx}`).value || '0', 10);
+  if (isNaN(m) || m < 0) m = 0;
+  const w = Math.ceil(m / WEEKS_PER_MONTH);
+  document.getElementById(`w_${code}_${idx}`).value = String(w);
   calcRow(code, idx);
 }
 function calcRow(code, idx){
-  const m = +document.getElementById(`m_${code}_${idx}`).value || 0;
-  document.getElementById(`t_${code}_${idx}`).textContent = m.toFixed(1);
+  const m = parseInt(document.getElementById(`m_${code}_${idx}`).value || '0', 10) || 0;
+  document.getElementById(`t_${code}_${idx}`).textContent = String(m);
 
-  // 找 price
+  // 取 price
   let price = 0;
   outer: for(const g in serviceData){
     for(const it of serviceData[g]){
       if(it.code === code){ price = it.price; break outer; }
     }
   }
-  const used = Math.round(price * m);
+  const used = price * m; // 整數相乘
   document.getElementById(`u_${code}_${idx}`).textContent = used.toLocaleString();
   updateCapsAndSummary();
 }
@@ -320,18 +310,13 @@ function updateCapsAndSummary(){
   });
   document.getElementById('usedBudget').value = used.toLocaleString();
 
-  // 額度上限
   const cap = capsByCMS[currentCMS] || 0;
   document.getElementById('capTotal').textContent = cap.toLocaleString();
 
-  // 留用額度
   const reserved = +(document.getElementById('reservedBudget').value || 0);
-
-  // 剩餘額度
   const remain = Math.max(cap - reserved - used, 0);
   document.getElementById('capRemain').textContent = remain.toLocaleString();
 
-  // 部分負擔與自付總計（這裡假設=使用額度×身分別比例）
   const copay = Math.round(used * currentCopayRate);
   document.getElementById('copay').textContent = copay.toLocaleString();
   document.getElementById('selfTotal').textContent = copay.toLocaleString();
@@ -339,7 +324,9 @@ function updateCapsAndSummary(){
 
 /* 重置 */
 function resetAll(){
-  document.querySelectorAll('input[type="number"]').forEach(i=>{ if(i.id.startsWith('w_')||i.id.startsWith('m_')) i.value='0'; });
+  document.querySelectorAll('input[type="number"]').forEach(i=>{
+    if(i.id.startsWith('w_')||i.id.startsWith('m_')) i.value='0';
+  });
   document.querySelectorAll('[id^="t_"],[id^="u_"]').forEach(td=>td.textContent='0');
   document.getElementById('reservedBudget').value = '0';
   document.getElementById('usedBudget').value = '0';
