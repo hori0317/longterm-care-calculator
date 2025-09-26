@@ -179,7 +179,7 @@ const serviceData = {
 };
 
 /* 月上限（可依單位調整） */
-const capsByCMS = { 2:20000, 3:32000, 4:36000, 5:44000, 6:56000, 7:70000, 8:90000 };
+const capsByCMS = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180 };
 
 /* 規則：整數、4.5 週／月、無條件進位 */
 const WEEKS_PER_MONTH = 4.5;
@@ -345,3 +345,4 @@ function resetAll(){
   document.getElementById('usedBudget').value = '0';
   updateCapsAndSummary();
 }
+
