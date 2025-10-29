@@ -116,19 +116,29 @@ body{
   border:1px solid var(--line); border-radius:10px; background:#fbfbfd;
 }
 
-.seg{ display:inline-grid; grid-auto-flow:column; gap:8px; }
-.seg input{ display:none; }
-.seg label{
-  padding:8px 14px;
-  border:1px solid var(--line);
-  background:#fff;
-  border-radius:999px;
-  cursor:pointer; user-select:none;
-  box-shadow:var(--shadow);
+/* ====== CMS等級按鈕列（縮小版） ====== */
+.seg {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 6px;                   /* 按鈕之間距離更緊 */
+}
+
+.seg label {
+  padding: 6px 12px;          /* ★ 內距縮小（原本是 8px 14px） */
+  font-size: 14px;            /* ★ 字體略小 */
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: var(--shadow);
   transition: all 0.15s ease;
 }
-.seg input:checked + label{
-  background:var(--brand); color:#fff; border-color:var(--brand);
+
+.seg input:checked + label {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
 }
 
 /* 右卡：摘要 */
@@ -191,3 +201,4 @@ input[type="number"]{
     min-width: unset;
   }
 }
+
