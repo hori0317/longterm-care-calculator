@@ -187,6 +187,7 @@ function updateRow(code, idx){
 function bindHeaderInputs(){
   document.querySelectorAll("input[name='idty']").forEach(el=>el.addEventListener("change", updateResults));
   document.querySelectorAll("input[name='cms']").forEach(el=>el.addEventListener("change", updateResults));
+  $("#keepQuota").addEventListener("input", updateResults);
 }
 
 /********* 摘要計算 *********/
