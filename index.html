@@ -1,116 +1,49 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>額度試算</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>長照額度試算</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="page-header">
-    <div class="container header-inner">
-      <div class="brand">
-        <h1>額度試算</h1>
-      </div>
-      <button class="btn" id="resetBtn">重置</button>
-    </div>
-  </header>
+  <h1>長照額度試算</h1>
 
-  <main class="container">
-    <!-- 三欄資訊卡 -->
-    <section class="grid-3 cards">
-      <!-- 左：居服薪資 / 加成（預留區） -->
-      <div class="card">
-        <h2>居服薪資(6/4)</h2>
-        <div class="row">
-          <span>預計月薪資：</span>
-          <span class="muted">（此區先預留，不參與下方計算）</span>
-        </div>
-        <div class="row">
-          <span>加成次數</span>
-          <button class="btn small" id="saveAddon">儲存</button>
-        </div>
-        <table class="simple">
-          <thead>
-            <tr><th>項目</th><th>價格</th><th>次數</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>AA05</td><td><input class="num" placeholder="價格"></td><td><input class="num" placeholder="次數"></td></tr>
-            <tr><td>AA06</td><td><input class="num" placeholder="價格"></td><td><input class="num" placeholder="次數"></td></tr>
-            <tr><td>AA08</td><td><input class="num" placeholder="價格"></td><td><input class="num" placeholder="次數"></td></tr>
-            <tr><td>AA09</td><td><input class="num" placeholder="價格"></td><td><input class="num" placeholder="次數"></td></tr>
-            <tr><td>AA11</td><td><input class="num" placeholder="價格"></td><td><input class="num" placeholder="次數"></td></tr>
-          </tbody>
-        </table>
-      </div>
+  <section class="condition">
+    <h2>案主條件</h2>
+    <label>長照等級：
+      <select id="cms_level">
+        <option value="2">2級</option>
+        <option value="3">3級</option>
+        <option value="4">4級</option>
+        <option value="5">5級</option>
+        <option value="6">6級</option>
+        <option value="7">7級</option>
+        <option value="8">8級</option>
+      </select>
+    </label>
+    <label>身分別：
+      <select id="identity">
+        <option value="0.16">一般戶</option>
+        <option value="0.05">中低收入戶</option>
+        <option value="0">低收入戶</option>
+      </select>
+    </label>
+    <label>外籍看護：
+      <select id="foreign_caregiver">
+        <option value="0">無</option>
+        <option value="1">有</option>
+      </select>
+    </label>
+  </section>
 
-      <!-- 中：基本資料 -->
-      <div class="card">
-        <h2>基本資料</h2>
+  <section>
+    <h2>服務安排</h2>
+    <div id="tables"></div>
+  </section>
 
-        <div class="field">
-          <label>身分別：</label>
-          <div class="seg">
-            <button class="seg-btn active" data-copay="0.16">一般戶</button>
-            <button class="seg-btn" data-copay="0.05">中低收</button>
-            <button class="seg-btn" data-copay="0">低收</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>CMS 等級：</label>
-          <div class="seg" id="cmsSeg">
-            <button class="seg-btn active" data-cms="2">2</button>
-            <button class="seg-btn" data-cms="3">3</button>
-            <button class="seg-btn" data-cms="4">4</button>
-            <button class="seg-btn" data-cms="5">5</button>
-            <button class="seg-btn" data-cms="6">6</button>
-            <button class="seg-btn" data-cms="7">7</button>
-            <button class="seg-btn" data-cms="8">8</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>留用額度：</label>
-          <input id="reservedBudget" class="num" value="0" />
-        </div>
-
-        <div class="field">
-          <label>給付額度（使用中）：</label>
-          <input id="usedBudget" class="num" value="0" readonly/>
-        </div>
-      </div>
-
-      <!-- 右：個案額度及自付額 -->
-      <div class="card">
-        <h2>個案額度及自付額</h2>
-        <div class="summary">
-          <div class="sum-row"><span>額度總計：</span><strong id="capTotal">0</strong></div>
-          <div class="sum-row"><span>剩餘額度：</span><strong id="capRemain">0</strong></div>
-          <div class="sum-row"><span>部分負擔：</span><strong id="copay">0</strong></div>
-          <div class="sum-row"><span>自付總計：</span><strong id="selfTotal">0</strong></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 大表：所有服務 -->
-    <section class="card">
-      <h2>服務安排</h2>
-      <table id="serviceTable">
-        <thead>
-          <tr>
-            <th style="width:30%">服務項目</th>
-            <th>給付價格</th>
-            <th>週次數</th>
-            <th>月次數</th>
-            <th>總次數</th>
-            <th>使用額度</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-  </main>
+  <button class="calculate-btn" onclick="calculate()">計算</button>
+  <div id="results"></div>
 
   <script src="script.js"></script>
 </body>
