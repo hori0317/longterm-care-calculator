@@ -49,29 +49,31 @@ body{
   border-radius:10px;
   cursor:pointer;
   box-shadow:var(--shadow);
+  transition: all 0.15s ease;
 }
-.btn:hover{ background:var(--brand-strong); }
-.btn.ghost{ background:#fff; color:var(--brand); border:1px solid var(--brand); }
+.btn:hover{ background:var(--brand-strong); transform:translateY(-1px); }
+.btn.ghost{ background:#fff; color:var(--brand); border:1px solid var(--brand); box-shadow:none; }
 .btn.small{ padding:8px 12px; font-size:13px; }
 .right{ text-align:right; }
 
 /* ====== 卡片區 ====== */
 .cards-grid{
   display:grid;
-  grid-template-columns:1.2fr 1.2fr 1fr;
-  gap:16px;
+  grid-template-columns: 1fr 1fr 1fr;  /* ★ 改成三欄平均寬度 */
+  gap:18px;
 }
 .card{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:var(--radius);
-  padding:16px;
+  padding:18px 20px;
   box-shadow:var(--shadow);
 }
 .card-title{
   font-weight:700;
   font-size:18px;
-  margin-bottom:10px;
+  margin-bottom:12px;
+  color:#1a1a1a;
 }
 .section-subtitle{
   margin:8px 0 6px;
@@ -88,7 +90,7 @@ body{
 
 .addon-row{
   display:grid;
-  grid-template-columns:1fr 120px 120px;
+  grid-template-columns:1fr 110px 110px;
   gap:10px;
   align-items:center;
   margin-bottom:8px;
@@ -123,6 +125,7 @@ body{
   border-radius:999px;
   cursor:pointer; user-select:none;
   box-shadow:var(--shadow);
+  transition: all 0.15s ease;
 }
 .seg input:checked + label{
   background:var(--brand); color:#fff; border-color:var(--brand);
@@ -137,19 +140,22 @@ body{
 .summary b{ font-size:16px; }
 .over{ margin-top:12px; color:var(--warn); font-weight:700; }
 .hidden{ display:none; }
-.foot-note{ margin-top:12px; color:var(--muted); font-size:12px; }
+.foot-note{ margin-top:12px; color:var(--muted); font-size:12px; line-height:1.4; }
 
 /* ====== 下方表格 ====== */
-section#tables{ margin-top:18px; }
+section#tables{ margin-top:24px; }
 .table-title{
-  margin-top:18px; font-weight:700; color:#374151;
+  margin:22px 0 8px;
+  font-weight:700;
+  color:#374151;
+  font-size:17px;
 }
 table{
   width:100%; border-collapse:collapse;
   background:#fff; border:1px solid var(--line);
   border-radius:var(--radius); overflow:hidden;
   box-shadow:var(--shadow);
-  margin-bottom:18px;
+  margin-bottom:20px;
 }
 thead th{
   background:#f7f8fb; color:#334155;
