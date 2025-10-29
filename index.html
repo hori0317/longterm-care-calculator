@@ -2,105 +2,114 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>長照額度試算</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>額度試算</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <header class="site-header">
-    <h1>額度試算</h1>
+  <header class="topbar">
+    <div class="title">額度試算</div>
+    <div class="actions">
+      <button type="button" id="btnReset">重置</button>
+      <button type="button" id="btnPrint">列印</button>
+    </div>
   </header>
 
-  <!-- 上方三欄 -->
-  <section class="top-grid">
-    <!-- 左：居服薪資 (加成示意) -->
-    <aside class="card left-card">
+  <main class="grid">
+    <!-- 左：居服薪資(6/4) 加成欄（僅示意，可儲存） -->
+    <section class="card">
       <h2>居服薪資(6/4)</h2>
-      <div class="addon-hint">
+      <div class="muted">※此區僅示意加成欄位（AA05/AA06/AA08/AA09/AA11），與下方服務額度計算分開，不影響補助額度。</div>
+      <div class="addon-head">
+        <span class="col1">項目</span>
+        <span class="col2">價格</span>
+        <span class="col3">次數</span>
+      </div>
+      <div id="addonRows" class="addon-body"></div>
+      <div class="addon-actions">
+        <button type="button" id="btnSaveAddons">儲存</button>
         <span id="addonHint" class="warn">請儲存加成次數</span>
       </div>
-
-      <div class="addon-grid head">
-        <div>項目</div><div>價格</div><div>次數</div>
-      </div>
-      <div id="addonRows" class="addon-body">
-        <!-- 由 script.js 動態建立 AA05/AA06/AA08/AA09/AA11 -->
-      </div>
-
-      <button class="btn primary" onclick="saveAddons()">儲存</button>
-
-      <p class="note">
-        ※此區僅示意加成欄位（AA05／AA06／AA08／AA09／AA11），與下方服務額度試算分開，不影響補助額度。
-      </p>
-    </aside>
+    </section>
 
     <!-- 中：基本資料 -->
-    <section class="card center-card">
+    <section class="card">
       <h2>基本資料</h2>
 
       <div class="field">
         <label class="label">身分別</label>
-        <div class="seg">
-          <label class="seg-btn"><input id="id-normal" type="radio" name="idty" value="一般戶" checked><span>一般戶</span></label>
-          <label class="seg-btn"><input type="radio" name="idty" value="中低收入戶"><span>中低收</span></label>
-          <label class="seg-btn"><input type="radio" name="idty" value="低收入戶"><span>低收</span></label>
+        <div class="chip-row">
+          <label class="chip">
+            <input type="radio" name="idty" value="一般戶" id="id-normal" checked>
+            <span>一般戶</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="idty" value="中低收入戶">
+            <span>中低收</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="idty" value="低收入戶">
+            <span>低收</span>
+          </label>
         </div>
       </div>
 
       <div class="field">
         <label class="label">CMS 等級</label>
-        <div class="cms-pills">
-          <label class="pill"><input id="cms2" type="radio" name="cms" value="2" checked><span>2</span></label>
-          <label class="pill"><input type="radio" name="cms" value="3"><span>3</span></label>
-          <label class="pill"><input type="radio" name="cms" value="4"><span>4</span></label>
-          <label class="pill"><input type="radio" name="cms" value="5"><span>5</span></label>
-          <label class="pill"><input type="radio" name="cms" value="6"><span>6</span></label>
-          <label class="pill"><input type="radio" name="cms" value="7"><span>7</span></label>
-          <label class="pill"><input type="radio" name="cms" value="8"><span>8</span></label>
+        <div class="chip-row cms">
+          <label class="chip small"><input type="radio" name="cms" value="2" id="cms2" checked><span>2</span></label>
+          <label class="chip small"><input type="radio" name="cms" value="3"><span>3</span></label>
+          <label class="chip small"><input type="radio" name="cms" value="4"><span>4</span></label>
+          <label class="chip small"><input type="radio" name="cms" value="5"><span>5</span></label>
+          <label class="chip small"><input type="radio" name="cms" value="6"><span>6</span></label>
+          <label class="chip small"><input type="radio" name="cms" value="7"><span>7</span></label>
+          <label class="chip small"><input type="radio" name="cms" value="8"><span>8</span></label>
         </div>
       </div>
 
-      <div class="field">
-        <label class="label">留用額度</label>
-        <input id="keepQuota" type="number" placeholder="例如 3000" oninput="updateResults()">
-      </div>
-
-      <div class="field">
-        <label class="label">給付額度（依身分別×CMS）</label>
-        <input id="grantQuota" type="text" readonly value="14,320">
+      <div class="two">
+        <div class="field">
+          <label class="label">留用額度</label>
+          <input id="keepQuota" type="number" inputmode="numeric" placeholder="例如 3000">
+        </div>
+        <div class="field">
+          <label class="label">額度總計</label>
+          <input id="grantQuota" type="text" readonly>
+        </div>
       </div>
     </section>
 
-    <!-- 右：摘要 -->
-    <aside class="card right-card">
+    <!-- 右：個案額度及自付額 -->
+    <aside class="card side">
       <h2>個案額度及自付額</h2>
-      <div class="summary-row">
-        <div class="summary-key">額度總計：</div>
-        <div id="sumTotal" class="summary-val">0</div>
+      <div class="metric">
+        <div class="name">額度總計</div>
+        <div id="sumGrant" class="value">0</div>
       </div>
-      <div class="summary-row">
-        <div class="summary-key">剩餘額度：</div>
-        <div id="sumRemain" class="summary-val">0</div>
+      <div class="metric">
+        <div class="name">剩餘額度</div>
+        <div id="sumRemain" class="value">0</div>
       </div>
-      <div class="summary-row">
-        <div class="summary-key">部分負擔：</div>
-        <div id="sumCopay" class="summary-val">0</div>
+      <div class="metric">
+        <div class="name">部分負擔</div>
+        <div id="sumCopay" class="value">0</div>
       </div>
-      <div class="summary-row">
-        <div class="summary-key">自付總計：</div>
-        <div id="sumSelfpay" class="summary-val">0</div>
+      <div class="metric">
+        <div class="name">自付總計</div>
+        <div id="sumSelfpay" class="value">0</div>
       </div>
-
-      <p id="overMsg" class="over hidden">⚠ 已超過可用額度（給付額度－留用額度）。</p>
-
-      <div class="summary-actions">
-        <button class="btn" onclick="resetAll()">重置</button>
+      <hr/>
+      <div class="metric small">
+        <div class="name">服務總額</div>
+        <div id="sumTotal" class="value">0</div>
       </div>
+      <p id="overMsg" class="over hidden">※ 服務總額已超過可用額度，差額將併入自付總計。</p>
     </aside>
-  </section>
+  </main>
 
-  <!-- 下方服務表格 -->
-  <section class="tables-wrap">
+  <!-- 服務表格 -->
+  <section class="card full">
+    <h2>服務安排</h2>
     <div id="tables"></div>
   </section>
 
