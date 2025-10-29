@@ -155,24 +155,24 @@ function renderTables(){
       // 單價
       const c1 = tr.insertCell(); c1.textContent = item.price.toLocaleString();
 
-      // 週次數
+      // 週次數（整數，最小1；填0則表示不使用）
       const c2 = tr.insertCell();
       const week = document.createElement("input");
       week.type="number"; week.min="1"; week.step="1"; week.value="0";
       week.oninput = ()=>updateRow(group, i);
       c2.appendChild(week);
 
-      // 月次數（唯讀，由週次數 4.5 無條件進位而來）
+      // 月次數（週*4.5 無條件進位，唯讀）
       const c3 = tr.insertCell();
       const month = document.createElement("input");
       month.type="number"; month.min="0"; month.step="1"; month.value="0"; month.readOnly = true;
       c3.appendChild(month);
 
-      // 總次數（可由使用者直接輸入，若 >0 以它計價）
+      // 總次數（使用者可直接輸入；若 >0 則以它計價）
       const c4 = tr.insertCell();
       const totalCnt = document.createElement("input");
       totalCnt.type="number"; totalCnt.min="0"; totalCnt.step="1"; totalCnt.value="0";
-      totalCnt.oninput = ()=>updateRow(group, i); // 重新計價
+      totalCnt.oninput = ()=>updateRow(group, i);
       c4.appendChild(totalCnt);
 
       // 總金額
@@ -192,12 +192,12 @@ function updateRow(group, idx){
 
   const price = serviceData[group][idx].price;
 
-  // 取值
-  const w = Math.max(0, parseInt(row.cells[2].querySelector("input").value)||0); // 週
-  const m = Math.ceil(w * WEEKS_PER_MONTH);                                      // 週→月（無條件進位）
+  // 週→月
+  const w = Math.max(0, parseInt(row.cells[2].querySelector("input").value)||0);
+  const m = Math.ceil(w * WEEKS_PER_MONTH);
   row.cells[3].querySelector("input").value = m;
 
-  // 總次數（如果 > 0 則優先）
+  // 總次數 > 0 以總次數計；否則以月次數計
   const cntUser = Math.max(0, parseInt(row.cells[4].querySelector("input").value)||0);
   const useCnt = cntUser > 0 ? cntUser : m;
 
@@ -233,7 +233,12 @@ function updateSCAvailability(){
   });
 }
 
-/********* 摘要計算 *********/
+/********* 摘要計算 *********
+ * 額度總計 = 主額度(CMS×身分別表) + 留用額度
+ * 剩餘額度 = max(主額度 - 主額度池消耗, 0)
+ * 部分負擔 = 全部服務總額 × 身分別係數
+ * 自付總計 = 部分負擔 + (主額度/GA/SC 的超額合計)
+ ***********************************************/
 function updateResults(){
   // 1) 逐表累計
   const totalByGroup = { BA:0, BD:0, C:0, GA:0, SC:0 };
@@ -245,38 +250,36 @@ function updateResults(){
     });
     totalByGroup[g] = sum;
   });
-
   const totalAll = Object.values(totalByGroup).reduce((a,b)=>a+b,0);
 
-  // 2) 取得條件
+  // 2) 條件
   const idty = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
-  const cms  = parseInt((document.querySelector("input[name='cms']:checked')")?.value || "2"); // 防呆
-  const cmsSel = parseInt((document.querySelector("input[name='cms']:checked")||{}).value || "2");
+  const cms  = parseInt((document.querySelector("input[name='cms']:checked")||{}).value || "2");
   const keep = Math.max(0, parseInt($("#keepQuota").value)||0);
-  const fg = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
+  const hasFG = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
 
   // 3) 額度池
-  const grantMain = (limitTable[idty][cmsSel]||0) + keep;      // 主額度（+留用）
-  const grantGA   = GA_QUOTA[cmsSel] || 0;                     // GA 獨立額度
-  const grantSC   = fg ? (SC_QUOTA[cmsSel] || 0) : 0;          // SC 獨立額度（需外籍看護）
+  const grantMain = (limitTable[idty][cms]||0) + keep;   // 主額度（+留用）
+  const grantGA   = GA_QUOTA[cms] || 0;                  // GA 獨立額度
+  const grantSC   = hasFG ? (SC_QUOTA[cms] || 0) : 0;    // SC 獨立額度（需外籍看護）
 
-  // 4) 各池消耗
+  // 4) 消耗
   const useMain = (totalByGroup.BA||0) + (totalByGroup.BD||0) + (totalByGroup.C||0);
   const useGA   = totalByGroup.GA||0;
   const useSC   = totalByGroup.SC||0;
 
-  // 5) 部分負擔（全部消耗 × 身分係數）
+  // 5) 部分負擔
   const idRate = idty === "一般戶" ? 0.16 : (idty === "中低收入戶" ? 0.05 : 0);
   const copay  = Math.round(totalAll * idRate);
 
-  // 6) 超額（各池分開計）
+  // 6) 超額
   const overMain = Math.max(0, useMain - grantMain);
   const overGA   = Math.max(0, useGA   - grantGA);
   const overSC   = Math.max(0, useSC   - grantSC);
   const overAll  = overMain + overGA + overSC;
 
   // 7) 顯示
-  $("#grantQuota").value = grantMain.toLocaleString();
+  $("#grantQuota").value   = grantMain.toLocaleString();
   $("#sumGrant").textContent  = grantMain.toLocaleString();
   $("#sumRemain").textContent = Math.max(0, grantMain - useMain).toLocaleString();
   $("#sumCopay").textContent  = copay.toLocaleString();
