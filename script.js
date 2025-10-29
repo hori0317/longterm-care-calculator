@@ -1,7 +1,5 @@
 /**********************
  * 服務清單
- *  — BA, BD, GA, SC 獨立
- *  — C碼 = 合併 CA/CB/CC/CD
  **********************/
 const serviceData = {
   BA: [
@@ -39,17 +37,13 @@ const serviceData = {
   ],
   // 合併後的 C 碼（專業服務）
   C: [
-    // CA
     { code: "CA07", name: "IADLs/ADLs 復能照護(3次含評估)", price: 4500 },
     { code: "CA08", name: "ISP擬定與執行(4次含評估)", price: 6000 },
-    // CB
     { code: "CB01", name: "營養照護(3次含評估)", price: 4500 },
     { code: "CB02", name: "進食與吞嚥照護(6次含評估)", price: 9000 },
     { code: "CB03", name: "困擾行為照護(3次含評估)", price: 4500 },
     { code: "CB04", name: "臥床/長期活動受限照護(6次含評估)", price: 9000 },
-    // CC
     { code: "CC01", name: "居家環境安全或無障礙空間規劃", price: 2000 },
-    // CD
     { code: "CD02", name: "居家護理指導與諮詢(3次+1次評估)", price: 6000 },
   ],
   GA: [
@@ -60,13 +54,13 @@ const serviceData = {
   ],
 };
 
-/********* 加成（左卡示意） *********/
+/********* 左卡加成（示意，可儲存） *********/
 const addonItems = [
-  { code: "AA05", name: "項目AA05", price: 0, key: "AA05" },
-  { code: "AA06", name: "項目AA06", price: 0, key: "AA06" },
-  { code: "AA08", name: "項目AA08", price: 0, key: "AA08" },
-  { code: "AA09", name: "項目AA09", price: 0, key: "AA09" },
-  { code: "AA11", name: "項目AA11", price: 0, key: "AA11" },
+  { code: "AA05", key: "AA05" },
+  { code: "AA06", key: "AA06" },
+  { code: "AA08", key: "AA08" },
+  { code: "AA09", key: "AA09" },
+  { code: "AA11", key: "AA11" },
 ];
 
 /********* 上限（依身分別×CMS等級） *********/
@@ -76,65 +70,67 @@ const limitTable = {
   "低收入戶":   [0, 0, 36000, 45000, 54000, 63000, 72000, 81000, 90000],
 };
 
-const WEEKS_PER_MONTH = 4.5; // 以 4.5 週換算
-const $ = (sel) => document.querySelector(sel);
+const WEEKS_PER_MONTH = 4.5;
+const $ = (s)=>document.querySelector(s);
 
-/********* Init *********/
-window.onload = () => {
+window.onload = ()=>{
   renderAddons();
   renderTables();
   bindHeaderInputs();
   updateResults();
 };
 
-/********* 左卡：加成 *********/
-function renderAddons() {
+/********* 左卡加成 *********/
+function renderAddons(){
+  const saved = JSON.parse(localStorage.getItem("addons")||"{}");
   const host = $("#addonRows");
   host.innerHTML = "";
-  const saved = JSON.parse(localStorage.getItem("addons") || "{}");
-
-  addonItems.forEach((it) => {
+  addonItems.forEach(it=>{
     const row = document.createElement("div");
     row.className = "addon-row";
     row.innerHTML = `
       <div>${it.code}</div>
-      <div><input type="number" min="0" step="1" value="${saved[`${it.key}_p`] ?? 0}" id="${it.key}_p"></div>
-      <div><input type="number" min="0" step="1" value="${saved[`${it.key}_n`] ?? 0}" id="${it.key}_n"></div>
+      <div><input type="number" id="${it.key}_p" min="0" step="1" value="${saved[`${it.key}_p`]??0}"></div>
+      <div><input type="number" id="${it.key}_n" min="0" step="1" value="${saved[`${it.key}_n`]??0}"></div>
     `;
     host.appendChild(row);
   });
 }
-function saveAddons() {
+function saveAddons(){
   const data = {};
-  addonItems.forEach((it) => {
-    data[`${it.key}_p`] = parseInt($(`#${it.key}_p`).value) || 0;
-    data[`${it.key}_n`] = parseInt($(`#${it.key}_n`).value) || 0;
+  addonItems.forEach(it=>{
+    data[`${it.key}_p`] = parseInt($(`#${it.key}_p`).value)||0;
+    data[`${it.key}_n`] = parseInt($(`#${it.key}_n`).value)||0;
   });
   localStorage.setItem("addons", JSON.stringify(data));
-  $("#addonHint").textContent = "已儲存加成次數";
-  $("#addonHint").classList.remove("warn");
+  const hint = $("#addonHint");
+  hint.textContent = "已儲存加成次數";
+  hint.classList.remove("warn");
 }
 
-/********* 表格渲染 *********/
-function renderTables() {
+/********* 產生各表格（C 碼合併） *********/
+function renderTables(){
   const container = $("#tables");
   container.innerHTML = "";
 
-  Object.keys(serviceData).forEach((code) => {
-    const cardTitle = ({
-      BA: "BA碼（照顧服務）",
-      BD: "BD碼（社區服務）",
-      C:  "C碼（專業服務）",
-      GA: "GA碼（喘息服務）",
-      SC: "SC碼（短期替代照顧）",
-    })[code] || `${code}碼`;
+  Object.keys(serviceData).forEach(code=>{
+    const titleMap = {
+      BA:"BA碼（照顧服務）",
+      BD:"BD碼（社區服務）",
+      C:"C碼（專業服務）",
+      GA:"GA碼（喘息服務）",
+      SC:"SC碼（短期替代照顧）",
+    };
+    const caption = document.createElement("div");
+    caption.className = "table-title";
+    caption.textContent = titleMap[code] || `${code}碼`;
+    container.appendChild(caption);
 
-    const section = document.createElement("section");
     const table = document.createElement("table");
     table.innerHTML = `
       <thead>
         <tr>
-          <th style="min-width:240px">服務項目</th>
+          <th style="min-width:260px">服務項目</th>
           <th>單價</th>
           <th>週次數</th>
           <th>月次數</th>
@@ -143,112 +139,99 @@ function renderTables() {
       </thead>
       <tbody></tbody>
     `;
-
-    const caption = document.createElement("div");
-    caption.className = "card-title";
-    caption.textContent = cardTitle;
-    section.appendChild(caption);
-
     const tbody = table.querySelector("tbody");
-    serviceData[code].forEach((item, i) => {
+
+    serviceData[code].forEach((item, i)=>{
       const tr = document.createElement("tr");
 
-      const td0 = tr.insertCell(); td0.textContent = `${item.code} ${item.name}`;
-      const td1 = tr.insertCell(); td1.textContent = item.price.toLocaleString();
+      const c0 = tr.insertCell(); c0.textContent = `${item.code} ${item.name}`;
+      const c1 = tr.insertCell(); c1.textContent = item.price.toLocaleString();
 
-      const td2 = tr.insertCell();
-      const weekInput = document.createElement("input");
-      weekInput.type = "number"; weekInput.min = "1"; weekInput.step = "1"; weekInput.value = "0";
-      weekInput.oninput = () => updateRow(code, i);
-      td2.appendChild(weekInput);
+      const c2 = tr.insertCell();
+      const week = document.createElement("input");
+      week.type = "number"; week.min="1"; week.step="1"; week.value="0";
+      week.oninput = ()=>updateRow(code, i);
+      c2.appendChild(week);
 
-      const td3 = tr.insertCell();
-      const monthInput = document.createElement("input");
-      monthInput.type = "number"; monthInput.min = "0"; monthInput.step = "1"; monthInput.value = "0"; monthInput.readOnly = true;
-      td3.appendChild(monthInput);
+      const c3 = tr.insertCell();
+      const month = document.createElement("input");
+      month.type = "number"; month.min="0"; month.step="1"; month.value="0"; month.readOnly = true;
+      c3.appendChild(month);
 
-      const td4 = tr.insertCell(); td4.textContent = "0";
+      const c4 = tr.insertCell(); c4.textContent = "0";
 
       tbody.appendChild(tr);
     });
 
-    section.appendChild(table);
-    container.appendChild(section);
+    container.appendChild(table);
   });
 }
 
-/********* 行更新：週→月(無條件進位)、金額 *********/
-function updateRow(code, idx) {
-  const tableIndex = Object.keys(serviceData).indexOf(code);
-  const table = document.querySelectorAll("#tables table")[tableIndex];
-  const row = table.tBodies[0].rows[idx];
+/********* 週→月(無條件進位)、更新金額 *********/
+function updateRow(code, idx){
+  const tIndex = Object.keys(serviceData).indexOf(code);
+  const table  = document.querySelectorAll("#tables table")[tIndex];
+  const row    = table.tBodies[0].rows[idx];
 
   const price = serviceData[code][idx].price;
-  const week = Math.max(0, parseInt(row.cells[2].querySelector("input").value) || 0);
+  const w = Math.max(0, parseInt(row.cells[2].querySelector("input").value)||0);
+  const m = Math.ceil(w * WEEKS_PER_MONTH);
 
-  const month = Math.ceil(week * WEEKS_PER_MONTH);
-  row.cells[3].querySelector("input").value = month;
-
-  const total = price * month;
-  row.cells[4].textContent = total.toLocaleString();
+  row.cells[3].querySelector("input").value = m;
+  row.cells[4].textContent = (price * m).toLocaleString();
 
   updateResults();
 }
 
-/********* 條件變更綁定 *********/
-function bindHeaderInputs() {
-  document.querySelectorAll("input[name='idty']").forEach(el => el.addEventListener("change", updateResults));
-  document.querySelectorAll("input[name='cms']").forEach(el => el.addEventListener("change", updateResults));
+/********* 綁定上方條件 *********/
+function bindHeaderInputs(){
+  document.querySelectorAll("input[name='idty']").forEach(el=>el.addEventListener("change", updateResults));
+  document.querySelectorAll("input[name='cms']").forEach(el=>el.addEventListener("change", updateResults));
 }
 
-/********* 計算摘要 *********/
-function updateResults() {
-  // 1) 服務總額
-  let totalService = 0;
-  document.querySelectorAll("#tables tbody tr").forEach(tr => {
-    totalService += parseInt(tr.cells[4].textContent.replace(/,/g, "")) || 0;
+/********* 摘要計算 *********/
+function updateResults(){
+  // 服務總額
+  let total = 0;
+  document.querySelectorAll("#tables tbody tr").forEach(tr=>{
+    total += parseInt(tr.cells[4].textContent.replace(/,/g,""))||0;
   });
 
-  // 2) 條件
-  const idty = (document.querySelector("input[name='idty']:checked") || {}).value || "一般戶";
-  const cms = parseInt((document.querySelector("input[name='cms']:checked") || {}).value || "2");
-  const keep = Math.max(0, parseInt($("#keepQuota").value) || 0);
+  // 條件
+  const idty = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
+  const cms  = parseInt((document.querySelector("input[name='cms']:checked")||{}).value || "2");
+  const keep = Math.max(0, parseInt($("#keepQuota").value)||0);
 
-  // 3) 上限＆可用額度
-  const grant = limitTable[idty][cms] || 0;
+  // 上限與可用額度
+  const grant = limitTable[idty][cms]||0;
   const usable = Math.max(0, grant - keep);
 
-  // 4) 超額/自付
-  const selfpay = Math.max(0, totalService - usable);
-  const remain = Math.max(0, usable - totalService);
+  const self = Math.max(0, total - usable);
+  const remain = Math.max(0, usable - total);
 
-  // 5) 顯示
   $("#grantQuota").value = grant.toLocaleString();
-  $("#sumTotal").textContent   = totalService.toLocaleString();
-  $("#sumRemain").textContent  = remain.toLocaleString();
-  $("#sumCopay").textContent   = selfpay.toLocaleString();
-  $("#sumSelfpay").textContent = selfpay.toLocaleString();
+  $("#sumTotal").textContent = total.toLocaleString();
+  $("#sumRemain").textContent = remain.toLocaleString();
+  $("#sumCopay").textContent = self.toLocaleString();
+  $("#sumSelfpay").textContent = self.toLocaleString();
 
   const over = $("#overMsg");
-  if (totalService > usable) over.classList.remove("hidden");
+  if (total > usable) over.classList.remove("hidden");
   else over.classList.add("hidden");
 }
 
 /********* 重置 *********/
-function resetAll() {
-  // 條件
+function resetAll(){
   $("#keepQuota").value = "";
   document.getElementById("id-normal").checked = true;
   document.getElementById("cms2").checked = true;
 
-  // 表格
-  document.querySelectorAll("#tables tbody tr").forEach(tr => {
-    tr.cells[2].querySelector("input").value = 0; // week
-    tr.cells[3].querySelector("input").value = 0; // month
-    tr.cells[4].textContent = "0";               // total
+  document.querySelectorAll("#tables tbody tr").forEach(tr=>{
+    tr.cells[2].querySelector("input").value = 0;
+    tr.cells[3].querySelector("input").value = 0;
+    tr.cells[4].textContent = "0";
   });
 
-  // 左卡加成提示
   $("#addonHint").textContent = "請儲存加成次數";
   $("#addonHint").classList.add("warn");
 
