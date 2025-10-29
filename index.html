@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>額度試算</title>
 
-  <!-- 網站圖示 -->
-  <link rel="icon" href="YORU.ico" type="image/x-icon">
+  <!-- 站台小圖示（把 YORU.ico 放在與本檔同層） -->
+  <link rel="icon" href="YORU.ico" type="image/x-icon"/>
 
   <link rel="stylesheet" href="style.css"/>
 </head>
@@ -17,11 +17,9 @@
 
   <!-- 上方三欄 -->
   <section class="top-grid">
-
-    <!-- 左：居服薪資(6/4) / 加成次數（示意存放，不影響下方計算） -->
+    <!-- 左：居服薪資(6/4) / 加成（僅示意存放，不影響額度池） -->
     <div class="card">
       <h2>居服薪資(6/4)</h2>
-
       <div class="addon-hint">
         預計月薪資：<span id="addonHint" class="warn">請儲存加成次數</span>
       </div>
@@ -34,9 +32,8 @@
       </div>
 
       <button class="btn primary" onclick="saveAddons()">儲存</button>
-
       <p class="note">
-        ※此區僅示意加成欄位（ AA05 / AA06 / AA08 / AA09 / AA11 ），與下方服務額度計算分開，不影響補助額度。
+        ※此區僅示意加成欄位（AA05/AA06/AA08/AA09/AA11），與下方服務額度計算分開，不影響補助額度。
       </p>
     </div>
 
@@ -44,7 +41,6 @@
     <div class="card">
       <h2>基本資料</h2>
 
-      <!-- 身分別 -->
       <div class="field">
         <label class="lbl">身分別</label>
         <div class="seg">
@@ -54,7 +50,6 @@
         </div>
       </div>
 
-      <!-- 外籍看護 -->
       <div class="field">
         <label class="lbl">外籍看護</label>
         <div class="seg">
@@ -63,7 +58,6 @@
         </div>
       </div>
 
-      <!-- CMS 等級（縮小圓角 pill） -->
       <div class="field">
         <label class="lbl">CMS等級</label>
         <div class="seg compact">
@@ -77,7 +71,6 @@
         </div>
       </div>
 
-      <!-- 留用額度 / 額度總計(唯讀) -->
       <div class="field">
         <label class="lbl">留用額度</label>
         <input id="keepQuota" type="number" min="0" step="1" placeholder="例如 3000">
@@ -100,7 +93,6 @@
       </div>
       <div id="overMsg" class="over hidden"></div>
     </div>
-
   </section>
 
   <!-- 下方服務表 -->
@@ -109,7 +101,6 @@
     <div id="tables"></div>
   </section>
 
-  <!-- 操作 -->
   <div class="actions">
     <button class="btn" onclick="resetAll()">重置</button>
   </div>
