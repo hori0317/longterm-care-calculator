@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>長照額度試算</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <h1>長照額度試算</h1>
+  <header>
+    <h1>長照額度試算</h1>
+    <button id="resetBtn" onclick="resetAll()">重置</button>
+  </header>
 
   <section class="condition">
     <h2>案主條件</h2>
     <label>長照等級：
-      <select id="cms_level">
+      <select id="cmsLevel">
         <option value="2">2級</option>
         <option value="3">3級</option>
         <option value="4">4級</option>
@@ -24,26 +27,22 @@
     </label>
     <label>身分別：
       <select id="identity">
-        <option value="0.16">一般戶</option>
-        <option value="0.05">中低收入戶</option>
-        <option value="0">低收入戶</option>
-      </select>
-    </label>
-    <label>外籍看護：
-      <select id="foreign_caregiver">
-        <option value="0">無</option>
-        <option value="1">有</option>
+        <option value="一般戶">一般戶</option>
+        <option value="中低收入戶">中低收入戶</option>
+        <option value="低收入戶">低收入戶</option>
       </select>
     </label>
   </section>
 
-  <section>
-    <h2>服務安排</h2>
-    <div id="tables"></div>
-  </section>
+  <section id="tables"></section>
 
-  <button class="calculate-btn" onclick="calculate()">計算</button>
-  <div id="results"></div>
+  <section id="results">
+    <h2>試算結果</h2>
+    <p id="totalAmount">總額：0 元</p>
+    <p id="limitAmount">補助上限：0 元</p>
+    <p id="remainAmount">剩餘額度：0 元</p>
+    <p id="overMsg" class="hidden">⚠️ 超過補助額度！</p>
+  </section>
 
   <script src="script.js"></script>
 </body>
