@@ -1,5 +1,5 @@
 /**********************
- * 服務清單
+ * 服務清單（依你提供之精簡碼別）
  **********************/
 const serviceData = {
   BA: [
@@ -35,7 +35,7 @@ const serviceData = {
     { code: "BD02", name: "社區式晚餐", price: 150 },
     { code: "BD03", name: "社區式服務交通接送", price: 115 },
   ],
-  // 合併後的 C 碼（專業服務）
+  // 合併的 C 碼（專業服務）
   C: [
     { code: "CA07", name: "IADLs/ADLs 復能照護(3次含評估)", price: 4500 },
     { code: "CA08", name: "ISP擬定與執行(4次含評估)", price: 6000 },
@@ -46,24 +46,20 @@ const serviceData = {
     { code: "CC01", name: "居家環境安全或無障礙空間規劃", price: 2000 },
     { code: "CD02", name: "居家護理指導與諮詢(3次+1次評估)", price: 6000 },
   ],
-  GA: [
-    { code: "GA09", name: "喘息2小時/支", price: 770 },
-  ],
-  SC: [
-    { code: "SC09", name: "短照2小時/支", price: 770 },
-  ],
+  GA: [{ code: "GA09", name: "喘息2小時/支", price: 770 }],
+  SC: [{ code: "SC09", name: "短照2小時/支", price: 770 }],
 };
 
 /********* 左卡加成（示意，可儲存） *********/
 const addonItems = [
-  { code: "AA05", key: "AA05" },
-  { code: "AA06", key: "AA06" },
-  { code: "AA08", key: "AA08" },
-  { code: "AA09", key: "AA09" },
-  { code: "AA11", key: "AA11" },
+  { code: "AA05", key: "AA05", price: 0 },
+  { code: "AA06", key: "AA06", price: 0 },
+  { code: "AA08", key: "AA08", price: 0 },
+  { code: "AA09", key: "AA09", price: 0 },
+  { code: "AA11", key: "AA11", price: 0 },
 ];
 
-/********* 上限（依身分別×CMS等級） *********/
+/********* 上限（依身分別×CMS 等級） *********/
 const limitTable = {
   "一般戶":     [0, 0, 14320, 17920, 21520, 25120, 28720, 32320, 35920],
   "中低收入戶": [0, 0, 27100, 33900, 40700, 47500, 54300, 61100, 67900],
@@ -90,7 +86,7 @@ function renderAddons(){
     row.className = "addon-row";
     row.innerHTML = `
       <div>${it.code}</div>
-      <div><input type="number" id="${it.key}_p" min="0" step="1" value="${saved[`${it.key}_p`]??0}"></div>
+      <div>${(it.price||0).toLocaleString()}</div>
       <div><input type="number" id="${it.key}_n" min="0" step="1" value="${saved[`${it.key}_n`]??0}"></div>
     `;
     host.appendChild(row);
@@ -99,7 +95,6 @@ function renderAddons(){
 function saveAddons(){
   const data = {};
   addonItems.forEach(it=>{
-    data[`${it.key}_p`] = parseInt($(`#${it.key}_p`).value)||0;
     data[`${it.key}_n`] = parseInt($(`#${it.key}_n`).value)||0;
   });
   localStorage.setItem("addons", JSON.stringify(data));
@@ -108,7 +103,7 @@ function saveAddons(){
   hint.classList.remove("warn");
 }
 
-/********* 產生各表格（C 碼合併） *********/
+/********* 產生各表格（含『總次數』欄） *********/
 function renderTables(){
   const container = $("#tables");
   container.innerHTML = "";
@@ -134,6 +129,7 @@ function renderTables(){
           <th>單價</th>
           <th>週次數</th>
           <th>月次數</th>
+          <th>總次數</th>
           <th>總金額</th>
         </tr>
       </thead>
@@ -144,21 +140,33 @@ function renderTables(){
     serviceData[code].forEach((item, i)=>{
       const tr = document.createElement("tr");
 
+      // 服務項目、單價
       const c0 = tr.insertCell(); c0.textContent = `${item.code} ${item.name}`;
       const c1 = tr.insertCell(); c1.textContent = item.price.toLocaleString();
 
+      // 週次數（可輸入）
       const c2 = tr.insertCell();
       const week = document.createElement("input");
       week.type = "number"; week.min="1"; week.step="1"; week.value="0";
-      week.oninput = ()=>updateRow(code, i);
+      week.oninput = ()=>updateRowFromWeek(code, i);
       c2.appendChild(week);
 
+      // 月次數（唯讀顯示）
       const c3 = tr.insertCell();
       const month = document.createElement("input");
-      month.type = "number"; month.min="0"; month.step="1"; month.value="0"; month.readOnly = true;
+      month.type = "number"; month.min="0"; month.step="1"; month.value="0";
+      month.readOnly = true;
       c3.appendChild(month);
 
-      const c4 = tr.insertCell(); c4.textContent = "0";
+      // 總次數（可輸入）
+      const c4 = tr.insertCell();
+      const total = document.createElement("input");
+      total.type = "number"; total.min="0"; total.step="1"; total.value="0";
+      total.oninput = ()=>updateRowFromTotal(code, i);
+      c4.appendChild(total);
+
+      // 總金額（顯示）
+      const c5 = tr.insertCell(); c5.textContent = "0";
 
       tbody.appendChild(tr);
     });
@@ -167,18 +175,36 @@ function renderTables(){
   });
 }
 
-/********* 週→月(無條件進位)、更新金額 *********/
-function updateRow(code, idx){
+/********* 由「週次數」更新（月=ceil(週*4.5)，總=月） *********/
+function updateRowFromWeek(code, idx){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table  = document.querySelectorAll("#tables table")[tIndex];
   const row    = table.tBodies[0].rows[idx];
 
   const price = serviceData[code][idx].price;
   const w = Math.max(0, parseInt(row.cells[2].querySelector("input").value)||0);
-  const m = Math.ceil(w * WEEKS_PER_MONTH);
 
-  row.cells[3].querySelector("input").value = m;
-  row.cells[4].textContent = (price * m).toLocaleString();
+  const m = Math.ceil(w * WEEKS_PER_MONTH);
+  row.cells[3].querySelector("input").value = m;     // 月
+  row.cells[4].querySelector("input").value = m;     // 總
+  row.cells[row.cells.length-1].textContent = (price * m).toLocaleString();
+
+  updateResults();
+}
+
+/********* 由「總次數」更新（月=總，週=ceil(總/4.5)） *********/
+function updateRowFromTotal(code, idx){
+  const tIndex = Object.keys(serviceData).indexOf(code);
+  const table  = document.querySelectorAll("#tables table")[tIndex];
+  const row    = table.tBodies[0].rows[idx];
+
+  const price = serviceData[code][idx].price;
+  const tot = Math.max(0, parseInt(row.cells[4].querySelector("input").value)||0);
+
+  const w = Math.ceil(tot / WEEKS_PER_MONTH);
+  row.cells[2].querySelector("input").value = w;     // 週
+  row.cells[3].querySelector("input").value = tot;   // 月
+  row.cells[row.cells.length-1].textContent = (price * tot).toLocaleString();
 
   updateResults();
 }
@@ -187,15 +213,15 @@ function updateRow(code, idx){
 function bindHeaderInputs(){
   document.querySelectorAll("input[name='idty']").forEach(el=>el.addEventListener("change", updateResults));
   document.querySelectorAll("input[name='cms']").forEach(el=>el.addEventListener("change", updateResults));
-  $("#keepQuota").addEventListener("input", updateResults);
 }
 
 /********* 摘要計算 *********/
 function updateResults(){
-  // 服務總額
+  // 服務總額（取每列最後一欄）
   let total = 0;
   document.querySelectorAll("#tables tbody tr").forEach(tr=>{
-    total += parseInt(tr.cells[4].textContent.replace(/,/g,""))||0;
+    const last = tr.cells[tr.cells.length-1].textContent;
+    total += parseInt(last.replace(/,/g,""))||0;
   });
 
   // 條件
@@ -228,9 +254,10 @@ function resetAll(){
   document.getElementById("cms2").checked = true;
 
   document.querySelectorAll("#tables tbody tr").forEach(tr=>{
-    tr.cells[2].querySelector("input").value = 0;
-    tr.cells[3].querySelector("input").value = 0;
-    tr.cells[4].textContent = "0";
+    tr.cells[2].querySelector("input").value = 0; // 週
+    tr.cells[3].querySelector("input").value = 0; // 月
+    tr.cells[4].querySelector("input").value = 0; // 總
+    tr.cells[tr.cells.length-1].textContent = "0";
   });
 
   $("#addonHint").textContent = "請儲存加成次數";
