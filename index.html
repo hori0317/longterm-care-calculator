@@ -4,117 +4,116 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>額度試算</title>
-  <link rel="stylesheet" href="style.css"/>
+
+  <!-- 網站圖示 -->
   <link rel="icon" href="YORU.ico" type="image/x-icon">
+
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <header class="topbar">
-    <div class="title">額度試算</div>
-    <div class="actions">
-      <button type="button" id="btnReset">重置</button>
-      <button type="button" id="btnPrint">列印</button>
-    </div>
+  <header class="app-title">
+    <h1>額度試算</h1>
   </header>
 
-  <main class="grid">
-    <!-- 左：居服薪資(6/4) 加成欄（僅示意，可儲存） -->
-    <section class="card">
+  <!-- 上方三欄 -->
+  <section class="top-grid">
+
+    <!-- 左：居服薪資(6/4) / 加成次數（示意存放，不影響下方計算） -->
+    <div class="card">
       <h2>居服薪資(6/4)</h2>
-      <div class="muted">※此區僅示意加成欄位（AA05/AA06/AA08/AA09/AA11），與下方服務額度計算分開，不影響補助額度。</div>
-      <div class="addon-head">
-        <span class="col1">項目</span>
-        <span class="col2">價格</span>
-        <span class="col3">次數</span>
+
+      <div class="addon-hint">
+        預計月薪資：<span id="addonHint" class="warn">請儲存加成次數</span>
       </div>
-      <div id="addonRows" class="addon-body"></div>
-      <div class="addon-actions">
-        <button type="button" id="btnSaveAddons">儲存</button>
-        <span id="addonHint" class="warn">請儲存加成次數</span>
+
+      <div class="addon-list">
+        <div class="addon-head">
+          <div>項目</div><div>價格</div><div>次數</div>
+        </div>
+        <div id="addonRows"></div>
       </div>
-    </section>
+
+      <button class="btn primary" onclick="saveAddons()">儲存</button>
+
+      <p class="note">
+        ※此區僅示意加成欄位（ AA05 / AA06 / AA08 / AA09 / AA11 ），與下方服務額度計算分開，不影響補助額度。
+      </p>
+    </div>
 
     <!-- 中：基本資料 -->
-    <section class="card">
+    <div class="card">
       <h2>基本資料</h2>
 
+      <!-- 身分別 -->
       <div class="field">
-        <label class="label">身分別</label>
-        <div class="chip-row">
-          <label class="chip">
-            <input type="radio" name="idty" value="一般戶" id="id-normal" checked>
-            <span>一般戶</span>
-          </label>
-          <label class="chip">
-            <input type="radio" name="idty" value="中低收入戶">
-            <span>中低收</span>
-          </label>
-          <label class="chip">
-            <input type="radio" name="idty" value="低收入戶">
-            <span>低收</span>
-          </label>
+        <label class="lbl">身分別</label>
+        <div class="seg">
+          <label><input type="radio" name="idty" id="id-normal" value="一般戶" checked> 一般戶</label>
+          <label><input type="radio" name="idty" value="中低收入戶"> 中低收</label>
+          <label><input type="radio" name="idty" value="低收入戶"> 低收</label>
         </div>
       </div>
 
+      <!-- 外籍看護 -->
       <div class="field">
-        <label class="label">CMS 等級</label>
-        <div class="chip-row cms">
-          <label class="chip small"><input type="radio" name="cms" value="2" id="cms2" checked><span>2</span></label>
-          <label class="chip small"><input type="radio" name="cms" value="3"><span>3</span></label>
-          <label class="chip small"><input type="radio" name="cms" value="4"><span>4</span></label>
-          <label class="chip small"><input type="radio" name="cms" value="5"><span>5</span></label>
-          <label class="chip small"><input type="radio" name="cms" value="6"><span>6</span></label>
-          <label class="chip small"><input type="radio" name="cms" value="7"><span>7</span></label>
-          <label class="chip small"><input type="radio" name="cms" value="8"><span>8</span></label>
+        <label class="lbl">外籍看護</label>
+        <div class="seg">
+          <label><input type="radio" name="foreign" id="fg-no" value="0" checked> 無</label>
+          <label><input type="radio" name="foreign" id="fg-yes" value="1"> 有</label>
         </div>
       </div>
 
-      <div class="two">
-        <div class="field">
-          <label class="label">留用額度</label>
-          <input id="keepQuota" type="number" inputmode="numeric" placeholder="例如 3000">
-        </div>
-        <div class="field">
-          <label class="label">額度總計</label>
-          <input id="grantQuota" type="text" readonly>
+      <!-- CMS 等級（縮小圓角 pill） -->
+      <div class="field">
+        <label class="lbl">CMS等級</label>
+        <div class="seg compact">
+          <label><input type="radio" name="cms" id="cms2" value="2" checked>2</label>
+          <label><input type="radio" name="cms" value="3">3</label>
+          <label><input type="radio" name="cms" value="4">4</label>
+          <label><input type="radio" name="cms" value="5">5</label>
+          <label><input type="radio" name="cms" value="6">6</label>
+          <label><input type="radio" name="cms" value="7">7</label>
+          <label><input type="radio" name="cms" value="8">8</label>
         </div>
       </div>
-    </section>
+
+      <!-- 留用額度 / 額度總計(唯讀) -->
+      <div class="field">
+        <label class="lbl">留用額度</label>
+        <input id="keepQuota" type="number" min="0" step="1" placeholder="例如 3000">
+      </div>
+
+      <div class="field">
+        <label class="lbl">給付額度(主額度＋留用)</label>
+        <input id="grantQuota" type="text" readonly>
+      </div>
+    </div>
 
     <!-- 右：個案額度及自付額 -->
-    <aside class="card side">
+    <div class="card">
       <h2>個案額度及自付額</h2>
-      <div class="metric">
-        <div class="name">額度總計</div>
-        <div id="sumGrant" class="value">0</div>
+      <div class="summary">
+        <div class="row"><span>額度總計：</span><strong id="sumGrant">0</strong></div>
+        <div class="row"><span>剩餘額度：</span><strong id="sumRemain">0</strong></div>
+        <div class="row"><span>部分負擔：</span><strong id="sumCopay">0</strong></div>
+        <div class="row"><span>自付總計：</span><strong id="sumSelfpay">0</strong></div>
       </div>
-      <div class="metric">
-        <div class="name">剩餘額度</div>
-        <div id="sumRemain" class="value">0</div>
-      </div>
-      <div class="metric">
-        <div class="name">部分負擔</div>
-        <div id="sumCopay" class="value">0</div>
-      </div>
-      <div class="metric">
-        <div class="name">自付總計</div>
-        <div id="sumSelfpay" class="value">0</div>
-      </div>
-      <hr/>
-      <div class="metric small">
-        <div class="name">服務總額</div>
-        <div id="sumTotal" class="value">0</div>
-      </div>
-      <p id="overMsg" class="over hidden">※ 服務總額已超過可用額度，差額將併入自付總計。</p>
-    </aside>
-  </main>
+      <div id="overMsg" class="over hidden"></div>
+    </div>
 
-  <!-- 服務表格 -->
-  <section class="card full">
+  </section>
+
+  <!-- 下方服務表 -->
+  <section class="card">
     <h2>服務安排</h2>
     <div id="tables"></div>
   </section>
 
+  <!-- 操作 -->
+  <div class="actions">
+    <button class="btn" onclick="resetAll()">重置</button>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
-
