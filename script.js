@@ -1,5 +1,8 @@
+console.log('script.js loaded ✔');
+
 /**********************
  * 服務清單
+ *  - BA / BD / C（合併CA/CB/CC/CD）/ GA / SC
  **********************/
 const serviceData = {
   BA: [
@@ -46,11 +49,11 @@ const serviceData = {
     { code: "CC01", name: "居家環境安全或無障礙空間規劃", price: 2000 },
     { code: "CD02", name: "居家護理指導與諮詢(3次+1次評估)", price: 6000 },
   ],
-  GA: [  // 喘息（獨立額度池）
-    { code: "GA09", name: "喘息2小時/支", price: 770 },
+  GA: [
+    { code: "GA09", name: "喘息 2 小時/支", price: 770 },
   ],
-  SC: [  // 短照（獨立額度池；需外籍看護）
-    { code: "SC09", name: "短照2小時/支", price: 770 },
+  SC: [
+    { code: "SC09", name: "短照 2 小時/支", price: 770 },
   ],
 };
 
@@ -63,28 +66,31 @@ const addonItems = [
   { code: "AA11", key: "AA11" },
 ];
 
-/********* 主額度（依身分別×CMS） *********/
+/********* 上限（依身分別×CMS等級） *********/
 const limitTable = {
   "一般戶":     [0, 0, 14320, 17920, 21520, 25120, 28720, 32320, 35920],
   "中低收入戶": [0, 0, 27100, 33900, 40700, 47500, 54300, 61100, 67900],
   "低收入戶":   [0, 0, 36000, 45000, 54000, 63000, 72000, 81000, 90000],
 };
-/********* GA/SC 獨立額度 *********/
-const GA_QUOTA = { 2:32340,3:32340,4:32340,5:32340,6:32340,7:48510,8:48510 };
-const SC_QUOTA = { 2:87780,3:87780,4:87780,5:87780,6:87780,7:71610,8:71610 };
+/********* GA/SC 專屬池 *********/
+const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
+const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
 const WEEKS_PER_MONTH = 4.5;
 const $ = (s)=>document.querySelector(s);
 
-window.onload = ()=>{
+document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
   bindHeaderInputs();
   updateSCAvailability();
   updateResults();
-};
 
-/********* 左卡加成 *********/
+  $("#btnSaveAddons").addEventListener('click', saveAddons);
+  $("#btnReset").addEventListener('click', resetAll);
+});
+
+/* ---------------- 左卡加成 ---------------- */
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
   const host = $("#addonRows");
@@ -112,26 +118,25 @@ function saveAddons(){
   hint.classList.remove("warn");
 }
 
-/********* 產生各表格（含 總次數 欄位） *********/
+/* ---------------- 產生各表格（含「總次數」欄） ---------------- */
 function renderTables(){
   const container = $("#tables");
   container.innerHTML = "";
 
-  Object.keys(serviceData).forEach(group=>{
+  Object.keys(serviceData).forEach(code=>{
     const titleMap = {
       BA:"BA碼（照顧服務）",
       BD:"BD碼（社區服務）",
       C:"C碼（專業服務）",
-      GA:"GA碼（喘息服務／獨立額度）",
-      SC:"SC碼（短期替代照顧／獨立額度，須外籍看護）",
+      GA:"GA碼（喘息服務）",
+      SC:"SC碼（短期替代照顧）",
     };
     const caption = document.createElement("div");
     caption.className = "table-title";
-    caption.textContent = titleMap[group] || `${group}碼`;
+    caption.textContent = titleMap[code] || `${code}碼`;
     container.appendChild(caption);
 
     const table = document.createElement("table");
-    table.dataset.group = group;
     table.innerHTML = `
       <thead>
         <tr>
@@ -147,35 +152,29 @@ function renderTables(){
     `;
     const tbody = table.querySelector("tbody");
 
-    serviceData[group].forEach((item, i)=>{
+    serviceData[code].forEach((item, i)=>{
       const tr = document.createElement("tr");
 
-      // 服務項目
       const c0 = tr.insertCell(); c0.textContent = `${item.code} ${item.name}`;
-      // 單價
       const c1 = tr.insertCell(); c1.textContent = item.price.toLocaleString();
 
-      // 週次數（整數，最小1；填0則表示不使用）
       const c2 = tr.insertCell();
       const week = document.createElement("input");
-      week.type="number"; week.min="1"; week.step="1"; week.value="0";
-      week.oninput = ()=>updateRow(group, i);
+      week.type = "number"; week.min="1"; week.step="1"; week.value="0";
+      week.addEventListener('input', ()=>updateRow(code, i));
       c2.appendChild(week);
 
-      // 月次數（週*4.5 無條件進位，唯讀）
       const c3 = tr.insertCell();
       const month = document.createElement("input");
-      month.type="number"; month.min="0"; month.step="1"; month.value="0"; month.readOnly = true;
+      month.type = "number"; month.min="0"; month.step="1"; month.value="0"; month.readOnly = true;
       c3.appendChild(month);
 
-      // 總次數（使用者可直接輸入；若 >0 則以它計價）
       const c4 = tr.insertCell();
       const totalCnt = document.createElement("input");
-      totalCnt.type="number"; totalCnt.min="0"; totalCnt.step="1"; totalCnt.value="0";
-      totalCnt.oninput = ()=>updateRow(group, i);
+      totalCnt.type = "number"; totalCnt.min="0"; totalCnt.step="1"; totalCnt.value="0";
+      totalCnt.addEventListener('input', ()=>updateRow(code, i, /*fromTotal*/true));
       c4.appendChild(totalCnt);
 
-      // 總金額
       const c5 = tr.insertCell(); c5.textContent = "0";
 
       tbody.appendChild(tr);
@@ -185,135 +184,161 @@ function renderTables(){
   });
 }
 
-/********* 週→月(無條件進位)、總次數優先、更新金額 *********/
-function updateRow(group, idx){
-  const table  = [...document.querySelectorAll("#tables table")].find(t=>t.dataset.group===group);
+/* 週→月(無條件進位)、總次數優先、更新金額 */
+function updateRow(code, idx, fromTotal=false){
+  const tIndex = Object.keys(serviceData).indexOf(code);
+  const table  = document.querySelectorAll("#tables table")[tIndex];
   const row    = table.tBodies[0].rows[idx];
 
-  const price = serviceData[group][idx].price;
+  const price = serviceData[code][idx].price;
+  const weekInput  = row.cells[2].querySelector("input");
+  const monthInput = row.cells[3].querySelector("input");
+  const totalInput = row.cells[4].querySelector("input");
 
-  // 週→月
-  const w = Math.max(0, parseInt(row.cells[2].querySelector("input").value)||0);
-  const m = Math.ceil(w * WEEKS_PER_MONTH);
-  row.cells[3].querySelector("input").value = m;
+  let week  = Math.max(0, parseInt(weekInput.value)||0);
+  let month = Math.ceil(week * WEEKS_PER_MONTH);
+  monthInput.value = month;
 
-  // 總次數 > 0 以總次數計；否則以月次數計
-  const cntUser = Math.max(0, parseInt(row.cells[4].querySelector("input").value)||0);
-  const useCnt = cntUser > 0 ? cntUser : m;
+  let totalCount = Math.max(0, parseInt(totalInput.value)||0);
+  const useCount = totalCount > 0 ? totalCount : month;
 
-  // 金額
-  row.cells[5].textContent = (price * useCnt).toLocaleString();
+  row.cells[5].textContent = (price * useCount).toLocaleString();
 
   updateResults();
 }
 
-/********* 綁定上方條件 & 外籍看護邏輯 *********/
+/* ---------------- 綁定上方條件 ---------------- */
 function bindHeaderInputs(){
   document.querySelectorAll("input[name='idty']").forEach(el=>el.addEventListener("change", updateResults));
-  document.querySelectorAll("input[name='cms']").forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
-  document.querySelectorAll("input[name='foreign']").forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
-  $("#keepQuota").addEventListener("input", updateResults);
+  document.querySelectorAll("input[name='cms']").forEach(el=>el.addEventListener("change", ()=>{
+    updateSCAvailability();
+    updateResults();
+  }));
+  document.querySelectorAll("input[name='foreign']").forEach(el=>el.addEventListener("change", ()=>{
+    updateSCAvailability();
+    updateResults();
+  }));
+  $("#keepQuota").addEventListener('input', updateResults);
 }
 
+/* 外籍看護＝否時，SC09 禁用 */
 function updateSCAvailability(){
-  const hasFG = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
-  const scTable = [...document.querySelectorAll("#tables table")].find(t=>t.dataset.group==="SC");
-  if(!scTable) return;
-  scTable.querySelectorAll("tbody tr").forEach(tr=>{
-    const week = tr.cells[2].querySelector("input");
-    const cnt  = tr.cells[4].querySelector("input");
-    if(hasFG){
-      week.disabled = cnt.disabled = false;
-    }else{
-      week.value = 0; cnt.value = 0;
-      week.disabled = cnt.disabled = true;
-      tr.cells[3].querySelector("input").value = 0;  // 月
-      tr.cells[5].textContent = "0";                 // 金額
+  const foreignYes = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
+  const tables = document.querySelectorAll("#tables table");
+  const scTableIndex = Object.keys(serviceData).indexOf("SC");
+  if (scTableIndex < 0 || !tables[scTableIndex]) return;
+
+  const inputs = tables[scTableIndex].querySelectorAll("input[type='number']");
+  inputs.forEach(inp=>{
+    inp.disabled = !foreignYes;
+    if (!foreignYes){
+      // 清空
+      inp.value = 0;
     }
   });
+
+  // 提醒字樣
+  const warnSC = $("#warnSCfg");
+  if (!foreignYes) warnSC.classList.remove("hidden");
+  else warnSC.classList.add("hidden");
 }
 
-/********* 摘要計算 *********
- * 額度總計 = 主額度(CMS×身分別表) + 留用額度
- * 剩餘額度 = max(主額度 - 主額度池消耗, 0)
- * 部分負擔 = 全部服務總額 × 身分別係數
- * 自付總計 = 部分負擔 + (主額度/GA/SC 的超額合計)
- ***********************************************/
+/* ---------------- 摘要計算 ---------------- */
 function updateResults(){
-  // 1) 逐表累計
-  const totalByGroup = { BA:0, BD:0, C:0, GA:0, SC:0 };
-  document.querySelectorAll("#tables table").forEach(table=>{
-    const g = table.dataset.group;
-    let sum = 0;
-    table.querySelectorAll("tbody tr").forEach(tr=>{
-      sum += parseInt(tr.cells[5].textContent.replace(/,/g,""))||0;
-    });
-    totalByGroup[g] = sum;
-  });
-  const totalAll = Object.values(totalByGroup).reduce((a,b)=>a+b,0);
+  // 累計各群組金額，同時計算 GA/SC 的支出
+  let totalMain = 0; // 主額度要扣的（不包含 GA/SC）
+  let totalGA   = 0;
+  let totalSC   = 0;
 
-  // 2) 條件
+  // 走訪每一群組的表格
+  const groupKeys = Object.keys(serviceData);
+  const tables = document.querySelectorAll("#tables table");
+
+  groupKeys.forEach((gKey, gi)=>{
+    const rows = tables[gi]?.tBodies[0]?.rows || [];
+    rows.forEach((tr, idx)=>{
+      const item = serviceData[gKey][idx];
+      const price = item.price;
+      const week  = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
+      const month = Math.ceil(week * WEEKS_PER_MONTH);
+      const total = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
+      const useCnt = total > 0 ? total : month;
+      const amount = price * useCnt;
+
+      if (gKey === "GA") totalGA += amount;
+      else if (gKey === "SC") totalSC += amount;
+      else totalMain += amount;
+    });
+  });
+
+  // 條件
   const idty = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
   const cms  = parseInt((document.querySelector("input[name='cms']:checked")||{}).value || "2");
   const keep = Math.max(0, parseInt($("#keepQuota").value)||0);
-  const hasFG = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
 
-  // 3) 額度池
-  const grantMain = (limitTable[idty][cms]||0) + keep;   // 主額度（+留用）
-  const grantGA   = GA_QUOTA[cms] || 0;                  // GA 獨立額度
-  const grantSC   = hasFG ? (SC_QUOTA[cms] || 0) : 0;    // SC 獨立額度（需外籍看護）
+  const mainGrant = (limitTable[idty][cms]||0) + keep; // 主額度 + 留用
+  const gaGrant   = GA_CAP[cms] || 0;
+  const scGrant   = SC_CAP[cms] || 0;
 
-  // 4) 消耗
-  const useMain = (totalByGroup.BA||0) + (totalByGroup.BD||0) + (totalByGroup.C||0);
-  const useGA   = totalByGroup.GA||0;
-  const useSC   = totalByGroup.SC||0;
+  // 身分別部分負擔比率
+  const rate = (idty === "一般戶") ? 0.16 : (idty === "中低收入戶" ? 0.05 : 0);
 
-  // 5) 部分負擔
-  const idRate = idty === "一般戶" ? 0.16 : (idty === "中低收入戶" ? 0.05 : 0);
-  const copay  = Math.round(totalAll * idRate);
+  // 主額度：只對「非GA/SC」合計的金額做比較
+  const overMain = Math.max(0, totalMain - mainGrant);
+  const remainMain = Math.max(0, mainGrant - totalMain);
 
-  // 6) 超額
-  const overMain = Math.max(0, useMain - grantMain);
-  const overGA   = Math.max(0, useGA   - grantGA);
-  const overSC   = Math.max(0, useSC   - grantSC);
-  const overAll  = overMain + overGA + overSC;
+  // 專屬池：只對 GA 與 SC 的金額做比較（不影響主額度）
+  const overGA  = Math.max(0, totalGA - gaGrant);
+  const overSC  = Math.max(0, totalSC - scGrant);
 
-  // 7) 顯示
-  $("#grantQuota").value   = grantMain.toLocaleString();
-  $("#sumGrant").textContent  = grantMain.toLocaleString();
-  $("#sumRemain").textContent = Math.max(0, grantMain - useMain).toLocaleString();
-  $("#sumCopay").textContent  = copay.toLocaleString();
-  $("#sumSelfpay").textContent= (copay + overAll).toLocaleString();
+  // 部分負擔：依「全部服務總額」乘以比率
+  const grandTotal = totalMain + totalGA + totalSC;
+  const copay = Math.round(grandTotal * rate);
 
-  // 8) 超額訊息
-  const over = $("#overMsg");
-  const msgs = [];
-  if(overMain>0) msgs.push(`主額度超額 ${overMain.toLocaleString()} 元`);
-  if(overGA>0)   msgs.push(`GA 喘息額度超額 ${overGA.toLocaleString()} 元`);
-  if(overSC>0)   msgs.push(`SC 短照額度超額 ${overSC.toLocaleString()} 元`);
-  if(msgs.length){
-    over.classList.remove("hidden");
-    over.innerHTML = msgs.map(s=>`• ${s}`).join("<br>");
-  }else{
-    over.classList.add("hidden");
-    over.innerHTML = "";
-  }
+  // 自付總計：部分負擔 + 主額度不足的差額（GA/SC 超額不會補貼，亦需自付）
+  const selfpay = copay + overMain + overGA + overSC;
+
+  // 輸出
+  $("#grantQuota").value = mainGrant.toLocaleString();
+  $("#sumGrant").textContent = mainGrant.toLocaleString();
+  $("#sumRemain").textContent = remainMain.toLocaleString();
+  $("#sumCopay").textContent = copay.toLocaleString();
+  $("#sumSelfpay").textContent = selfpay.toLocaleString();
+
+  // 提示：超額顯示
+  const elOverMain = $("#overMain");
+  const elOverGA   = $("#overGA");
+  const elOverSC   = $("#overSC");
+
+  if (overMain > 0) elOverMain.classList.remove("hidden");
+  else elOverMain.classList.add("hidden");
+
+  if (overGA > 0) elOverGA.classList.remove("hidden");
+  else elOverGA.classList.add("hidden");
+
+  // 只有外籍看護＝有時才允許 SC，否則 SC 金額會是 0
+  const foreignYes = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
+  if (overSC > 0 && foreignYes) elOverSC.classList.remove("hidden");
+  else elOverSC.classList.add("hidden");
 }
 
-/********* 重置 *********/
+/* ---------------- 重置 ---------------- */
 function resetAll(){
+  // 條件
   $("#keepQuota").value = "";
-  document.getElementById("id-normal").checked = true;
-  document.getElementById("cms2").checked = true;
-  document.getElementById("fg-no").checked = true;
+  $("#id-normal").checked = true;
+  $("#cms2").checked = true;
+  $("#fg-no").checked = true;
 
+  // 表格清空
   document.querySelectorAll("#tables tbody tr").forEach(tr=>{
-    tr.cells[2].querySelector("input").value = 0;   // 週
-    tr.cells[3].querySelector("input").value = 0;   // 月
-    tr.cells[4].querySelector("input").value = 0;   // 總次數
-    tr.cells[5].textContent = "0";                  // 金額
+    tr.cells[2].querySelector("input").value = 0; // 週
+    tr.cells[3].querySelector("input").value = 0; // 月
+    tr.cells[4].querySelector("input").value = 0; // 總次數
+    tr.cells[5].textContent = "0";               // 金額
   });
 
+  // 加成提示還原
   $("#addonHint").textContent = "請儲存加成次數";
   $("#addonHint").classList.add("warn");
 
