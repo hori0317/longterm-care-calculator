@@ -179,3 +179,15 @@ input[type="number"]{
   .cards-grid{ grid-template-columns:1fr; }
 }
 @page{ margin:16mm; } /* 列印邊界 */
+
+.card {
+  min-width: 280px;      /* 每張卡片最小寬度，避免字擠在一起 */
+  overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+  .cards-grid {
+    grid-template-columns: 1fr;   /* 螢幕窄時改成一欄排版 */
+    min-width: unset;
+  }
+}
