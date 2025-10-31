@@ -4,117 +4,99 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>額度試算</title>
-  <!-- 網站小圖示（請把 YORU.ico 放在專案根目錄） -->
-  <link rel="icon" href="YORU.ico" type="image/x-icon">
+  <link rel="icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css"/>
+  <script src="script.js" defer></script>
 </head>
 <body>
-  <header class="page-title">
-    <h1>額度試算</h1>
-  </header>
+  <header class="app-title">額度試算</header>
 
-  <!-- 三欄頂部：左卡（加成）、中卡（基本資料）、右卡（個案額度與自付額） -->
-  <section class="top-row">
-    <!-- 左：居服薪資(6/4) -->
-    <div class="card">
-      <div class="card-title">居服薪資(6/4)</div>
-
-      <div class="addon-hint">
-        預計月薪資：<span id="addonHint" class="warn">請儲存加成次數</span>
-      </div>
+  <main class="grid-3">
+    <!-- 左：居服薪資 -->
+    <section class="card">
+      <h2>居服薪資(6/4)</h2>
+      <div class="muted">預計月薪資：<span class="warn">請儲存加成次數</span></div>
 
       <div class="addon-header">
-        <div>項目</div>
-        <div>價格</div>
-        <div>次數</div>
+        <div>項目</div><div>價格</div><div>次數</div>
       </div>
+      <div id="addonRows" class="addon-rows"></div>
 
-      <div id="addonRows" class="addon-rows"><!-- 由 JS 產生 --></div>
+      <button class="btn" id="btnSaveAddons">儲存</button>
+      <div id="addonHint" class="muted warn">請儲存加成次數</div>
 
-      <div class="addon-actions">
-        <button class="btn" id="btnSaveAddons">儲存</button>
-      </div>
-
-      <div class="addon-note">
-        ※此區僅示意加成欄位（AA05 / AA06 / AA08 / AA09 / AA11），與下方服務額度試算分開，不影響補助額度。
-      </div>
-    </div>
+      <p class="note">
+        ※此區僅示意加成欄位（AA05 / AA06 / AA08 / AA09 / AA11），與下方服務額度計算分開，不影響補助額度。
+      </p>
+    </section>
 
     <!-- 中：基本資料 -->
-    <div class="card">
-      <div class="card-title">基本資料</div>
+    <section class="card">
+      <h2>基本資料</h2>
 
       <div class="field">
-        <label>身分別：</label>
-        <div class="chip-group">
-          <label class="chip"><input type="radio" name="idty" id="id-normal" value="一般戶" checked><span>一般戶</span></label>
-          <label class="chip"><input type="radio" name="idty" value="中低收入戶"><span>中低收</span></label>
-          <label class="chip"><input type="radio" name="idty" value="低收入戶"><span>低收</span></label>
+        <label>身分別</label>
+        <div class="seg">
+          <label><input id="id-normal" type="radio" name="idty" value="一般戶" checked> 一般戶</label>
+          <label><input type="radio" name="idty" value="中低收入戶"> 中低收</label>
+          <label><input type="radio" name="idty" value="低收入戶"> 低收</label>
         </div>
       </div>
 
       <div class="field">
-        <label>外籍看護：</label>
-        <div class="chip-group">
-          <label class="chip"><input type="radio" name="foreign" id="fg-no" value="0" checked><span>無</span></label>
-          <label class="chip"><input type="radio" name="foreign" id="fg-yes" value="1"><span>有</span></label>
+        <label>外籍看護</label>
+        <div class="seg">
+          <label><input type="radio" name="foreign" value="0" checked> 無</label>
+          <label><input type="radio" name="foreign" value="1"> 有</label>
         </div>
       </div>
 
       <div class="field">
-        <label>CMS等級</label>
-        <div class="chip-group small">
-          <label class="chip"><input type="radio" name="cms" id="cms2" value="2" checked><span>2</span></label>
-          <label class="chip"><input type="radio" name="cms" value="3"><span>3</span></label>
-          <label class="chip"><input type="radio" name="cms" value="4"><span>4</span></label>
-          <label class="chip"><input type="radio" name="cms" value="5"><span>5</span></label>
-          <label class="chip"><input type="radio" name="cms" value="6"><span>6</span></label>
-          <label class="chip"><input type="radio" name="cms" value="7"><span>7</span></label>
-          <label class="chip"><input type="radio" name="cms" value="8"><span>8</span></label>
+        <label>CMS 等級</label>
+        <div class="seg compact">
+          <label><input id="cms2" type="radio" name="cms" value="2" checked> 2</label>
+          <label><input id="cms3" type="radio" name="cms" value="3"> 3</label>
+          <label><input id="cms4" type="radio" name="cms" value="4"> 4</label>
+          <label><input id="cms5" type="radio" name="cms" value="5"> 5</label>
+          <label><input id="cms6" type="radio" name="cms" value="6"> 6</label>
+          <label><input id="cms7" type="radio" name="cms" value="7"> 7</label>
+          <label><input id="cms8" type="radio" name="cms" value="8"> 8</label>
         </div>
       </div>
 
       <div class="field">
         <label>留用額度</label>
-        <input id="keepQuota" type="number" min="0" step="1" placeholder="例如 3000">
+        <input id="keepQuota" type="number" inputmode="numeric" placeholder="例如 3000">
       </div>
 
       <div class="field">
         <label>給付額度（主額度＋留用）</label>
         <input id="grantQuota" type="text" readonly>
       </div>
-    </div>
+    </section>
 
-    <!-- 右：個案額度及自付額 -->
-    <div class="card">
-      <div class="card-title">個案額度及自付額</div>
-      <ul class="summary">
-        <li><span>額度總計：</span><strong id="sumGrant">0</strong></li>
-        <li><span>剩餘額度：</span><strong id="sumRemain">0</strong></li>
-        <li><span>部分負擔：</span><strong id="sumCopay">0</strong></li>
-        <li><span>自付總計：</span><strong id="sumSelfpay">0</strong></li>
-      </ul>
+    <!-- 右：個案額度與自付額 -->
+    <section class="card">
+      <h2>個案額度及自付額</h2>
+      <div class="kv"><div>額度總計：</div><div id="sumGrant">0</div></div>
+      <div class="kv"><div>剩餘額度：</div><div id="sumRemain">0</div></div>
+      <div class="kv"><div>部分負擔：</div><div id="sumCopay">0</div></div>
+      <div class="kv strong"><div>自付總計：</div><div id="sumSelfpay">0</div></div>
 
-      <div id="poolAlerts" class="alerts">
-        <!-- 超額提示（主額度/GA/SC）由 JS 控制顯示 -->
-        <div id="overMain" class="alert hidden">主額度不足：已超出主額度。</div>
-        <div id="overGA" class="alert hidden">喘息（GA09）額度不足：已超出專屬額度。</div>
-        <div id="overSC" class="alert hidden">短照（SC09）額度不足：已超出專屬額度。</div>
-        <div id="warnSCfg" class="alert hidden">短照（SC09）需「外籍看護：有」。已停用相關輸入。</div>
-      </div>
-    </div>
-  </section>
+      <div id="overMain" class="alert hidden">主額度已超額，超出部分將列入自付。</div>
+      <div id="overGA" class="alert hidden">GA09 喘息額度已超額，超出部分將列入自付。</div>
+      <div id="overSC" class="alert hidden">SC09 短照額度已超額，超出部分將列入自付。</div>
+    </section>
+  </main>
 
-  <!-- 服務安排 -->
-  <section class="services">
+  <section class="card full">
     <h2>服務安排</h2>
-    <div id="tables"><!-- 由 JS 產生 --></div>
+    <div id="warnSCfg" class="alert hidden">未選「外籍看護：有」，SC09 短照不可使用。</div>
+    <div id="tables"></div>
   </section>
 
-  <div class="footer-actions">
+  <div class="toolbar">
     <button class="btn ghost" id="btnReset">重置</button>
   </div>
-
-  <script defer src="script.js"></script>
 </body>
 </html>
