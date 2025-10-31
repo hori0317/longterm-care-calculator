@@ -1,20 +1,20 @@
 :root{
-  /* 背景主調：柔和淡黃色系 */
-  --bg:#fffbea;          /* 整體背景：米黃 */
-  --card:#fffef5;        /* 卡片內底：更亮的奶油白 */
-  --line:#e3e0b5;        /* 線條：淡黃灰 */
+  /* 主背景與卡片 */
+  --bg:#fff6d5;         /* 柔亮奶油黃，比原本更顯色 */
+  --card:#fffdf5;       /* 卡片偏暖白，仍有層次 */
+  --line:#e6dca8;       /* 線條黃灰 */
 
-  /* 文字與輔助色 */
-  --ink:#3b3b1f;         /* 深墨綠棕，讓文字有柔和對比 */
-  --muted:#75734a;       /* 次文字：灰黃綠 */
+  /* 文字 */
+  --ink:#3b3a1f;
+  --muted:#78714f;
 
-  /* 綠色系強調色（維持原品牌感） */
-  --green:#2e7d32;       /* 深綠（按鈕、標線主色） */
-  --green-2:#198754;     /* 中綠（主按鈕亮版） */
+  /* 綠色主題 */
+  --green:#2f7d32;
+  --green-2:#0f766e;
 
-  /* 其他顏色 */
+  /* 其他 */
   --orange:#f59e0b;
-  --graybtn:#a8a29e;
+  --graybtn:#9ca3af;
   --warn:#b00020;
 }
 *{box-sizing:border-box}
@@ -171,5 +171,6 @@ input[type="number"], input[type="text"]{
   .topbar{align-items:center}
   .topbar .actions{margin-top:6px}
 }
+
 
 
