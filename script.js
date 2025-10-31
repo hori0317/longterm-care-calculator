@@ -1,10 +1,10 @@
 /**********************
- * script.js（直接覆蓋）
- * 保持你的HTML/CSS不變：三結構版
+ * script.js（三結構版：完整檔）
+ * 2025-10-31 修正：BA 額度僅依 CMS + 留用，不受身分別影響
  **********************/
 
 /**********************
- * 服務清單與上限（依你提供）
+ * 服務清單與單價（依你提供）
  **********************/
 const serviceData = {
   BA: [
@@ -54,24 +54,22 @@ const serviceData = {
   SC: [{ code: "SC09", name: "短照 2 小時/支", price: 770 }],
 };
 
-/* 主(BA)額度：CMS */
+/**********************
+ * 額度表（主池與專屬池）
+ **********************/
+// BA 主(補助)額度：僅依 CMS 等級
 const cmsQuota = {
   2: 10020, 3: 15460, 4: 18580,
   5: 24100, 6: 28070, 7: 32090, 8: 36180
 };
 
-/* 身分別 → 共用主額度（身分影響的是部分負擔率，不影響額度本身） */
-const limitTable = {
-  "一般戶":      cmsQuota,
-  "中低收入戶":  cmsQuota,
-  "低收入戶":    cmsQuota,
-};
-
-/********* GA/SC 專屬池（依你提供） *********/
+// GA/SC 專屬池（依你提供）
 const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/********* Addons（本機儲存加次數；不參與計算，只保留UI與資料） *********/
+/**********************
+ * 其他設定
+ **********************/
 const ADDONS = [
   { code:"AA05" },{ code:"AA06" },{ code:"AA08" },{ code:"AA09" },{ code:"AA11" },
 ];
@@ -79,7 +77,9 @@ const ADDONS = [
 const WEEKS_PER_MONTH = 4.5;
 const $ = (s)=>document.querySelector(s);
 
-/* ========= 初始化 ========= */
+/**********************
+ * 初始化
+ **********************/
 document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $("#btnSaveAddons")?.addEventListener("click", saveAddons);
   $("#btnReset")?.addEventListener("click", resetAll);
 
-  // 事件委派：任何在 #tables 的 input/select 變更都會重算（防止漏綁）
+  // 事件委派：任何在 #tables 的 input/select 變更都會重算（避免漏綁）
   $("#tables")?.addEventListener("input", (e)=>{
     if(e.target.tagName === "INPUT" || e.target.tagName === "SELECT"){
       updateResults();
@@ -98,7 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-/********* 左卡加成 *********/
+/**********************
+ * 左卡加成（本機儲存，不參與金額計算）
+ **********************/
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
   const host = $("#addonRows"); if(!host) return;
@@ -124,7 +126,9 @@ function saveAddons(){
   const hint=$("#addonHint"); if(hint){ hint.textContent="已儲存加成次數"; hint.classList.remove("warn"); }
 }
 
-/********* 產生各表格（含總次數） *********/
+/**********************
+ * 服務表格生成
+ **********************/
 function renderTables(){
   const container = $("#tables"); if(!container) return;
   container.innerHTML="";
@@ -167,7 +171,9 @@ function renderTables(){
   });
 }
 
-/********* 每行更新（週→月：無條件進位 4.5） *********/
+/**********************
+ * 每行更新（週→月：無條件進位 4.5）
+ **********************/
 function updateRow(code, idx, fromTotal=false){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table = document.querySelectorAll("#tables table")[tIndex];
@@ -185,14 +191,18 @@ function updateRow(code, idx, fromTotal=false){
   updateResults();
 }
 
-/********* 綁定上方條件 *********/
+/**********************
+ * 綁定條件輸入
+ **********************/
 function bindHeaderInputs(){
   document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
     .forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
   $("#keepQuota")?.addEventListener("input", updateResults);
 }
 
-/********* SC 僅外籍看護「有」可用 *********/
+/**********************
+ * SC 僅外籍看護「有」可用
+ **********************/
 function updateSCAvailability(){
   const tables = document.querySelectorAll("#tables table");
   if(!tables.length) return;
@@ -208,9 +218,11 @@ function updateSCAvailability(){
   if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
 }
 
-/********* 總額度/自付計算（BA/GA/SC 分池；部分負擔僅對額度內金額） *********/
+/**********************
+ * 計算核心（分池；部分負擔僅對額度內）
+ **********************/
 function updateResults(){
-  // 先彙總各池消耗（BD/C 併入 BA 主池）
+  // 匯總各池（BD / C 併入 BA 主池）
   let sumBA = 0, sumGA = 0, sumSC = 0;
 
   const tables = document.querySelectorAll("#tables table");
@@ -227,21 +239,21 @@ function updateResults(){
 
       if(g==="GA") sumGA += amt;
       else if(g==="SC") sumSC += amt;
-      else sumBA += amt; // BA / BD / C 都算在主池
+      else sumBA += amt; // BA / BD / C -> 主池
     });
   });
 
-  // 取條件
+  // 條件值
   const idtyRaw = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
   const cms  = Number((document.querySelector("input[name='cms']:checked")||{}).value || 2);
   const keep = Math.max(0, parseInt($("#keepQuota")?.value)||0);
 
-  // 部分負擔率（支援文字與代碼）
+  // 身分別 → 部分負擔率（支援代碼/中文）
   const rateMap = { "一般戶":0.16, "中低收入戶":0.05, "低收入戶":0, "normal":0.16, "midlow":0.05, "low":0 };
   const rate = rateMap[idtyRaw] ?? 0.16;
 
-  // 各池額度（主池＋留用；GA/SC 專屬池）
-  // BA 主額度不受身分別影響，只依 CMS 等級＋留用額度 const grantBA = (cmsQuota[cms] || 0) + keep;
+  // 各池額度（⚠️ BA 只依 CMS＋留用，不依身分別）
+  const grantBA = (cmsQuota[cms] || 0) + keep;
   const grantGA = GA_CAP[cms] || 0;
   const grantSC = SC_CAP[cms] || 0;
 
@@ -264,10 +276,10 @@ function updateResults(){
   const selfpay    = copay + overBA + overGA + overSC;
   const grandTotal = govSubsidy + selfpay; // ＝ sumBA + sumGA + sumSC
 
-  // 中區顯示：給付額度（BA 主額度＋留用）
+  // 中區：給付額度（BA 主額度＋留用）
   const grantQuotaEl = $("#grantQuota"); if(grantQuotaEl) grantQuotaEl.value = grantBA.toLocaleString();
 
-  // 右區顯示（分池）
+  // 右區：分池額度/剩餘
   const remainBA = Math.max(0, grantBA - allowBA);
   const remainGA = Math.max(0, grantGA - allowGA);
   const remainSC = Math.max(0, grantSC - allowSC);
@@ -279,7 +291,7 @@ function updateResults(){
   setText("#sumGrantSC", grantSC);
   setText("#sumRemainSC", remainSC);
 
-  // Footer 同步（若存在）
+  // 底部同步（存在才更新）
   setText("#sumRemainBA_foot", remainBA);
   setText("#sumRemainGA_foot", remainGA);
   setText("#sumRemainSC_foot", remainSC);
@@ -299,21 +311,25 @@ function updateResults(){
   toggle("#overGA",   overGA>0);
   toggle("#overSC",   overSC>0);
 
-  // 如需排錯可打開：
+  // 除錯可開：
   // console.log({sumBA,sumGA,sumSC,grantBA,grantGA,grantSC,allowBA,allowGA,allowSC,overBA,overGA,overSC,rate,copay,govSubsidy,selfpay,grandTotal});
 }
 
+/**********************
+ * 小工具
+ **********************/
 function setText(sel, num){
   const el=$(sel); if(!el) return;
   el.textContent = Number(num).toLocaleString();
 }
-
 function toggle(sel, show){
   const el=$(sel); if(!el) return;
   show ? el.classList.remove("hidden") : el.classList.add("hidden");
 }
 
-/********* 重置 *********/
+/**********************
+ * 重置
+ **********************/
 function resetAll(){
   const idN = document.getElementById("id-normal");
   if(idN) idN.checked = true;
@@ -332,4 +348,3 @@ function resetAll(){
   const hint=$("#addonHint");
   if(hint){ hint.textContent="請儲存加成次數"; hint.classList.add("warn"); }
 }
-
