@@ -171,6 +171,39 @@ input[type="number"], input[type="text"]{
   .topbar{align-items:center}
   .topbar .actions{margin-top:6px}
 }
+/* === 🔹固定底部工具列樣式＆自動避位設定 === */
+:root {
+  --dock-gap: 12px;           /* 工具列上方留白距離 */
+  --dock-h: 0px;              /* JS 會自動設定實際高度 */
+}
+
+body {
+  /* 頁面下方留空，避免內容被工具列擋住 */
+  padding-bottom: calc(var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom));
+  scroll-padding-bottom: calc(var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom));
+}
+
+/* 底部工具列 */
+.bottom-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  padding: 6px 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: center;
+  color: #333;
+}
+
+/* 讓最底的表格區不太靠近底欄 */
+#tables {
+  margin-bottom: 8px;
+}
 
 
 
