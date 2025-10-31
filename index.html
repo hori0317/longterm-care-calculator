@@ -1,110 +1,115 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>額度試算</title>
-  <link rel="icon" href="YORU.ico" />
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>長照額度與自付同步計算</title>
+  <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
 </head>
 <body>
-  <header class="app-title">額度試算</header>
+  <header><h1>長照額度與自付同步計算（BA / BD / C / GA / SC）</h1></header>
 
-  <main class="grid-3">
-    <!-- 左：居服薪資 -->
+  <div class="wrap grid grid-3">
+    <!-- 左卡 -->
     <section class="card">
-      <h2>居服薪資(6/4)</h2>
-      <div class="muted">預計月薪資：<span class="warn">請儲存加成次數</span></div>
-
-      <div class="addon-header">
-        <div>項目</div><div>價格</div><div>次數</div>
+      <h2>左卡加成（儲存於本機）</h2>
+      <div id="addonRows"></div>
+      <div class="row">
+        <button class="btn" id="btnSaveAddons">儲存加成</button>
+        <span id="addonHint" class="muted warn">請儲存加成次數</span>
       </div>
-      <div id="addonRows" class="addon-rows"></div>
-
-      <button class="btn" id="btnSaveAddons">儲存</button>
-      <div id="addonHint" class="muted warn">請儲存加成次數</div>
-
-      <p class="note">
-        ※此區僅示意加成欄位（AA05 / AA06 / AA08 / AA09 / AA11），與下方服務額度計算分開，不影響補助額度。
-      </p>
-    </section>
-
-    <!-- 中：基本資料 -->
-    <section class="card">
-      <h2>基本資料</h2>
-
-      <div class="field">
+      <hr>
+      <div class="col">
         <label>身分別</label>
-        <div class="seg">
-          <label><input id="id-normal" type="radio" name="idty" value="一般戶" checked> 一般戶</label>
-          <label><input type="radio" name="idty" value="中低收入戶"> 中低收</label>
-          <label><input type="radio" name="idty" value="低收入戶"> 低收</label>
+        <div class="banner">
+          <label class="pill"><input type="radio" name="idty" id="id-normal" value="一般戶" checked> 一般戶</label>
+          <label class="pill"><input type="radio" name="idty" value="中低收入戶"> 中低</label>
+          <label class="pill"><input type="radio" name="idty" value="低收入戶"> 低收</label>
         </div>
       </div>
-
-      <div class="field">
-        <label>外籍看護</label>
-        <div class="seg">
-          <label><input type="radio" name="foreign" value="0" checked> 無</label>
-          <label><input type="radio" name="foreign" value="1"> 有</label>
-        </div>
-      </div>
-
-      <div class="field">
+      <div class="col">
         <label>CMS 等級</label>
-        <div class="seg compact">
-          <label><input id="cms2" type="radio" name="cms" value="2" checked> 2</label>
-          <label><input id="cms3" type="radio" name="cms" value="3"> 3</label>
-          <label><input id="cms4" type="radio" name="cms" value="4"> 4</label>
-          <label><input id="cms5" type="radio" name="cms" value="5"> 5</label>
-          <label><input id="cms6" type="radio" name="cms" value="6"> 6</label>
-          <label><input id="cms7" type="radio" name="cms" value="7"> 7</label>
-          <label><input id="cms8" type="radio" name="cms" value="8"> 8</label>
+        <div class="banner">
+          <label class="pill"><input type="radio" name="cms" id="cms2" value="2" checked> 2</label>
+          <label class="pill"><input type="radio" name="cms" value="3">3</label>
+          <label class="pill"><input type="radio" name="cms" value="4">4</label>
+          <label class="pill"><input type="radio" name="cms" value="5">5</label>
+          <label class="pill"><input type="radio" name="cms" value="6">6</label>
+          <label class="pill"><input type="radio" name="cms" value="7">7</label>
+          <label class="pill"><input type="radio" name="cms" value="8">8</label>
         </div>
       </div>
-
-      <div class="field">
-        <label>留用額度</label>
-        <input id="keepQuota" type="number" inputmode="numeric" placeholder="例如 3000">
+      <div class="col">
+        <label>是否有外籍看護（SC 僅可於此時使用）</label>
+        <div class="banner">
+          <label class="pill"><input type="radio" name="foreign" value="1"> 有</label>
+          <label class="pill"><input type="radio" name="foreign" value="0" checked> 無</label>
+        </div>
+        <div id="warnSCfg" class="muted warn">未勾選外籍看護，SC 目前不可用。</div>
       </div>
-
-      <div class="field">
+      <div class="col">
+        <label>主池額度留用（元）</label>
+        <input id="keepQuota" type="number" min="0" placeholder="例：5000">
+      </div>
+      <div class="col">
         <label>給付額度（BA 主額度＋留用）</label>
         <input id="grantQuota" type="text" readonly>
       </div>
+      <div class="row"><button class="btn" id="btnReset">重置</button></div>
     </section>
 
-    <!-- 右：個案額度與自付額 -->
+    <!-- 中卡 -->
     <section class="card">
-      <h2>個案額度及自付額</h2>
-
-      <div class="kv"><div>額度總計(BA)：</div><div id="sumGrantBA">0</div></div>
-      <div class="kv"><div>剩餘額度(BA)：</div><div id="sumRemainBA">0</div></div>
-
-      <div class="kv"><div>額度總計(GA)：</div><div id="sumGrantGA">0</div></div>
-      <div class="kv"><div>剩餘額度(GA)：</div><div id="sumRemainGA">0</div></div>
-
-      <div class="kv"><div>額度總計(SC)：</div><div id="sumGrantSC">0</div></div>
-      <div class="kv"><div>剩餘額度(SC)：</div><div id="sumRemainSC">0</div></div>
-
-      <div class="kv"><div>部分負擔：</div><div id="sumCopay">0</div></div>
-      <div class="kv strong"><div>自付總計：</div><div id="sumSelfpay">0</div></div>
-
-      <div id="overMain" class="alert hidden">BA 主額度已超額，超出部分將列入自付。</div>
-      <div id="overGA" class="alert hidden">GA09 喘息額度已超額，超出部分將列入自付。</div>
-      <div id="overSC" class="alert hidden">SC09 短照額度已超額，超出部分將列入自付。</div>
+      <h2>服務安排（BD/C 併入 BA 主池）</h2>
+      <div id="tables"></div>
     </section>
-  </main>
 
-  <section class="card full">
-    <h2>服務安排</h2>
-    <div id="warnSCfg" class="alert hidden">未選「外籍看護：有」，SC09 短照不可使用。</div>
-    <div id="tables"></div>
-  </section>
+    <!-- 右卡 -->
+    <section class="card">
+      <h2>分池額度與剩餘</h2>
+      <div class="kpi">
+        <div class="col">
+          <label>BA 額度</label>
+          <div>額度：<strong id="sumGrantBA">0</strong></div>
+          <div>剩餘：<strong id="sumRemainBA">0</strong></div>
+          <div id="overMain" class="muted warn hidden">已超過 BA 額度</div>
+        </div>
+        <div class="col">
+          <label>GA 額度</label>
+          <div>額度：<strong id="sumGrantGA">0</strong></div>
+          <div>剩餘：<strong id="sumRemainGA">0</strong></div>
+          <div id="overGA" class="muted warn hidden">已超過 GA 額度</div>
+        </div>
+        <div class="col">
+          <label>SC 額度</label>
+          <div>額度：<strong id="sumGrantSC">0</strong></div>
+          <div>剩餘：<strong id="sumRemainSC">0</strong></div>
+          <div id="overSC" class="muted warn hidden">已超過 SC 額度</div>
+        </div>
+      </div>
 
-  <div class="toolbar">
-    <button class="btn ghost" id="btnReset">重置</button>
+      <hr>
+      <h2>費用總結</h2>
+      <div class="col">
+        <div>政府補助：<strong id="sumGovSubsidy">0</strong></div>
+        <div>部分負擔（補助內）：<strong id="sumCopay">0</strong></div>
+        <div>自付總計（含超額）：<strong id="sumSelfpay">0</strong></div>
+        <div>總金額（補助＋自付）：<strong id="sumGrand">0</strong></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 底部同步顯示 -->
+  <div class="footerbar">
+    <div class="sum">
+      <span class="chip">BA剩餘：<b id="sumRemainBA_foot">0</b></span>
+      <span class="chip">GA剩餘：<b id="sumRemainGA_foot">0</b></span>
+      <span class="chip">SC剩餘：<b id="sumRemainSC_foot">0</b></span>
+      <span class="chip ok">補助：<b id="sumGovSubsidy_foot">0</b></span>
+      <span class="chip warn">自付：<b id="sumSelfpay_foot">0</b></span>
+      <span class="chip">總額：<b id="sumGrand_foot">0</b></span>
+    </div>
   </div>
 </body>
 </html>
