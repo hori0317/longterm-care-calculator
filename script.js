@@ -50,10 +50,19 @@ const serviceData = {
   SC: [{ code: "SC09", name: "短照 2 小時/支", price: 770 }],
 };
 
-/* 主(BA)額度： CMS
+/* 主(BA)額度：CMS（你給的數字） */
 const cmsQuota = {
-    2: 10020, 3: 15460, 4: 18580,
-    5: 24100, 6: 28070, 7: 32090, 8: 36180
+  2: 10020, 3: 15460, 4: 18580,
+  5: 24100, 6: 28070, 7: 32090, 8: 36180
+};
+
+/* 不同身分別共用同一份 CMS 主額度（身分影響的是部分負擔率，不影響額度） */
+const limitTable = {
+  "一般戶":      cmsQuota,
+  "中低收入戶":  cmsQuota,
+  "低收入戶":    cmsQuota,
+};
+
   
 };
 /********* GA/SC 專屬池（依你提供） *********/
@@ -270,4 +279,5 @@ function resetAll(){
   $("#addonHint").textContent="請儲存加成次數";
   $("#addonHint").classList.add("warn");
 }
+
 
