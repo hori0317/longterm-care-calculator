@@ -1,12 +1,12 @@
 /* 基本色與全域 */
 :root{
-  --bg:#f6f7f8;
+  --bg:#f7f7f7;
   --card:#fff;
   --ink:#222;
   --muted:#6b7280;
   --line:#e5e7eb;
   --primary:#2f7d32;
-  --accent:#1f7a8c;
+  --accent:#0f766e;
   --warn:#b00020;
 }
 *{box-sizing:border-box}
@@ -16,36 +16,36 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans TC", Arial;
   color:var(--ink);
   background:var(--bg);
+  line-height:1.5;
 }
 hr{border:none;border-top:1px solid var(--line);margin:10px 0}
+.hidden{display:none}
+.warn{color:var(--warn)}
+.ok{color:var(--primary)}
 
 /* 容器與卡片 */
-.container{max-width:1200px;margin:14px auto;padding:0 16px 70px}
+.container{max-width:1200px;margin:12px auto;padding:0 16px 72px}
 .card{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:10px;
   padding:12px;
 }
-.card + .card{margin-top:10px}
 .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 h2{margin:0;font-size:16px}
-.subtitle{font-size:12px;color:var(--muted)}
-.warn{color:var(--warn)}
-.ok{color:var(--primary)}
-.hidden{display:none}
+.subtitle{font-size:12px}
 
 /* 三欄 */
 .top-grid{
   display:grid;
-  grid-template-columns: 1.1fr 1fr 1fr;
-  gap:10px;
+  grid-template-columns: 1.1fr 1fr 1fr; /* 左略寬 */
+  gap:12px;
   align-items:start;
 }
 
-/* 左：加成區 */
+/* 左：加成表 */
 .addon-wrap{margin-top:6px}
-.addon-title{font-size:14px;color:var(--ink);margin-bottom:6px}
+.addon-title{font-size:14px;margin-bottom:6px}
 .addon-table{
   border:1px solid var(--line);
   border-radius:8px;
@@ -53,7 +53,7 @@ h2{margin:0;font-size:16px}
 }
 .addon-thead{
   display:grid;
-  grid-template-columns: 1fr 100px 100px;
+  grid-template-columns: 1fr 90px 90px 90px; /* 項目｜價格｜P｜N */
   background:#f3f4f6;
   color:#555;
   font-size:13px;
@@ -63,7 +63,7 @@ h2{margin:0;font-size:16px}
 .addon-rows{padding:8px}
 .addon-row{
   display:grid;
-  grid-template-columns: 1fr 100px 100px;
+  grid-template-columns: 1fr 90px 90px 90px;
   gap:8px;
   align-items:center;
   margin-bottom:6px;
@@ -75,7 +75,7 @@ h2{margin:0;font-size:16px}
   border-radius:8px;
   background:#fff;
 }
-.addon-actions{margin-top:6px;display:flex;justify-content:flex-start}
+.addon-actions{margin-top:6px}
 .btn{
   border:1px solid var(--line);
   background:#fff;
@@ -90,9 +90,9 @@ h2{margin:0;font-size:16px}
   color:#fff;
   border-color:transparent;
 }
-.btn.primary:hover{filter:brightness(0.95)}
+.btn.primary:hover{filter:brightness(0.96)}
 
-/* 左：QR 區塊 */
+/* 左：QR 區 */
 .qr-box{
   margin-top:12px;
   border:1px dashed var(--line);
@@ -118,15 +118,16 @@ h2{margin:0;font-size:16px}
   padding:4px 10px;background:#fff;font-size:13px;color:#333;
 }
 .pill input{accent-color:var(--accent)}
+
 .cms-buttons{display:flex;gap:6px;flex-wrap:wrap}
 .cms{
   display:inline-flex;align-items:center;justify-content:center;
-  width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:#fff;
-  font-size:13px;color:#333;
+  min-width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:#fff;
+  font-size:13px;color:#333;padding:0 8px
 }
 .cms input{display:none}
-.cms input:checked + span{}
-.cms:has(input:checked){background:#0f766e;color:#fff;border-color:#0f766e}
+.cms span{display:inline-block}
+.cms:has(input:checked){background:var(--accent);color:#fff;border-color:var(--accent)}
 
 input[type="number"]{
   padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:220px
@@ -149,7 +150,7 @@ input[type="number"]{
 .kv-value.strong{font-size:18px;color:#111}
 
 /* 服務區（下方） */
-.services{margin-top:10px}
+.services{margin-top:12px}
 .table-title{font-size:16px;margin-bottom:6px}
 #tables h3{
   margin:14px 0 6px;
