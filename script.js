@@ -442,3 +442,23 @@ function resetAll(){
   const hint=$("#addonHint");
   if(hint){ hint.textContent="請儲存加成次數"; hint.classList.add("warn"); }
 }
+/* === 🔹底部工具列避位設定（自動計算高度） === */
+function adjustDockPadding(){
+  const dock = document.getElementById('bottomDock');
+  if(!dock) return;
+  const h = dock.offsetHeight || 0;
+  document.documentElement.style.setProperty('--dock-h', h + 'px');
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  adjustDockPadding();
+  window.addEventListener('resize', adjustDockPadding);
+  window.addEventListener('orientationchange', adjustDockPadding);
+
+  // 若底欄內容動態改變（例如換語言或改字體），自動重算
+  const dock = document.getElementById('bottomDock');
+  if(window.ResizeObserver && dock){
+    const ro = new ResizeObserver(()=>adjustDockPadding());
+    ro.observe(dock);
+  }
+});
