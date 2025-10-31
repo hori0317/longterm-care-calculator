@@ -10,20 +10,22 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  <!-- 頂部列 -->
+  <!-- 頂部列（固定） -->
   <header class="topbar">
     <div class="brand">
       <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       <span>額度試算</span>
     </div>
     <div class="actions">
-      <!-- A/B 切換按鈕 -->
+      <!-- A/B 切換按鈕：預設 B；切換時會在畫面與計算上生效 -->
       <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="B">B單位</button>
       <button class="btn pill btn-green" id="btnReset" type="button">重置</button>
       <button class="btn pill btn-gray" type="button" onclick="window.print()">列印</button>
     </div>
   </header>
-  <div class="divider"></div>
+
+  <!-- 🔝 頂端墊片（高度由 JS 寫入 --topbar-h） -->
+  <div id="topSpacer" aria-hidden="true"></div>
 
   <main class="container">
     <!-- 上方三欄 -->
@@ -37,7 +39,7 @@
           <button class="btn btn-primary" id="btnSaveAddons" type="button">儲存</button>
         </div>
 
-        <!-- AA 區（項目＋單一「次數」輸入欄） -->
+        <!-- AA 區（項目＋單一「次數」欄） -->
         <div class="addon">
           <div class="addon-head">
             <span>項目</span>
@@ -46,6 +48,7 @@
           <div id="addonRows" class="addon-body"></div>
         </div>
 
+        <!-- 可留宣傳/QR，不影響計算 -->
         <div class="qrbox">
           <div class="qr-left">
             <img src="qrcode.png" alt="QR" onerror="this.style.opacity=0.2" />
@@ -57,7 +60,7 @@
             <p class="orange">廣告待補</p>
           </div>
         </div>
-        <!-- 居服員薪資合計會由 script.js 動態插入在此卡片底部 -->
+        <!-- 居服員薪資合計由 script.js 動態插入在此卡底部 -->
       </div>
 
       <!-- 中：基本資料 -->
@@ -137,7 +140,7 @@
     </section>
   </main>
 
-  <!-- 墊片：避免被底部工具列遮擋 -->
+  <!-- 🔻 底部墊片（高度由 JS 寫入 --dock-h；避免內容被底部資訊條遮住） -->
   <div id="dockSpacer" aria-hidden="true"></div>
 
   <!-- 底部資訊條 -->
