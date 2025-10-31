@@ -1,4 +1,6 @@
-/* ========= 常數與資料 ========= */
+/**********************
+ * 服務清單與上限
+ **********************/
 const serviceData = {
   BA: [
     { code: "BA01", name: "基本身體清潔", price: 260 },
@@ -33,6 +35,7 @@ const serviceData = {
     { code: "BD02", name: "社區式晚餐", price: 150 },
     { code: "BD03", name: "社區式服務交通接送", price: 115 },
   ],
+  // 合併後的 C（專業服務）
   C: [
     { code: "CA07", name: "IADLs/ADLs 復能照護(3次含評估)", price: 4500 },
     { code: "CA08", name: "ISP擬定與執行(4次含評估)", price: 6000 },
@@ -47,15 +50,15 @@ const serviceData = {
   SC: [{ code: "SC09", name: "短照 2 小時/支", price: 770 }],
 };
 
-// 主額度（身分別 × CMS）- 依你提供的版本
+/* 主(BA)額度：身分別 × CMS */
 const limitTable = {
   "一般戶":     [0, 0, 14320, 17920, 21520, 25120, 28720, 32320, 35920],
   "中低收入戶": [0, 0, 27100, 33900, 40700, 47500, 54300, 61100, 67900],
   "低收入戶":   [0, 0, 36000, 45000, 54000, 63000, 72000, 81000, 90000],
 };
-// GA、SC 獨立額度
-const GA_CAP = { 2:32340,3:32340,4:32340,5:32340,6:32340,7:48510,8:48510 };
-const SC_CAP = { 2:87780,3:87780,4:87780,5:87780,6:87780,7:71610,8:71610 };
+/********* GA/SC 專屬池（依你提供） *********/
+const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
+const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
 const ADDONS = [
   { code:"AA05" },{ code:"AA06" },{ code:"AA08" },{ code:"AA09" },{ code:"AA11" },
@@ -64,7 +67,7 @@ const ADDONS = [
 const WEEKS_PER_MONTH = 4.5;
 const $ = (s)=>document.querySelector(s);
 
-/* ===== 初始化 ===== */
+/* ========= 初始化 ========= */
 document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
@@ -76,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $("#btnReset").addEventListener("click", resetAll);
 });
 
-/* ===== 左卡：加成欄 ===== */
+/********* 左卡加成 *********/
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
   const host = $("#addonRows"); host.innerHTML="";
@@ -101,7 +104,7 @@ function saveAddons(){
   const hint=$("#addonHint"); hint.textContent="已儲存加成次數"; hint.classList.remove("warn");
 }
 
-/* ===== 產生服務表格 ===== */
+/********* 產生各表格（含總次數） *********/
 function renderTables(){
   const container = $("#tables"); container.innerHTML="";
   const titles = { BA:"BA碼（照顧服務）", BD:"BD碼（社區服務）", C:"C碼（專業服務）", GA:"GA碼（喘息服務）", SC:"SC碼（短期替代照顧）" };
@@ -143,32 +146,32 @@ function renderTables(){
   });
 }
 
-/* ===== 更新列 ===== */
+/********* 每行更新（週→月：無條件進位 4.5） *********/
 function updateRow(code, idx, fromTotal=false){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table = document.querySelectorAll("#tables table")[tIndex];
   const tr = table.tBodies[0].rows[idx];
 
   const price = serviceData[code][idx].price;
-  const week = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
-  const month = Math.ceil(week * WEEKS_PER_MONTH);
-  tr.cells[3].querySelector("input").value = month;
+  const w = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
+  const m = Math.ceil(w * WEEKS_PER_MONTH);
+  tr.cells[3].querySelector("input").value = m;
 
-  const inputTotal = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
-  const useCount = inputTotal > 0 ? inputTotal : month;
+  const t = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
+  const use = t > 0 ? t : m;
 
-  tr.cells[5].textContent = (price * useCount).toLocaleString();
+  tr.cells[5].textContent = (price * use).toLocaleString();
   updateResults();
 }
 
-/* ===== 綁定上層欄位 ===== */
+/********* 綁定上方條件 *********/
 function bindHeaderInputs(){
   document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
     .forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
   $("#keepQuota").addEventListener("input", updateResults);
 }
 
-/* ===== 外籍看護限制 SC ===== */
+/********* SC 僅外籍看護「有」可用 *********/
 function updateSCAvailability(){
   const scTable = [...document.querySelectorAll("#tables table")].find(t=>t.previousSibling.textContent.includes("SC"));
   if(!scTable) return;
@@ -181,15 +184,15 @@ function updateSCAvailability(){
   if(!hasForeign) warn.classList.remove("hidden"); else warn.classList.add("hidden");
 }
 
-/* ===== 計算寫入右側 ===== */
+/********* 總額度/自付計算（BA/GA/SC 分池） *********/
 function updateResults(){
-  let totalMain=0, totalGA=0, totalSC=0;
+  // 先彙總各池消耗
+  let sumBA=0, sumGA=0, sumSC=0;
 
   const tables = document.querySelectorAll("#tables table");
   const groups = Object.keys(serviceData);
   groups.forEach((g,idx)=>{
-    const tbody = tables[idx]?.tBodies[0];
-    if(!tbody) return;
+    const tbody = tables[idx]?.tBodies[0]; if(!tbody) return;
     [...tbody.rows].forEach((tr,i)=>{
       const price = serviceData[g][i].price;
       const w = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
@@ -197,46 +200,61 @@ function updateResults(){
       const t = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
       const use = t > 0 ? t : m;
       const amt = price * use;
-      if(g==="GA") totalGA += amt;
-      else if(g==="SC") totalSC += amt;
-      else totalMain += amt;
+      if(g==="GA") sumGA += amt;
+      else if(g==="SC") sumSC += amt;
+      else sumBA += amt;
     });
   });
 
+  // 取條件
   const idty = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
   const cms  = parseInt((document.querySelector("input[name='cms']:checked")||{}).value || "2");
   const keep = Math.max(0, parseInt($("#keepQuota").value)||0);
-
-  const mainGrant = (limitTable[idty][cms]||0) + keep;   // 額度總計=主額度+留用額度
-  const gaGrant   = GA_CAP[cms] || 0;
-  const scGrant   = SC_CAP[cms] || 0;
-
   const rate = idty==="一般戶" ? 0.16 : (idty==="中低收入戶" ? 0.05 : 0);
-  const grandUsed = totalMain + totalGA + totalSC;
 
-  const overMain = Math.max(0, totalMain - mainGrant);
-  const remainMain = Math.max(0, mainGrant - totalMain);
-  const overGA = Math.max(0, totalGA - gaGrant);
-  const overSC = Math.max(0, totalSC - scGrant);
+  // 各池額度
+  const grantBA = (limitTable[idty][cms]||0) + keep;
+  const grantGA = GA_CAP[cms] || 0;
+  const grantSC = SC_CAP[cms] || 0;
 
-  const copay = Math.round(grandUsed * rate);
-  const selfpay = copay + overMain + overGA + overSC;
+  // 超額 / 剩餘
+  const overBA = Math.max(0, sumBA - grantBA);
+  const overGA = Math.max(0, sumGA - grantGA);
+  const overSC = Math.max(0, sumSC - grantSC);
 
-  // 寫回 UI
-  $("#grantQuota").value = mainGrant.toLocaleString();
-  $("#sumGrant").textContent  = mainGrant.toLocaleString();
-  $("#sumRemain").textContent = remainMain.toLocaleString();
-  $("#sumCopay").textContent  = copay.toLocaleString();
-  $("#sumSelfpay").textContent= selfpay.toLocaleString();
+  const remainBA = Math.max(0, grantBA - sumBA);
+  const remainGA = Math.max(0, grantGA - sumGA);
+  const remainSC = Math.max(0, grantSC - sumSC);
 
-  toggle("#overMain", overMain>0);
-  toggle("#overGA", overGA>0);
-  toggle("#overSC", overSC>0);
+  // 部分負擔 & 自付總計（你指定的計算）
+  const totalUsed = sumBA + sumGA + sumSC;
+  const copay = Math.round(totalUsed * rate);
+  const selfpay = copay + overBA + overGA + overSC;
+
+  // 中卡顯示：給付額度（BA 主額度＋留用）
+  $("#grantQuota").value = grantBA.toLocaleString();
+
+  // 右卡顯示（分池）
+  $("#sumGrantBA").textContent  = grantBA.toLocaleString();
+  $("#sumRemainBA").textContent = remainBA.toLocaleString();
+
+  $("#sumGrantGA").textContent  = grantGA.toLocaleString();
+  $("#sumRemainGA").textContent = remainGA.toLocaleString();
+
+  $("#sumGrantSC").textContent  = grantSC.toLocaleString();
+  $("#sumRemainSC").textContent = remainSC.toLocaleString();
+
+  $("#sumCopay").textContent    = copay.toLocaleString();
+  $("#sumSelfpay").textContent  = selfpay.toLocaleString();
+
+  // 超額提醒
+  toggle("#overMain", overBA>0);
+  toggle("#overGA",   overGA>0);
+  toggle("#overSC",   overSC>0);
 }
-
 function toggle(sel, show){ const el=$(sel); if(!el) return; show?el.classList.remove("hidden"):el.classList.add("hidden"); }
 
-/* ===== 重置 ===== */
+/********* 重置 *********/
 function resetAll(){
   document.getElementById("id-normal").checked = true;
   document.getElementById("cms2").checked = true;
