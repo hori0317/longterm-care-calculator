@@ -1,4 +1,4 @@
-/* 色票 */
+/* 色票與避位變數（JS 會動態覆寫 --topbar-h 與 --dock-h） */
 :root{
   --bg:#fff6d5;
   --card:#fffdf5;
@@ -11,45 +11,48 @@
   --graybtn:#9ca3af;
   --warn:#b00020;
 
-  /* 底部 dock 高度（JS 會覆寫） */
-  --dock-h:64px;
+  --topbar-h:56px; /* 預設；啟動後由 JS 寫入實際高度 */
+  --dock-h:64px;   /* 預設；啟動後由 JS 寫入實際高度 */
 }
 
 /* 基礎 */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0; font-family:system-ui,-apple-system,"Segoe UI",Noto Sans TC,Roboto,Arial;
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Noto Sans TC,Roboto,Arial;
   color:var(--ink); background:var(--bg);
-  padding-bottom:var(--dock-h); /* 避位 */
+  padding-top:var(--topbar-h);   /* 頂端預留，避免內容被固定 topbar 蓋住 */
+  padding-bottom:var(--dock-h);  /* 底部預留，避免內容被 footerbar 蓋住 */
 }
 img{max-width:100%; display:block}
-
 .hidden{display:none !important}
 
-/* 頂部列 */
+/* 頂部列（固定在視窗） */
 .topbar{
-  position:sticky; top:0; z-index:10;
+  position:fixed; top:0; left:0; right:0; z-index:100;
   display:flex; justify-content:space-between; align-items:center;
   padding:10px 16px; background:#fff; border-bottom:1px solid var(--line);
 }
 .brand{display:flex; align-items:center; gap:8px; font-weight:700}
 .brand img{width:28px; height:28px; object-fit:contain; opacity:.9}
 .actions{display:flex; gap:8px}
+
+/* spacer：以 CSS 變數提供保險墊高（index 有放空 div） */
+#topSpacer{ height:var(--topbar-h); }
+#dockSpacer{ height:var(--dock-h); }
+
 .divider{height:8px; background:transparent}
 
-/* 通用按鈕 */
-.btn{
-  border:1px solid transparent; padding:8px 12px; cursor:pointer; font-weight:600;
-  background:#fff; border-radius:10px; box-shadow:0 1px 0 rgba(0,0,0,.03);
-}
+/* 按鈕 */
+.btn{border:1px solid transparent; padding:8px 12px; cursor:pointer; font-weight:600; background:#fff; border-radius:10px; box-shadow:0 1px 0 rgba(0,0,0,.03)}
 .btn.pill{border-radius:999px}
 .btn-primary{background:var(--green-2); color:#fff}
 .btn-green{background:var(--green); color:#fff}
 .btn-orange{background:var(--orange); color:#fff}
 .btn-gray{background:var(--graybtn); color:#fff}
 
-/* 容器與卡片 */
+/* 版面 */
 .container{max-width:1180px; margin:16px auto; padding:0 12px}
 .grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px}
 .card{
@@ -65,7 +68,7 @@ img{max-width:100%; display:block}
 .note{font-size:12px; color:var(--muted)}
 .note.warn{color:var(--warn)}
 
-/* AA 區（只保留單一輸入欄） */
+/* AA 區（「項目＋次數」兩欄） */
 .addon{margin-top:8px}
 .addon-head,
 .addon-row{
@@ -92,7 +95,7 @@ img{max-width:100%; display:block}
 .qr-right .bold{font-weight:700}
 .qr-right .orange{color:var(--orange)}
 
-/* 基本資料表單 */
+/* 基本資料 */
 .form-row{display:flex; align-items:center; gap:12px; margin:10px 0}
 .chips{display:flex; flex-wrap:wrap; gap:8px}
 .chip{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#fff; border:1px solid var(--line); border-radius:999px}
@@ -120,7 +123,7 @@ tbody input{
 }
 td:last-child, th:last-child{text-align:right}
 
-/* 底部資訊條 */
+/* 底部資訊條（固定） */
 .footerbar{
   position:fixed; left:0; right:0; bottom:0; z-index:20;
   background:#fff; border-top:1px solid var(--line)
@@ -131,3 +134,6 @@ td:last-child, th:last-child{text-align:right}
 }
 .foot .ok{color:var(--green)}
 .foot .warn{color:var(--warn)}
+
+/* 讓最底的服務卡與 footer 保持距離（再加一道保險） */
+.service-card{ margin-bottom: calc(var(--dock-h) + 12px); }
