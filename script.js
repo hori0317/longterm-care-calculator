@@ -1,14 +1,14 @@
 /**********************
- * script.js（2025-10-31）
- * - 週→月→總（BA/BD/GA/SC）
- * - C 碼一包制（每組價 × 每月組數）
- * - A/B 單位切換：B 隱藏 C，且薪資排除 C
+ * script.js（2025-10-31 最終整合）
+ * - 非 C：週→月→總（總次數可手動覆寫）
+ * - C：一包制（每組價 × 每月組數）
+ * - AA 區：單一輸入欄，localStorage 保存
+ * - A/B 切換：B 隱藏 C，且薪資排除 C
  * - 居服薪資(6/4)：(AA 總 + 政府補助 + 自付) × 0.6
- * - AA 區「單一輸入欄」
- * - 底部 dock 避位自動量測
+ * - 頂/底工具列動態避位（SC09 不再被擋）
  **********************/
 
-/* 服務清單與單價 */
+/* 服務與單價 */
 const serviceData = {
   BA: [
     { code: "BA01", name: "基本身體清潔", price: 260 },
@@ -57,7 +57,7 @@ const serviceData = {
   SC: [{ code: "SC09", name: "短照 2 小時/支", price: 770 }],
 };
 
-/* 額度 */
+/* 額度表 */
 const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180 };
 const GA_CAP   = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP   = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
@@ -67,7 +67,7 @@ const ADDONS = [{code:"AA05"},{code:"AA06"},{code:"AA08"},{code:"AA09"},{code:"A
 const WEEKS_PER_MONTH = 4.5;
 const $ = (s)=>document.querySelector(s);
 
-/* 全域狀態：單位與最近一次計算（含C/排C） */
+/* 單位狀態與最近一次計算（含/排C） */
 let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
 const lastCalc = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
@@ -87,15 +87,25 @@ document.addEventListener('DOMContentLoaded', () => {
   $("#tables")?.addEventListener("input", (e)=>{
     if(e.target.tagName === "INPUT" || e.target.tagName === "SELECT"){ updateResults(); }
   });
+
+  // 避位：頂/底高度動態量測
+  adjustTopbarPadding();
+  adjustDockPadding();
+  window.addEventListener('resize', ()=>{ adjustTopbarPadding(); adjustDockPadding(); });
+  window.addEventListener('orientationchange', ()=>{ adjustTopbarPadding(); adjustDockPadding(); });
+
+  const dock = document.getElementById('bottomDock');
+  if(window.ResizeObserver && dock){ new ResizeObserver(()=>adjustDockPadding()).observe(dock); }
+  const topbar = document.querySelector('.topbar');
+  if(window.ResizeObserver && topbar){ new ResizeObserver(()=>adjustTopbarPadding()).observe(topbar); }
 });
 
-/* 左卡 AA 區（單一輸入欄） */
-function renderAddons() {
+/* 左卡 AA 區（項目＋單一輸入欄） */
+function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons") || "{}");
-  const host = $("#addonRows"); if (!host) return;
+  const host = $("#addonRows"); if(!host) return;
   host.innerHTML = "";
-
-  ADDONS.forEach(a => {
+  ADDONS.forEach(a=>{
     const row = document.createElement("div");
     row.className = "addon-row";
     row.innerHTML = `
@@ -106,17 +116,16 @@ function renderAddons() {
     host.appendChild(row);
   });
 }
-function saveAddons() {
-  const data = {};
-  ADDONS.forEach(a => {
+function saveAddons(){
+  const data={};
+  ADDONS.forEach(a=>{
     data[`${a.code}_count`] = parseInt($(`#${a.code}_count`)?.value) || 0;
   });
   localStorage.setItem("addons", JSON.stringify(data));
-  const hint = $("#addonHint");
-  if (hint) { hint.textContent = "已儲存加成次數"; hint.classList.remove("warn"); }
+  const hint=$("#addonHint"); if(hint){ hint.textContent="已儲存加成次數"; hint.classList.remove("warn"); }
 }
 
-/* 服務表格生成（群組盒方便 show/hide） */
+/* 服務表格（各群組包一層，方便顯示/隱藏 C） */
 function renderTables(){
   const container = $("#tables"); if(!container) return;
   container.innerHTML="";
@@ -131,6 +140,7 @@ function renderTables(){
   Object.keys(serviceData).forEach(code=>{
     const groupBox = document.createElement("div");
     groupBox.dataset.group = code;
+
     const h3=document.createElement("h3"); h3.textContent=titles[code];
     const table=document.createElement("table");
 
@@ -141,7 +151,8 @@ function renderTables(){
           <th>單價(每組)</th>
           <th>每月組數</th>
           <th>總金額</th>
-        </tr></thead><tbody></tbody>`;
+        </tr></thead>
+        <tbody></tbody>`;
     }else{
       table.innerHTML=`
         <thead><tr>
@@ -151,40 +162,44 @@ function renderTables(){
           <th>月次數</th>
           <th>總次數</th>
           <th>總金額</th>
-        </tr></thead><tbody></tbody>`;
+        </tr></thead>
+        <tbody></tbody>`;
     }
 
     const tbody=table.querySelector("tbody");
 
     serviceData[code].forEach((item,i)=>{
       const tr=document.createElement("tr");
-      tr.dataset.manual="0";
-      if(code==="C"){
-        tr.dataset.cmode="1";
-        tr.innerHTML=`
+      tr.dataset.manual = "0";
+      if(code === "C"){
+        tr.dataset.cmode = "1";
+        tr.innerHTML = `
           <td>${item.code} ${item.name}</td>
           <td class="cell-price">${item.price.toLocaleString()}</td>
-          <td><input class="inp-c-groups" type="number" min="0" step="1" value="0"/></td>
+          <td><input class="inp-c-groups" type="number" min="0" step="1" value="0" /></td>
           <td class="cell-amount">0</td>`;
-        tr.querySelector(".inp-c-groups").addEventListener("input",()=>{ updateOneRow(code,i); updateResults(); });
+        tr.querySelector(".inp-c-groups").addEventListener("input", ()=>{ updateOneRow(code, i); updateResults(); });
       }else{
         tr.innerHTML=`
           <td>${item.code} ${item.name}</td>
           <td class="cell-price">${item.price.toLocaleString()}</td>
-          <td><input class="inp-week" type="number" min="0" step="1" value="0"/></td>
-          <td><input class="inp-month" value="0" readonly/></td>
-          <td><input class="inp-total" type="number" min="0" step="1" value="0"/></td>
+          <td><input class="inp-week"  type="number" min="0" step="1" value="0" /></td>
+          <td><input class="inp-month" type="number" value="0" readonly /></td>
+          <td><input class="inp-total" type="number" min="0" step="1" value="0" /></td>
           <td class="cell-amount">0</td>`;
-        const week=tr.querySelector(".inp-week");
-        const month=tr.querySelector(".inp-month");
-        const total=tr.querySelector(".inp-total");
-        week.addEventListener("input",()=>{
-          const w=Math.max(0,parseInt(week.value)||0);
-          const m=Math.ceil(w*WEEKS_PER_MONTH);
-          month.value=m; tr.dataset.manual="0"; total.value=m;
-          updateOneRow(code,i); updateResults();
+        const week  = tr.querySelector(".inp-week");
+        const month = tr.querySelector(".inp-month");
+        const total = tr.querySelector(".inp-total");
+        week.addEventListener("input", ()=>{
+          const w = Math.max(0, parseInt(week.value)||0);
+          const m = Math.ceil(w * WEEKS_PER_MONTH);
+          month.value = m;
+          tr.dataset.manual = "0";
+          total.value = m;
+          updateOneRow(code, i);
+          updateResults();
         });
-        total.addEventListener("input",()=>{ tr.dataset.manual="1"; updateOneRow(code,i); updateResults(); });
+        total.addEventListener("input", ()=>{ tr.dataset.manual = "1"; updateOneRow(code, i); updateResults(); });
       }
       tbody.appendChild(tr);
     });
@@ -194,152 +209,162 @@ function renderTables(){
     container.appendChild(groupBox);
   });
 
-  applyUnitEffects(); // 依單位顯示/隱藏 C
+  applyUnitEffects(); // 初始依單位顯示/隱藏 C
 }
 
 /* 單列金額更新 */
-function updateOneRow(code,idx){
-  const tIndex=Object.keys(serviceData).indexOf(code);
-  const table=document.querySelectorAll("#tables table")[tIndex];
-  const tr=table.tBodies[0].rows[idx];
-  const price=serviceData[code][idx].price;
+function updateOneRow(code, idx){
+  const tIndex = Object.keys(serviceData).indexOf(code);
+  const table = document.querySelectorAll("#tables table")[tIndex];
+  const tr = table.tBodies[0].rows[idx];
+  const price = serviceData[code][idx].price;
 
-  if(tr.dataset.cmode==="1"){
-    const g=Math.max(0,parseInt(tr.querySelector(".inp-c-groups").value)||0);
-    tr.querySelector(".cell-amount").textContent=(price*g).toLocaleString();
+  if(tr.dataset.cmode === "1"){
+    const groups = Math.max(0, parseInt(tr.querySelector(".inp-c-groups").value)||0);
+    tr.querySelector(".cell-amount").textContent = (price * groups).toLocaleString();
     return;
   }
-  const week=parseInt(tr.querySelector(".inp-week").value)||0;
-  const month=Math.ceil(week*WEEKS_PER_MONTH);
-  tr.querySelector(".inp-month").value=month;
-  const manual=tr.dataset.manual==="1";
-  const tVal=parseInt(tr.querySelector(".inp-total").value)||0;
-  const use=manual?tVal:month;
-  tr.querySelector(".cell-amount").textContent=(price*use).toLocaleString();
+
+  const week  = Math.max(0, parseInt(tr.querySelector(".inp-week").value)||0);
+  const month = Math.ceil(week * WEEKS_PER_MONTH);
+  tr.querySelector(".inp-month").value = month;
+
+  const manual = tr.dataset.manual === "1";
+  const total  = Math.max(0, parseInt(tr.querySelector(".inp-total").value)||0);
+  const use    = manual ? total : month;
+
+  tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
 }
 
 /* 條件輸入綁定 */
 function bindHeaderInputs(){
-  document.querySelectorAll("input[name='idty'],input[name='cms'],input[name='foreign']")
-    .forEach(el=>el.addEventListener("change",()=>{ updateSCAvailability(); updateResults(); }));
-  $("#keepQuota")?.addEventListener("input",updateResults);
+  document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
+    .forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
+  $("#keepQuota")?.addEventListener("input", updateResults);
 }
 
 /* SC 僅外籍看護可用 */
 function updateSCAvailability(){
-  const scBox=[...document.querySelectorAll("[data-group]")].find(b=>b.dataset.group==="SC");
-  if(!scBox)return;
-  const hasForeign=(document.querySelector("input[name='foreign']:checked")||{}).value==="1";
+  const scBox = document.querySelector('[data-group="SC"]');
+  if(!scBox) return;
+  const hasForeign = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
   scBox.querySelectorAll("input").forEach(inp=>{
-    inp.disabled=!hasForeign;
-    if(!hasForeign)inp.value=0;
+    inp.disabled = !hasForeign;
+    if(!hasForeign) inp.value = 0;
   });
   const warn=$("#warnSCfg");
-  if(warn){!hasForeign?warn.classList.remove("hidden"):warn.classList.add("hidden");}
+  if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
 }
 
-/* 核心計算：同時計算「含 C」和「排 C」 */
+/* 核心計算：同時計算「含 C」與「排 C」 */
 function updateResults(){
-  let sumBA=0,sumGA=0,sumSC=0,sumC=0;
+  let sumBA = 0, sumGA = 0, sumSC = 0, sumC = 0;
 
-  const tables=document.querySelectorAll("#tables table");
-  const groups=Object.keys(serviceData);
+  const tables = document.querySelectorAll("#tables table");
+  const groups = Object.keys(serviceData);
 
   groups.forEach((g,idx)=>{
-    const tbody=tables[idx]?.tBodies[0]; if(!tbody)return;
+    const tbody = tables[idx]?.tBodies[0]; if(!tbody) return;
     [...tbody.rows].forEach((tr,i)=>{
-      const price=serviceData[g][i].price;
+      const price = serviceData[g][i].price;
 
-      if(tr.dataset.cmode==="1"){
-        const cnt=parseInt(tr.querySelector(".inp-c-groups").value)||0;
-        const amt=price*cnt; sumBA+=amt; sumC+=amt;
-        tr.querySelector(".cell-amount").textContent=amt.toLocaleString();
+      if(tr.dataset.cmode === "1"){
+        const cnt = Math.max(0, parseInt(tr.querySelector(".inp-c-groups").value)||0);
+        const amt = price * cnt;
+        sumBA += amt;  // C 併入主池
+        sumC  += amt;  // 另存一份，供「排 C」使用
+        tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
         return;
       }
 
-      const w=parseInt(tr.querySelector(".inp-week").value)||0;
-      const m=Math.ceil(w*WEEKS_PER_MONTH);
-      const manual=tr.dataset.manual==="1";
-      const t=parseInt(tr.querySelector(".inp-total").value)||0;
-      const use=manual?t:m;
-      const amt=price*use;
+      const w = Math.max(0, parseInt(tr.querySelector(".inp-week").value)||0);
+      const m = Math.ceil(w * WEEKS_PER_MONTH);
+      const manual = tr.dataset.manual === "1";
+      const t = Math.max(0, parseInt(tr.querySelector(".inp-total").value)||0);
+      const use = manual ? t : m;
+      const amt = price * use;
 
-      if(g==="GA") sumGA+=amt;
-      else if(g==="SC") sumSC+=amt;
-      else sumBA+=amt; // BA/BD
-      tr.querySelector(".cell-amount").textContent=amt.toLocaleString();
+      if(g==="GA") sumGA += amt;
+      else if(g==="SC") sumSC += amt;
+      else sumBA += amt;
+
+      tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
     });
   });
 
   // 條件
-  const idty=(document.querySelector("input[name='idty']:checked")||{}).value||"一般戶";
-  const cms = Number((document.querySelector("input[name='cms']:checked")||{}).value||2);
-  const keep= Math.max(0, parseInt($("#keepQuota")?.value)||0);
-  const rateMap={"一般戶":0.16,"中低收入戶":0.05,"低收入戶":0};
-  const rate=rateMap[idty]??0.16;
+  const idtyRaw = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
+  const cms  = Number((document.querySelector("input[name='cms']:checked")||{}).value || 2);
+  const keep = Math.max(0, parseInt($("#keepQuota")?.value)||0);
+
+  const rateMap = { "一般戶":0.16, "中低收入戶":0.05, "低收入戶":0 };
+  const rate = rateMap[idtyRaw] ?? 0.16;
 
   // 額度
-  const grantBA=(cmsQuota[cms]||0)+keep, grantGA=GA_CAP[cms]||0, grantSC=SC_CAP[cms]||0;
+  const grantBA = (cmsQuota[cms] || 0) + keep;
+  const grantGA = GA_CAP[cms] || 0;
+  const grantSC = SC_CAP[cms] || 0;
 
-  // 計算器
-  const calc = (ba, ga, sc) => {
-    const allowBA=Math.min(ba, grantBA);
-    const allowGA=Math.min(ga, grantGA);
-    const allowSC=Math.min(sc, grantSC);
-    const subsidyBase=allowBA+allowGA+allowSC;
+  // 計算輔函數
+  const calc = (ba,ga,sc)=>{
+    const allowBA = Math.min(ba, grantBA);
+    const allowGA = Math.min(ga, grantGA);
+    const allowSC = Math.min(sc, grantSC);
+    const subsidyBase = allowBA + allowGA + allowSC;
 
-    const overBA=Math.max(0, ba-grantBA);
-    const overGA=Math.max(0, ga-grantGA);
-    const overSC=Math.max(0, sc-grantSC);
+    const overBA = Math.max(0, ba - grantBA);
+    const overGA = Math.max(0, ga - grantGA);
+    const overSC = Math.max(0, sc - grantSC);
 
-    const copay=Math.round(subsidyBase*rate);
-    const gov=subsidyBase-copay;
-    const self=copay+overBA+overGA+overSC;
-    const grand=gov+self;
+    const copay = Math.round(subsidyBase * rate);
+    const gov   = subsidyBase - copay;
+    const self  = copay + overBA + overGA + overSC;
+    const grand = gov + self;
 
-    // 畫面顯示（仍用含 C）
     return {allowBA,allowGA,allowSC,overBA,overGA,overSC,copay,gov,self,grand};
   };
 
   // 1) 含 C
   const inc = calc(sumBA, sumGA, sumSC);
-  // 2) 排 C
+  // 2) 排 C（給 B 單位薪資用）
   const exC = calc(sumBA - sumC, sumGA, sumSC);
 
-  // 右卡顯示（沿用含 C）
+  // 右側卡片顯示：沿用「含 C」
   $("#grantQuota") && ($("#grantQuota").value = grantBA.toLocaleString());
-  setText("#sumGrantBA",grantBA);
+
+  setText("#sumGrantBA", grantBA);
   setText("#sumRemainBA", Math.max(0, grantBA - inc.allowBA));
-  setText("#sumGrantGA",grantGA);
+  setText("#sumGrantGA", grantGA);
   setText("#sumRemainGA", Math.max(0, grantGA - inc.allowGA));
-  setText("#sumGrantSC",grantSC);
+  setText("#sumGrantSC", grantSC);
   setText("#sumRemainSC", Math.max(0, grantSC - inc.allowSC));
 
   setText("#sumRemainBA_foot", Math.max(0, grantBA - inc.allowBA));
   setText("#sumRemainGA_foot", Math.max(0, grantGA - inc.allowGA));
   setText("#sumRemainSC_foot", Math.max(0, grantSC - inc.allowSC));
 
-  setText("#sumCopay",        inc.copay);
-  setText("#sumSelfpay",      inc.self);
-  setText("#sumGovSubsidy",   inc.gov);
-  setText("#sumGrand",        inc.grand);
+  setText("#sumCopay", inc.copay);
+  setText("#sumSelfpay", inc.self);
+  setText("#sumGovSubsidy", inc.gov);
+  setText("#sumGrand", inc.grand);
+
   setText("#sumGovSubsidy_foot", inc.gov);
-  setText("#sumSelfpay_foot",    inc.self);
-  setText("#sumGrand_foot",      inc.grand);
+  setText("#sumSelfpay_foot", inc.self);
+  setText("#sumGrand_foot", inc.grand);
 
-  toggle("#overMain", (inc.overBA>0));
-  toggle("#overGA",   (inc.overGA>0));
-  toggle("#overSC",   (inc.overSC>0));
+  toggle("#overMain", inc.overBA>0);
+  toggle("#overGA",   inc.overGA>0);
+  toggle("#overSC",   inc.overSC>0);
 
-  // 保存兩組結果，供薪資使用
+  // 保存兩組結果供薪資使用
   lastCalc.gov_inc = inc.gov;   lastCalc.self_inc = inc.self;
   lastCalc.gov_exC = exC.gov;   lastCalc.self_exC = exC.self;
 
   updateCaregiverSalary();
 }
 
-/* 居服薪資(6/4)：(AA 總 + 基礎) × 0.6
-   AA 單價：AA05:200、AA06:200、AA08:385、AA09:770、AA11:50 */
+/* 居服薪資(6/4)：(AA總 + 補助 + 自付) × 0.6
+   AA 價格：AA05:200、AA06:200、AA08:385、AA09:770、AA11:50  */
 function updateCaregiverSalary(){
   const AA_PRICE={AA05:200,AA06:200,AA08:385,AA09:770,AA11:50};
   const saved=JSON.parse(localStorage.getItem("addons")||"{}");
@@ -355,16 +380,15 @@ function updateCaregiverSalary(){
 
   let target=$("#caregiverSalary");
   if(!target){
-    const card=[...document.querySelectorAll(".card h2.card-title")]
-      .find(el=>el.textContent.includes("居服薪資"));
-    if(card){
+    const title=[...document.querySelectorAll(".card h2.card-title")].find(el=>el.textContent.includes("居服薪資"));
+    if(title){
       const box=document.createElement("div");
       box.id="caregiverSalary";
       box.style.marginTop="10px";
       box.style.fontWeight="700";
       box.style.textAlign="right";
       box.style.color="#2e7d32";
-      card.parentElement.appendChild(box);
+      title.parentElement.appendChild(box);
       target=box;
     }
   }
@@ -387,38 +411,31 @@ function applyUnitEffects(){
   if(btn){
     btn.textContent = `${currentUnit}單位`;
     btn.dataset.unit = currentUnit;
-    // 顏色可選：A=綠、B=橘
     btn.classList.remove("btn-green","btn-orange");
     btn.classList.add(currentUnit==="A" ? "btn-green" : "btn-orange");
   }
   const cBox = document.querySelector('[data-group="C"]');
   if(cBox){
-    if(currentUnit==="B"){ cBox.classList.add("hidden"); }
-    else { cBox.classList.remove("hidden"); }
+    currentUnit==="B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden");
   }
 }
 
 /* 小工具 */
-function setText(sel,num){ const el=$(sel); if(!el) return; el.textContent=Number(num).toLocaleString(); }
-function toggle(sel,show){ const el=$(sel); if(!el) return; show?el.classList.remove("hidden"):el.classList.add("hidden"); }
-
-/* 重置（簡化：清掉 AA 記憶並重新載入） */
+function setText(sel, num){ const el=$(sel); if(!el) return; el.textContent = Number(num).toLocaleString(); }
+function toggle(sel, show){ const el=$(sel); if(!el) return; show ? el.classList.remove("hidden") : el.classList.add("hidden"); }
 function resetAll(){ localStorage.removeItem("addons"); location.reload(); }
 
-/* 底部工具列避位（量測高度） */
+/* 🔧 避位：量測底部工具列高度，寫入 --dock-h */
 function adjustDockPadding(){
-  const dock=document.getElementById('bottomDock');
-  if(!dock)return;
-  const h=dock.offsetHeight||0;
-  document.documentElement.style.setProperty('--dock-h',h+'px');
+  const dock = document.getElementById('bottomDock');
+  if(!dock) return;
+  const h = dock.offsetHeight || 0;
+  document.documentElement.style.setProperty('--dock-h', h + 'px');
 }
-document.addEventListener('DOMContentLoaded',()=>{
-  adjustDockPadding();
-  window.addEventListener('resize',adjustDockPadding);
-  window.addEventListener('orientationchange',adjustDockPadding);
-  const dock=document.getElementById('bottomDock');
-  if(window.ResizeObserver&&dock){
-    const ro=new ResizeObserver(()=>adjustDockPadding());
-    ro.observe(dock);
-  }
-});
+/* 🔧 避位：量測頂端工具列高度，寫入 --topbar-h */
+function adjustTopbarPadding(){
+  const topbar = document.querySelector('.topbar');
+  if(!topbar) return;
+  const h = topbar.offsetHeight || 0;
+  document.documentElement.style.setProperty('--topbar-h', h + 'px');
+}
