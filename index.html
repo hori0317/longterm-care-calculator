@@ -1,115 +1,179 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>長照額度與自付同步計算</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>長照額度與自付計算</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 </head>
 <body>
-  <header><h1>長照額度與自付同步計算（BA / BD / C / GA / SC）</h1></header>
+  <div class="container">
+    <!-- 頂部三欄 -->
+    <section class="top-grid">
+      <!-- 左：居服薪資(6/4) + 加成次數 -->
+      <div class="card">
+        <div class="card-head">
+          <h2>居服薪資(6/4)</h2>
+          <span class="subtitle warn" id="addonHint">請儲存加成次數</span>
+        </div>
 
-  <div class="wrap grid grid-3">
-    <!-- 左卡 -->
-    <section class="card">
-      <h2>左卡加成（儲存於本機）</h2>
-      <div id="addonRows"></div>
-      <div class="row">
-        <button class="btn" id="btnSaveAddons">儲存加成</button>
-        <span id="addonHint" class="muted warn">請儲存加成次數</span>
-      </div>
-      <hr>
-      <div class="col">
-        <label>身分別</label>
-        <div class="banner">
-          <label class="pill"><input type="radio" name="idty" id="id-normal" value="一般戶" checked> 一般戶</label>
-          <label class="pill"><input type="radio" name="idty" value="中低收入戶"> 中低</label>
-          <label class="pill"><input type="radio" name="idty" value="低收入戶"> 低收</label>
+        <div class="addon-wrap">
+          <div class="addon-title">加成次數</div>
+          <div class="addon-table">
+            <div class="addon-thead">
+              <span>項目</span><span>價格</span><span>次數</span>
+            </div>
+            <div class="addon-rows" id="addonRows"></div>
+          </div>
+          <div class="addon-actions">
+            <button class="btn primary" id="btnSaveAddons">儲存</button>
+          </div>
+        </div>
+
+        <div class="qr-box">
+          <div class="qr-left">
+            <img src="qr.png" alt="QR" onerror="this.style.opacity=0.2;this.alt='QR';" />
+          </div>
+          <div class="qr-right">
+            <p class="brand">我們是億家人居家長照機構</p>
+            <p>負責區域為新莊、板橋、樹林、五股<br/>歡迎洽詢：</p>
+            <p>諮詢電話：02-2276-0087</p>
+            <p class="slogan">在億家人，大家都是一家人</p>
+          </div>
         </div>
       </div>
-      <div class="col">
-        <label>CMS 等級</label>
-        <div class="banner">
-          <label class="pill"><input type="radio" name="cms" id="cms2" value="2" checked> 2</label>
-          <label class="pill"><input type="radio" name="cms" value="3">3</label>
-          <label class="pill"><input type="radio" name="cms" value="4">4</label>
-          <label class="pill"><input type="radio" name="cms" value="5">5</label>
-          <label class="pill"><input type="radio" name="cms" value="6">6</label>
-          <label class="pill"><input type="radio" name="cms" value="7">7</label>
-          <label class="pill"><input type="radio" name="cms" value="8">8</label>
+
+      <!-- 中：基本資料 -->
+      <div class="card">
+        <div class="card-head">
+          <h2>基本資料</h2>
+        </div>
+        <div class="form-row">
+          <label>身分類別：</label>
+          <div class="pill-group">
+            <label class="pill"><input type="radio" name="idty" id="id-normal" value="一般戶" checked /> 一般戶</label>
+            <label class="pill"><input type="radio" name="idty" value="中低收入戶" /> 中低收</label>
+            <label class="pill"><input type="radio" name="idty" value="低收入戶" /> 低收</label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>CMS 等級：</label>
+          <div class="cms-buttons">
+            <label class="cms"><input type="radio" name="cms" id="cms2" value="2" checked />2</label>
+            <label class="cms"><input type="radio" name="cms" value="3" />3</label>
+            <label class="cms"><input type="radio" name="cms" value="4" />4</label>
+            <label class="cms"><input type="radio" name="cms" value="5" />5</label>
+            <label class="cms"><input type="radio" name="cms" value="6" />6</label>
+            <label class="cms"><input type="radio" name="cms" value="7" />7</label>
+            <label class="cms"><input type="radio" name="cms" value="8" />8</label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>留用額度：</label>
+          <input id="keepQuota" type="number" min="0" placeholder="" />
+        </div>
+
+        <div class="form-row readonly">
+          <label>給付額度：</label>
+          <span id="grantQuota" class="readonly-box">0</span>
+        </div>
+
+        <div class="form-row">
+          <label>是否有外籍看護：</label>
+          <div class="pill-group">
+            <label class="pill"><input type="radio" name="foreign" value="1" /> 有</label>
+            <label class="pill"><input type="radio" name="foreign" value="0" checked /> 無</label>
+          </div>
+        </div>
+
+        <div id="warnSCfg" class="note warn">未勾選外籍看護，SC 目前不可用。</div>
+        <div class="form-actions">
+          <button class="btn" id="btnReset">重置</button>
         </div>
       </div>
-      <div class="col">
-        <label>是否有外籍看護（SC 僅可於此時使用）</label>
-        <div class="banner">
-          <label class="pill"><input type="radio" name="foreign" value="1"> 有</label>
-          <label class="pill"><input type="radio" name="foreign" value="0" checked> 無</label>
+
+      <!-- 右：個案額度及自付額 -->
+      <div class="card">
+        <div class="card-head">
+          <h2>個案額度及自付額</h2>
         </div>
-        <div id="warnSCfg" class="muted warn">未勾選外籍看護，SC 目前不可用。</div>
+
+        <div class="kv">
+          <div class="kv-row">
+            <span class="kv-label">BA 額度：</span>
+            <span class="kv-value" id="sumGrantBA">0</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">剩餘額度：</span>
+            <span class="kv-value" id="sumRemainBA">0</span>
+          </div>
+          <div id="overMain" class="note warn hidden">已超過 BA 額度</div>
+          <hr />
+
+          <div class="kv-row">
+            <span class="kv-label">GA 額度：</span>
+            <span class="kv-value" id="sumGrantGA">0</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">剩餘額度：</span>
+            <span class="kv-value" id="sumRemainGA">0</span>
+          </div>
+          <div id="overGA" class="note warn hidden">已超過 GA 額度</div>
+          <hr />
+
+          <div class="kv-row">
+            <span class="kv-label">SC 額度：</span>
+            <span class="kv-value" id="sumGrantSC">0</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">剩餘額度：</span>
+            <span class="kv-value" id="sumRemainSC">0</span>
+          </div>
+          <div id="overSC" class="note warn hidden">已超過 SC 額度</div>
+          <hr />
+
+          <div class="kv-row">
+            <span class="kv-label">部分負擔：</span>
+            <span class="kv-value" id="sumCopay">0</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">自付總計：</span>
+            <span class="kv-value strong" id="sumSelfpay">0</span>
+          </div>
+
+          <!-- 可選：若 script.js 有更新 sumGovSubsidy / sumGrand 會自動帶值 -->
+          <div class="kv-row optional">
+            <span class="kv-label">政府補助：</span>
+            <span class="kv-value" id="sumGovSubsidy">0</span>
+          </div>
+          <div class="kv-row optional">
+            <span class="kv-label">總金額：</span>
+            <span class="kv-value" id="sumGrand">0</span>
+          </div>
+        </div>
       </div>
-      <div class="col">
-        <label>主池額度留用（元）</label>
-        <input id="keepQuota" type="number" min="0" placeholder="例：5000">
-      </div>
-      <div class="col">
-        <label>給付額度（BA 主額度＋留用）</label>
-        <input id="grantQuota" type="text" readonly>
-      </div>
-      <div class="row"><button class="btn" id="btnReset">重置</button></div>
     </section>
 
-    <!-- 中卡 -->
-    <section class="card">
-      <h2>服務安排（BD/C 併入 BA 主池）</h2>
+    <!-- 下方：服務表格（由 script.js 自動產生多個表） -->
+    <section class="services card">
+      <div class="table-title">服務項目</div>
       <div id="tables"></div>
     </section>
 
-    <!-- 右卡 -->
-    <section class="card">
-      <h2>分池額度與剩餘</h2>
-      <div class="kpi">
-        <div class="col">
-          <label>BA 額度</label>
-          <div>額度：<strong id="sumGrantBA">0</strong></div>
-          <div>剩餘：<strong id="sumRemainBA">0</strong></div>
-          <div id="overMain" class="muted warn hidden">已超過 BA 額度</div>
-        </div>
-        <div class="col">
-          <label>GA 額度</label>
-          <div>額度：<strong id="sumGrantGA">0</strong></div>
-          <div>剩餘：<strong id="sumRemainGA">0</strong></div>
-          <div id="overGA" class="muted warn hidden">已超過 GA 額度</div>
-        </div>
-        <div class="col">
-          <label>SC 額度</label>
-          <div>額度：<strong id="sumGrantSC">0</strong></div>
-          <div>剩餘：<strong id="sumRemainSC">0</strong></div>
-          <div id="overSC" class="muted warn hidden">已超過 SC 額度</div>
-        </div>
+    <!-- 底部條帶（可留可移除） -->
+    <footer class="footerbar">
+      <div class="foot-row">
+        <span>BA 剩餘：<b id="sumRemainBA_foot">0</b></span>
+        <span>GA 剩餘：<b id="sumRemainGA_foot">0</b></span>
+        <span>SC 剩餘：<b id="sumRemainSC_foot">0</b></span>
+        <span class="ok">補助：<b id="sumGovSubsidy_foot">0</b></span>
+        <span class="warn">自付：<b id="sumSelfpay_foot">0</b></span>
+        <span>總額：<b id="sumGrand_foot">0</b></span>
       </div>
-
-      <hr>
-      <h2>費用總結</h2>
-      <div class="col">
-        <div>政府補助：<strong id="sumGovSubsidy">0</strong></div>
-        <div>部分負擔（補助內）：<strong id="sumCopay">0</strong></div>
-        <div>自付總計（含超額）：<strong id="sumSelfpay">0</strong></div>
-        <div>總金額（補助＋自付）：<strong id="sumGrand">0</strong></div>
-      </div>
-    </section>
-  </div>
-
-  <!-- 底部同步顯示 -->
-  <div class="footerbar">
-    <div class="sum">
-      <span class="chip">BA剩餘：<b id="sumRemainBA_foot">0</b></span>
-      <span class="chip">GA剩餘：<b id="sumRemainGA_foot">0</b></span>
-      <span class="chip">SC剩餘：<b id="sumRemainSC_foot">0</b></span>
-      <span class="chip ok">補助：<b id="sumGovSubsidy_foot">0</b></span>
-      <span class="chip warn">自付：<b id="sumSelfpay_foot">0</b></span>
-      <span class="chip">總額：<b id="sumGrand_foot">0</b></span>
-    </div>
+    </footer>
   </div>
 </body>
 </html>
