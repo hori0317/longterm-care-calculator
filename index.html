@@ -20,17 +20,21 @@
 
         <div class="addon-wrap">
           <div class="addon-title">加成次數</div>
+
+          <!-- 加成表：4 欄對齊 -->
           <div class="addon-table">
             <div class="addon-thead">
-              <span>項目</span><span>價格</span><span>次數</span>
+              <span>項目</span><span>價格</span><span>次數P</span><span>次數N</span>
             </div>
             <div class="addon-rows" id="addonRows"></div>
           </div>
+
           <div class="addon-actions">
             <button class="btn primary" id="btnSaveAddons">儲存</button>
           </div>
         </div>
 
+        <!-- QR 區（可換圖檔名） -->
         <div class="qr-box">
           <div class="qr-left">
             <img src="qr.png" alt="QR" onerror="this.style.opacity=0.2;this.alt='QR';" />
@@ -46,9 +50,8 @@
 
       <!-- 中：基本資料 -->
       <div class="card">
-        <div class="card-head">
-          <h2>基本資料</h2>
-        </div>
+        <div class="card-head"><h2>基本資料</h2></div>
+
         <div class="form-row">
           <label>身分類別：</label>
           <div class="pill-group">
@@ -61,13 +64,13 @@
         <div class="form-row">
           <label>CMS 等級：</label>
           <div class="cms-buttons">
-            <label class="cms"><input type="radio" name="cms" id="cms2" value="2" checked />2</label>
-            <label class="cms"><input type="radio" name="cms" value="3" />3</label>
-            <label class="cms"><input type="radio" name="cms" value="4" />4</label>
-            <label class="cms"><input type="radio" name="cms" value="5" />5</label>
-            <label class="cms"><input type="radio" name="cms" value="6" />6</label>
-            <label class="cms"><input type="radio" name="cms" value="7" />7</label>
-            <label class="cms"><input type="radio" name="cms" value="8" />8</label>
+            <label class="cms"><input type="radio" name="cms" id="cms2" value="2" checked /><span>2</span></label>
+            <label class="cms"><input type="radio" name="cms" value="3" /><span>3</span></label>
+            <label class="cms"><input type="radio" name="cms" value="4" /><span>4</span></label>
+            <label class="cms"><input type="radio" name="cms" value="5" /><span>5</span></label>
+            <label class="cms"><input type="radio" name="cms" value="6" /><span>6</span></label>
+            <label class="cms"><input type="radio" name="cms" value="7" /><span>7</span></label>
+            <label class="cms"><input type="radio" name="cms" value="8" /><span>8</span></label>
           </div>
         </div>
 
@@ -90,6 +93,7 @@
         </div>
 
         <div id="warnSCfg" class="note warn">未勾選外籍看護，SC 目前不可用。</div>
+
         <div class="form-actions">
           <button class="btn" id="btnReset">重置</button>
         </div>
@@ -97,67 +101,34 @@
 
       <!-- 右：個案額度及自付額 -->
       <div class="card">
-        <div class="card-head">
-          <h2>個案額度及自付額</h2>
-        </div>
+        <div class="card-head"><h2>個案額度及自付額</h2></div>
 
         <div class="kv">
-          <div class="kv-row">
-            <span class="kv-label">BA 額度：</span>
-            <span class="kv-value" id="sumGrantBA">0</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-label">剩餘額度：</span>
-            <span class="kv-value" id="sumRemainBA">0</span>
-          </div>
+          <div class="kv-row"><span class="kv-label">額度總計：</span><span class="kv-value" id="sumGrantBA">0</span></div>
+          <div class="kv-row"><span class="kv-label">剩餘額度：</span><span class="kv-value" id="sumRemainBA">0</span></div>
           <div id="overMain" class="note warn hidden">已超過 BA 額度</div>
           <hr />
 
-          <div class="kv-row">
-            <span class="kv-label">GA 額度：</span>
-            <span class="kv-value" id="sumGrantGA">0</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-label">剩餘額度：</span>
-            <span class="kv-value" id="sumRemainGA">0</span>
-          </div>
+          <div class="kv-row"><span class="kv-label">GA 額度：</span><span class="kv-value" id="sumGrantGA">0</span></div>
+          <div class="kv-row"><span class="kv-label">剩餘額度：</span><span class="kv-value" id="sumRemainGA">0</span></div>
           <div id="overGA" class="note warn hidden">已超過 GA 額度</div>
           <hr />
 
-          <div class="kv-row">
-            <span class="kv-label">SC 額度：</span>
-            <span class="kv-value" id="sumGrantSC">0</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-label">剩餘額度：</span>
-            <span class="kv-value" id="sumRemainSC">0</span>
-          </div>
+          <div class="kv-row"><span class="kv-label">SC 額度：</span><span class="kv-value" id="sumGrantSC">0</span></div>
+          <div class="kv-row"><span class="kv-label">剩餘額度：</span><span class="kv-value" id="sumRemainSC">0</span></div>
           <div id="overSC" class="note warn hidden">已超過 SC 額度</div>
           <hr />
 
-          <div class="kv-row">
-            <span class="kv-label">部分負擔：</span>
-            <span class="kv-value" id="sumCopay">0</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-label">自付總計：</span>
-            <span class="kv-value strong" id="sumSelfpay">0</span>
-          </div>
+          <div class="kv-row"><span class="kv-label">部分負擔：</span><span class="kv-value" id="sumCopay">0</span></div>
+          <div class="kv-row"><span class="kv-label">自付總計：</span><span class="kv-value strong" id="sumSelfpay">0</span></div>
 
-          <!-- 可選：若 script.js 有更新 sumGovSubsidy / sumGrand 會自動帶值 -->
-          <div class="kv-row optional">
-            <span class="kv-label">政府補助：</span>
-            <span class="kv-value" id="sumGovSubsidy">0</span>
-          </div>
-          <div class="kv-row optional">
-            <span class="kv-label">總金額：</span>
-            <span class="kv-value" id="sumGrand">0</span>
-          </div>
+          <div class="kv-row optional"><span class="kv-label">政府補助：</span><span class="kv-value" id="sumGovSubsidy">0</span></div>
+          <div class="kv-row optional"><span class="kv-label">總金額：</span><span class="kv-value" id="sumGrand">0</span></div>
         </div>
       </div>
     </section>
 
-    <!-- 下方：服務表格（由 script.js 自動產生多個表） -->
+    <!-- 下方：服務表格（由 script.js 自動產生） -->
     <section class="services card">
       <div class="table-title">服務項目</div>
       <div id="tables"></div>
