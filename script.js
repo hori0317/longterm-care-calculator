@@ -1,13 +1,14 @@
 /**********************
  * script.js（三結構版：完整檔）
  * 2025-10-31
- * - 週→月→總：總次數預設跟月次數相同；若使用者手動改總次數，之後週次數再變更時，總次數會重新跟週→月同步（覆蓋手動值）
+ * - 週→月→總（BA/BD/GA/SC）：總次數預設跟月次數相同；若使用者手動改總次數，之後週次數再變更時，總次數會重新跟週→月同步（覆蓋手動值）
  * - 金額依總次數計算（若未手動覆寫，採用月次數）
  * - BA 額度僅依 CMS + 留用，不受身分別影響
+ * - ✅ C碼為「一包＝多次」的月組數邏輯：顯示【單價(每組)／每月組數／總金額】，不使用週/總次數欄
  **********************/
 
 /**********************
- * 服務清單與單價（依你提供）
+ * 服務清單與單價（依你提供＋C碼新規）
  **********************/
 const serviceData = {
   BA: [
@@ -43,10 +44,14 @@ const serviceData = {
     { code: "BD02", name: "社區式晚餐", price: 150 },
     { code: "BD03", name: "社區式服務交通接送", price: 115 },
   ],
+  // ✅ C碼為「每組」單價；僅輸入「每月組數」
   C: [
+    // 規格：CA07(3次*1500=4500)、CA08(4*1500=6000)、CB01(3*2000=6000)、
+    // CB02(6*1500=9000)、CB03(3*1500=4500)、CB04(6*1500=9000)、
+    // CC01(2*1000=2000)、CD02(4*1500=6000)
     { code: "CA07", name: "IADLs/ADLs 復能照護(3次含評估)", price: 4500 },
     { code: "CA08", name: "ISP擬定與執行(4次含評估)", price: 6000 },
-    { code: "CB01", name: "營養照護(3次含評估)", price: 4500 },
+    { code: "CB01", name: "營養照護(3次含評估)", price: 6000 }, // ⬅ 依新規改為 6000
     { code: "CB02", name: "進食與吞嚥照護(6次含評估)", price: 9000 },
     { code: "CB03", name: "困擾行為照護(3次含評估)", price: 4500 },
     { code: "CB04", name: "臥床/長期活動受限照護(6次含評估)", price: 9000 },
@@ -76,7 +81,6 @@ const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 }
 const ADDONS = [
   { code:"AA05" },{ code:"AA06" },{ code:"AA08" },{ code:"AA09" },{ code:"AA11" },
 ];
-
 const WEEKS_PER_MONTH = 4.5;
 const $ = (s)=>document.querySelector(s);
 
@@ -134,81 +138,132 @@ function saveAddons(){
 function renderTables(){
   const container = $("#tables"); if(!container) return;
   container.innerHTML="";
-  const titles = { BA:"BA碼（照顧服務）", BD:"BD碼（社區服務）", C:"C碼（專業服務）", GA:"GA碼（喘息服務）", SC:"SC碼（短期替代照顧）" };
+  const titles = {
+    BA:"BA碼（照顧服務）",
+    BD:"BD碼（社區服務）",
+    C :"C碼（專業服務｜一包制）",
+    GA:"GA碼（喘息服務）",
+    SC:"SC碼（短期替代照顧）"
+  };
 
   Object.keys(serviceData).forEach(code=>{
     const h3=document.createElement("h3"); h3.textContent=titles[code]; container.appendChild(h3);
 
     const table=document.createElement("table");
-    table.innerHTML=`
-      <thead><tr>
-        <th style="min-width:260px">服務項目</th>
-        <th>單價</th>
-        <th>週次數</th>
-        <th>月次數</th>
-        <th>總次數</th>
-        <th>總金額</th>
-      </tr></thead>
-      <tbody></tbody>`;
+    // ✅ C碼專用欄位
+    if(code === "C"){
+      table.innerHTML = `
+        <thead><tr>
+          <th style="min-width:260px">服務項目</th>
+          <th>單價(每組)</th>
+          <th>每月組數</th>
+          <th>總金額</th>
+        </tr></thead>
+        <tbody></tbody>`;
+    }else{
+      table.innerHTML=`
+        <thead><tr>
+          <th style="min-width:260px">服務項目</th>
+          <th>單價</th>
+          <th>週次數</th>
+          <th>月次數</th>
+          <th>總次數</th>
+          <th>總金額</th>
+        </tr></thead>
+        <tbody></tbody>`;
+    }
+
     const tbody=table.querySelector("tbody");
 
     serviceData[code].forEach((item,i)=>{
       const tr=document.createElement("tr");
-      tr.dataset.manual = "0"; // 是否手動覆寫總次數：0=否 1=是
-      tr.innerHTML=`
-        <td>${item.code} ${item.name}</td>
-        <td>${item.price.toLocaleString()}</td>
-        <td><input type="number" min="0" step="1" value="0" /></td>
-        <td><input type="number" value="0" readonly /></td>
-        <td><input type="number" min="0" step="1" value="0" /></td>
-        <td>0</td>`;
-      const week  = tr.cells[2].querySelector("input");
-      const month = tr.cells[3].querySelector("input");
-      const total = tr.cells[4].querySelector("input");
+      tr.dataset.manual = "0"; // 只對非C碼有意義
 
-      // ✅ 週次數改變：更新月次數，並「總次數=月次數」（覆蓋任何手動值）
-      week.addEventListener("input", ()=>{
-        const w = Math.max(0, parseInt(week.value)||0);
-        const m = Math.ceil(w * WEEKS_PER_MONTH);
-        month.value = m;
-        tr.dataset.manual = "0";   // 取消手動覆寫狀態
-        total.value = m;           // 總次數回到跟月次數一致
-        updateOneRow(code, i);
-        updateResults();
-      });
+      if(code === "C"){
+        tr.dataset.cmode = "1";
+        tr.innerHTML = `
+          <td>${item.code} ${item.name}</td>
+          <td class="cell-price">${item.price.toLocaleString()}</td>
+          <td><input class="inp-c-groups" type="number" min="0" step="1" value="0" /></td>
+          <td class="cell-amount">0</td>
+        `;
+        const gInp = tr.querySelector(".inp-c-groups");
+        gInp.addEventListener("input", ()=>{
+          updateOneRow(code, i);
+          updateResults();
+        });
+      }else{
+        tr.innerHTML=`
+          <td>${item.code} ${item.name}</td>
+          <td class="cell-price">${item.price.toLocaleString()}</td>
+          <td><input class="inp-week"  type="number" min="0" step="1" value="0" /></td>
+          <td><input class="inp-month" type="number" value="0" readonly /></td>
+          <td><input class="inp-total" type="number" min="0" step="1" value="0" /></td>
+          <td class="cell-amount">0</td>
+        `;
+        const week  = tr.querySelector(".inp-week");
+        const month = tr.querySelector(".inp-month");
+        const total = tr.querySelector(".inp-total");
 
-      // 總次數改變：標記為手動覆寫；金額以總次數為準
-      total.addEventListener("input", ()=>{
-        tr.dataset.manual = "1";
-        updateOneRow(code, i);
-        updateResults();
-      });
+        // ✅ 週次數改變：更新月次數，並「總次數=月次數」（覆蓋任何手動值）
+        week.addEventListener("input", ()=>{
+          const w = Math.max(0, parseInt(week.value)||0);
+          const m = Math.ceil(w * WEEKS_PER_MONTH);
+          month.value = m;
+          tr.dataset.manual = "0";   // 取消手動覆寫狀態
+          total.value = m;           // 總次數回到跟月次數一致
+          updateOneRow(code, i);
+          updateResults();
+        });
+
+        // 總次數改變：標記為手動覆寫；金額以總次數為準
+        total.addEventListener("input", ()=>{
+          tr.dataset.manual = "1";
+          updateOneRow(code, i);
+          updateResults();
+        });
+      }
 
       tbody.appendChild(tr);
     });
+
     container.appendChild(table);
   });
 }
 
 /**********************
- * 單列金額更新（依「總次數」；未手動覆寫則採用月次數）
+ * 單列金額更新
+ * - 非C碼：依「總次數」（未手動覆寫採用月次數）
+ * - C碼：依「每月組數 × 每組單價」
  **********************/
 function updateOneRow(code, idx){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table = document.querySelectorAll("#tables table")[tIndex];
   const tr = table.tBodies[0].rows[idx];
-
   const price = serviceData[code][idx].price;
-  const week  = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
+
+  // ✅ C碼：每月組數 × 每組單價
+  if(tr.dataset.cmode === "1"){
+    const groups = Math.max(0, parseInt(tr.querySelector(".inp-c-groups").value)||0);
+    tr.querySelector(".cell-amount").textContent = (price * groups).toLocaleString();
+    return;
+  }
+
+  // 其他碼別（沿用週→月→總邏輯）
+  const weekInp  = tr.querySelector(".inp-week");
+  const monthInp = tr.querySelector(".inp-month");
+  const totalInp = tr.querySelector(".inp-total");
+
+  const week  = Math.max(0, parseInt(weekInp.value)||0);
   const month = Math.ceil(week * WEEKS_PER_MONTH);
-  tr.cells[3].querySelector("input").value = month; // 再保險同步
+  monthInp.value = month; // 再保險同步
 
   const manual = tr.dataset.manual === "1";
-  const tVal = tr.cells[4].querySelector("input").value;
+  const tVal = totalInp.value;
   const total = Math.max(0, parseInt(tVal===""? "0": tVal) || 0);
   const use = manual ? total : month;
 
-  tr.cells[5].textContent = (price * use).toLocaleString();
+  tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
 }
 
 /**********************
@@ -238,10 +293,11 @@ function updateSCAvailability(){
 }
 
 /**********************
- * 計算核心（分池；部分負擔僅對額度內；總次數優先）
+ * 計算核心（分池；部分負擔僅對額度內）
+ * - C碼併入 BA 主池，金額 = 每組單價 × 每月組數
+ * - 其餘碼別沿用週→月→總次數邏輯
  **********************/
 function updateResults(){
-  // 匯總各池（BD / C 併入 BA 主池）
   let sumBA = 0, sumGA = 0, sumSC = 0;
 
   const tables = document.querySelectorAll("#tables table");
@@ -251,17 +307,31 @@ function updateResults(){
     [...tbody.rows].forEach((tr,i)=>{
       const price = serviceData[g][i].price;
 
-      const w = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
+      // ✅ C碼：以每月組數計
+      if(tr.dataset.cmode === "1"){
+        const groupsCnt = Math.max(0, parseInt(tr.querySelector(".inp-c-groups").value)||0);
+        const amt = price * groupsCnt;
+        sumBA += amt; // C併主池
+        tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
+        return;
+      }
+
+      // 其他碼別
+      const wInp = tr.querySelector(".inp-week");
+      const tInp = tr.querySelector(".inp-total");
+
+      const w = Math.max(0, parseInt(wInp.value)||0);
       const m = Math.ceil(w * WEEKS_PER_MONTH);  // 週→月 無條件進位 4.5
       const manual = tr.dataset.manual === "1";
-      const t = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
+      const t = Math.max(0, parseInt(tInp.value)||0);
 
       const use = manual ? t : m;
       const amt = price * use;
 
       if(g==="GA") sumGA += amt;
       else if(g==="SC") sumSC += amt;
-      else sumBA += amt; // BA / BD / C -> 主池
+      else sumBA += amt; // BA / BD -> 主池
+      tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
     });
   });
 
@@ -356,8 +426,14 @@ function resetAll(){
 
   document.querySelectorAll("#tables table tbody tr").forEach(tr=>{
     tr.dataset.manual = "0";
-    tr.querySelectorAll("input").forEach(inp=>{ inp.value = 0; });
-    const lastCell = tr.cells[5]; if(lastCell) lastCell.textContent = "0";
+    // C碼與非C碼欄位不同，分開處理
+    if(tr.dataset.cmode === "1"){
+      tr.querySelector(".inp-c-groups").value = 0;
+      tr.querySelector(".cell-amount").textContent = "0";
+    }else{
+      tr.querySelectorAll("input").forEach(inp=>{ inp.value = 0; });
+      const lastCell = tr.querySelector(".cell-amount"); if(lastCell) lastCell.textContent = "0";
+    }
   });
 
   updateSCAvailability();
