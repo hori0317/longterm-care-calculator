@@ -455,7 +455,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   window.addEventListener('resize', adjustDockPadding);
   window.addEventListener('orientationchange', adjustDockPadding);
 
-  // 若底欄內容動態改變（例如換語言或改字體），自動重算
   const dock = document.getElementById('bottomDock');
   if(window.ResizeObserver && dock){
     const ro = new ResizeObserver(()=>adjustDockPadding());
