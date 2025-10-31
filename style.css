@@ -1,321 +1,133 @@
-/**********************
- * style.css（完整版，含色票＋避位修正）
- * 2025-10-31
- **********************/
+/* 色票 */
+:root{
+  --bg:#fff6d5;
+  --card:#fffdf5;
+  --line:#e6dca8;
+  --ink:#3b3a1f;
+  --muted:#78714f;
+  --green:#2f7d32;
+  --green-2:#0f766e;
+  --orange:#f59e0b;
+  --graybtn:#9ca3af;
+  --warn:#b00020;
 
-/* === 全站色票（可依需要微調） === */
-:root {
-  /* 背景與卡片 */
-  --bg:       #fff8e1;   /* 柔亮奶油黃 */
-  --card:     #fffef9;   /* 暖白卡片 */
-  --line:     #e8deaa;   /* 柔和線條 */
-
-  /* 文字 */
-  --ink:      #2e2a1e;   /* 主文字（深咖啡） */
-  --muted:    #80795b;   /* 次文字（暖灰） */
-
-  /* 主題綠系 */
-  --green:    #2e7d32;   /* 主綠 */
-  --green-2:  #128277;   /* 青松綠（次強調） */
-
-  /* 強調與狀態 */
-  --orange:   #f59e0b;   /* 橘色強調 */
-  --graybtn:  #9ca3af;   /* 中性灰按鈕 */
-  --warn:     #d32f2f;   /* 警示紅 */
-
-  /* 補充 */
-  --accent:   #ffe082;   /* 淺黃 hover */
-  --border:   #f3e7c0;   /* 區塊邊界 */
-
-  /* 底欄避位（JS 會覆寫 --dock-h） */
-  --dock-gap: 12px;
-  --dock-h:   64px;
+  /* 底部 dock 高度（JS 會覆寫） */
+  --dock-h:64px;
 }
 
-/* === 基礎設定 === */
-* {
-  box-sizing: border-box;
-  font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+/* 基礎 */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:system-ui,-apple-system,"Segoe UI",Noto Sans TC,Roboto,Arial;
+  color:var(--ink); background:var(--bg);
+  padding-bottom:var(--dock-h); /* 避位 */
 }
-html, body { height: 100%; }
+img{max-width:100%; display:block}
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  line-height: 1.6;
+.hidden{display:none !important}
+
+/* 頂部列 */
+.topbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 16px; background:#fff; border-bottom:1px solid var(--line);
 }
+.brand{display:flex; align-items:center; gap:8px; font-weight:700}
+.brand img{width:28px; height:28px; object-fit:contain; opacity:.9}
+.actions{display:flex; gap:8px}
+.divider{height:8px; background:transparent}
 
-/* === 頂部列 === */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  background: color-mix(in srgb, var(--accent) 60%, white);
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 2px 5px rgba(0,0,0,.06);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+/* 通用按鈕 */
+.btn{
+  border:1px solid transparent; padding:8px 12px; cursor:pointer; font-weight:600;
+  background:#fff; border-radius:10px; box-shadow:0 1px 0 rgba(0,0,0,.03);
 }
+.btn.pill{border-radius:999px}
+.btn-primary{background:var(--green-2); color:#fff}
+.btn-green{background:var(--green); color:#fff}
+.btn-orange{background:var(--orange); color:#fff}
+.btn-gray{background:var(--graybtn); color:#fff}
 
-.topbar .brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--ink);
+/* 容器與卡片 */
+.container{max-width:1180px; margin:16px auto; padding:0 12px}
+.grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 14px 16px;
+  box-shadow:0 1px 0 rgba(0,0,0,.03);
 }
+.card-title{margin:0 0 10px 0; font-size:18px}
+.row{display:flex; align-items:center; gap:12px}
+.space-between{justify-content:space-between}
 
-.topbar img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+.hint{font-size:12px; color:var(--muted)}
+.hint.warn{color:var(--warn)}
+.note{font-size:12px; color:var(--muted)}
+.note.warn{color:var(--warn)}
+
+/* AA 區（只保留單一輸入欄） */
+.addon{margin-top:8px}
+.addon-head,
+.addon-row{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center;
+  padding:8px 10px; border:1px solid var(--line);
 }
-
-.actions { display: flex; gap: 8px; }
-
-/* === 按鈕 === */
-.btn {
-  padding: 6px 12px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: filter .2s, transform .05s;
-  color: #fff;
+.addon-head{
+  background:#f7f3df; border-bottom:none; border-top-left-radius:8px; border-top-right-radius:8px;
+  font-weight:700
 }
-.btn:hover { filter: brightness(0.96); }
-.btn:active { transform: translateY(1px); }
-
-.btn-orange { background: var(--orange); border-color: color-mix(in srgb, var(--orange) 65%, black); }
-.btn-green  { background: var(--green);  border-color: color-mix(in srgb, var(--green) 65%, black); }
-.btn-gray   { background: var(--graybtn); border-color: color-mix(in srgb, var(--graybtn) 55%, black); }
-.btn-primary{ background: var(--green-2); border-color: color-mix(in srgb, var(--green-2) 65%, black); }
-.btn.pill   { border-radius: 999px; }
-
-/* === 分隔線 === */
-.divider {
-  height: 2px;
-  background: var(--line);
-  opacity: .7;
-  margin-bottom: 10px;
+.addon-body .addon-row + .addon-row{border-top:none}
+.addon-body .addon-row:last-child{
+  border-bottom-left-radius:8px; border-bottom-right-radius:8px;
 }
-
-/* === 主要容器 === */
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 12px 16px;
+.addon-inputs{display:flex; justify-content:flex-end}
+.addon-inputs input{
+  width:90px; padding:6px 8px; text-align:right;
+  border:1px solid var(--line); border-radius:8px; background:#fff;
 }
 
-/* === 三欄卡片 === */
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
+/* QR 區 */
+.qrbox{display:flex; gap:12px; margin-top:12px}
+.qr-left{width:92px}
+.qr-right .bold{font-weight:700}
+.qr-right .orange{color:var(--orange)}
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.05);
-  padding: 12px 16px;
-}
+/* 基本資料表單 */
+.form-row{display:flex; align-items:center; gap:12px; margin:10px 0}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#fff; border:1px solid var(--line); border-radius:999px}
+.cms{display:flex; gap:8px}
+.cms label{display:flex; align-items:center; gap:6px}
 
-.card-title {
-  font-size: 18px;
-  font-weight: 800;
-  margin: 0 0 10px 0;
-  color: var(--ink);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.card-title::before{
-  content: "";
-  width: 6px; height: 18px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, var(--green), var(--green-2));
-}
+/* KV 區 */
+.kv{display:grid; gap:6px}
+.kv-row{display:flex; justify-content:space-between}
 
-/* === 表格區 === */
-.service-card h2 { margin-bottom: 10px; }
+/* 服務表格 */
+.service-card .card-title{margin-bottom:12px}
+#tables h3{
+  margin:16px 0 8px; padding-left:12px; position:relative; font-size:16px
+}
+#tables h3::before{
+  content:""; position:absolute; left:0; top:6px; width:4px; height:16px; background:teal; border-radius:2px
+}
+table{width:100%; border-collapse:separate; border-spacing:0; border:1px solid var(--line); border-radius:10px; overflow:hidden}
+thead th{background:#f7f3df; padding:10px; text-align:left; border-bottom:1px solid var(--line)}
+tbody td{padding:8px 10px; border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:none}
+tbody input{
+  width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; text-align:right
+}
+td:last-child, th:last-child{text-align:right}
 
-#tables h3 {
-  margin-top: 20px;
-  color: var(--green-2);
-  font-weight: 700;
+/* 底部資訊條 */
+.footerbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:20;
+  background:#fff; border-top:1px solid var(--line)
 }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--card);
-  margin-bottom: 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+.foot{
+  max-width:1180px; margin:0 auto; padding:8px 12px;
+  display:flex; gap:18px; align-items:center; justify-content:flex-end; color:#333
 }
-
-thead {
-  background: color-mix(in srgb, var(--card) 70%, #f5f7fa);
-}
-
-th, td {
-  border: 1px solid var(--border);
-  padding: 8px 10px;
-  text-align: center;
-  color: var(--ink);
-}
-
-td:first-child, th:first-child { text-align: left; }
-
-input[type="number"] {
-  width: 88px;
-  padding: 4px 6px;
-  text-align: right;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--ink);
-}
-input[type="number"]:focus {
-  outline: 2px solid color-mix(in srgb, var(--green-2) 30%, transparent);
-  border-color: var(--green-2);
-}
-
-/* === 各區塊細節 === */
-.row.space-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.addon {
-  margin-top: 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.addon-head, .addon-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  padding: 8px 10px;
-}
-.addon-head {
-  background: color-mix(in srgb, var(--card) 75%, #f5f7fa);
-  font-weight: 700;
-}
-.addon-row:not(:last-child) { border-bottom: 1px solid var(--border); }
-
-.qrbox {
-  display: flex;
-  align-items: center;
-  margin-top: 12px;
-  gap: 12px;
-}
-.qrbox img { width: 88px; height: 88px; }
-.qr-right p { margin: 4px 0; font-size: 13px; color: var(--muted); }
-.bold { font-weight: 800; color: var(--ink); }
-.orange { color: var(--orange); }
-
-.note.warn { color: var(--warn); font-size: 13px; }
-.note.hidden { display: none; }
-
-/* 自付額區 */
-.kv { display: flex; flex-direction: column; gap: 6px; }
-.kv-row { display: flex; justify-content: space-between; color: var(--ink); }
-
-/* chips / CMS */
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 4px 10px;
-  cursor: pointer;
-  color: var(--ink);
-}
-.chip input { margin: 0; }
-
-.cms { display: flex; gap: 6px; flex-wrap: wrap; }
-.cms label {
-  background: #fff;
-  border: 1px solid var(--line);
-  color: var(--ink);
-  border-radius: 6px;
-  padding: 3px 6px;
-  cursor: pointer;
-}
-
-/* === Footer 底部資訊列（固定＋避位） === */
-.footerbar {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  z-index: 999;
-  background: #fff;
-  border-top: 1px solid var(--line);
-  box-shadow: 0 -4px 12px rgba(0,0,0,.08);
-  padding: 6px 16px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--ink);
-}
-.footerbar .foot {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px 16px;
-}
-.footerbar .ok   { color: var(--green-2); font-weight: 700; }
-.footerbar .warn { color: var(--warn);    font-weight: 700; }
-
-/* 讓內容不被 footer 擋住（JS 會動態覆寫 --dock-h） */
-body,
-main.container,
-.card.service-card,
-#tables {
-  padding-bottom: calc(var(--dock-h) + var(--dock-gap) + env(safe-area-inset-bottom));
-}
-
-/* 無 JS 時的保險墊片 */
-#dockSpacer { height: calc(var(--dock-h) + var(--dock-gap)); }
-
-/* 表格與底欄距離（再保險） */
-#tables { margin-bottom: 12px; }
-
-/* === RWD === */
-@media (max-width: 768px) {
-  .grid-3 { grid-template-columns: 1fr; }
-  .footerbar { font-size: 14px; line-height: 1.4; }
-  input[type="number"] { width: 72px; }
-}
-
-/* === 列印優化（可選）：列印時隱藏底欄與按鈕列 === */
-@media print {
-  .footerbar,
-  .actions { display: none !important; }
-  body { background: #fff; }
-  .card { box-shadow: none; }
-}
-/* 移除 AA 價格欄後的對齊修正 */
-.addon-head {
-  grid-template-columns: 1fr 1fr;
-}
-.addon-row {
-  grid-template-columns: 1fr 1fr;
-}
-.addon-inputs {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
+.foot .ok{color:var(--green)}
+.foot .warn{color:var(--warn)}
