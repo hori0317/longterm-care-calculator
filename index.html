@@ -5,28 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>額度試算</title>
 
-  <!-- favicon（前面已設定過，可保留或改成你的 ico） -->
+  <!-- favicon -->
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
 
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 </head>
 <body>
-  <!-- 頂部列 -->
+  <!-- 🔹頂部列 -->
   <header class="topbar">
     <div class="brand">
-      <!-- ★ 換圖：使用 org-logo.png -->
       <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       <span>額度試算</span>
     </div>
+
     <div class="actions">
-      <button class="btn pill btn-orange" type="button">B單位</button>
+      <!-- A/B 單位切換按鈕 -->
+      <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="B">B單位</button>
       <button class="btn pill btn-green" id="btnReset" type="button">重置</button>
       <button class="btn pill btn-gray" type="button" onclick="window.print()">列印</button>
     </div>
   </header>
   <div class="divider"></div>
 
+  <!-- 🔹主要內容 -->
   <main class="container">
     <!-- 上方三欄 -->
     <section class="grid-3">
@@ -42,21 +44,19 @@
         <div class="addon">
           <div class="addon-head">
             <span>項目</span>
-            <span>價格</span>
             <span>次數</span>
           </div>
           <div id="addonRows" class="addon-body"></div>
         </div>
 
-        <!-- ★ 換圖：使用 qrcode.png -->
         <div class="qrbox">
           <div class="qr-left">
             <img src="qrcode.png" alt="QR" onerror="this.style.opacity=0.2" />
           </div>
           <div class="qr-right">
-            <p class="bold">我們是XXXXXX機構</p>
-            <p>負責區域為XXXXXXXXXXX<br>歡迎洽詢：</p>
-            <p>諮詢電話：02-XXXX-XXXX</p>
+            <p class="bold">我們是常錦居家長照機構</p>
+            <p>負責區域為新莊、板橋、中和、永和、樹林、土城<br>歡迎洽詢：</p>
+            <p>諮詢電話：02-8952-0607</p>
             <p class="orange">廣告待補</p>
           </div>
         </div>
@@ -105,59 +105,54 @@
             <label class="chip"><input type="radio" name="foreign" value="0" checked> 無</label>
           </div>
         </div>
+
         <div id="warnSCfg" class="note warn">未勾選外籍看護，SC 目前不可用。</div>
       </div>
 
       <!-- 右：個案額度及自付額 -->
       <div class="card">
         <h2 class="card-title">個案額度及自付額</h2>
-
         <div class="kv">
           <div class="kv-row"><span>額度總計：</span><b id="sumGrantBA">0</b></div>
           <div class="kv-row"><span>剩餘額度：</span><b id="sumRemainBA">0</b></div>
           <div id="overMain" class="note warn hidden">已超過 BA 額度</div>
           <hr>
-
           <div class="kv-row"><span>GA 額度：</span><b id="sumGrantGA">0</b></div>
           <div class="kv-row"><span>剩餘額度：</span><b id="sumRemainGA">0</b></div>
           <div id="overGA" class="note warn hidden">已超過 GA 額度</div>
           <hr>
-
           <div class="kv-row"><span>SC 額度：</span><b id="sumGrantSC">0</b></div>
           <div class="kv-row"><span>剩餘額度：</span><b id="sumRemainSC">0</b></div>
           <div id="overSC" class="note warn hidden">已超過 SC 額度</div>
           <hr>
-
           <div class="kv-row"><span>部分負擔：</span><b id="sumCopay">0</b></div>
           <div class="kv-row"><span>自付總計：</span><b id="sumSelfpay">0</b></div>
-
           <div class="kv-row optional"><span>政府補助：</span><b id="sumGovSubsidy">0</b></div>
           <div class="kv-row optional"><span>總金額：</span><b id="sumGrand">0</b></div>
         </div>
       </div>
     </section>
 
-    <!-- 下方服務表格（由 script.js 產生） -->
+    <!-- 下方服務表格 -->
     <section class="card service-card">
       <h2 class="card-title">服務項目</h2>
       <div id="tables"></div>
     </section>
   </main>
-  
-<!-- 🔹為了不被底部工具列遮擋的墊片 -->
+
+  <!-- 墊片避免被 Dock 遮住 -->
   <div id="dockSpacer" aria-hidden="true"></div>
-  
-  <!-- 底部資訊條 -->
-<footer id="bottomDock" class="footerbar">
-  <div class="foot">
-    <span>BA 剩餘：<b id="sumRemainBA_foot">0</b></span>
-    <span>GA 剩餘：<b id="sumRemainGA_foot">0</b></span>
-    <span>SC 剩餘：<b id="sumRemainSC_foot">0</b></span>
-    <span class="ok">補助：<b id="sumGovSubsidy_foot">0</b></span>
-    <span class="warn">自付：<b id="sumSelfpay_foot">0</b></span>
-    <span>總額：<b id="sumGrand_foot">0</b></span>
-  </div>
-</footer>
+
+  <!-- 🔹底部資訊列 -->
+  <footer id="bottomDock" class="footerbar">
+    <div class="foot">
+      <span>BA 剩餘：<b id="sumRemainBA_foot">0</b></span>
+      <span>GA 剩餘：<b id="sumRemainGA_foot">0</b></span>
+      <span>SC 剩餘：<b id="sumRemainSC_foot">0</b></span>
+      <span class="ok">補助：<b id="sumGovSubsidy_foot">0</b></span>
+      <span class="warn">自付：<b id="sumSelfpay_foot">0</b></span>
+      <span>總額：<b id="sumGrand_foot">0</b></span>
+    </div>
+  </footer>
 </body>
 </html>
-
