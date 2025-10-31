@@ -122,7 +122,7 @@ function saveAddons(){
     data[`${a.code}_count`] = parseInt($(`#${a.code}_count`)?.value) || 0;
   });
   localStorage.setItem("addons", JSON.stringify(data));
-  const hint=$("#addonHint"); if(hint){ hint.textContent="已儲存加成次數"; hint.classList.remove("warn"); }
+  const hint=$("#addonHint"); if(hint){ hint.textContent="已儲存"; hint.classList.remove("warn"); }
 }
 
 /* 服務表格（各群組包一層，方便顯示/隱藏 C） */
@@ -439,3 +439,4 @@ function adjustTopbarPadding(){
   const h = topbar.offsetHeight || 0;
   document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
+
