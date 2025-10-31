@@ -307,3 +307,15 @@ main.container,
   body { background: #fff; }
   .card { box-shadow: none; }
 }
+/* 移除 AA 價格欄後的對齊修正 */
+.addon-head {
+  grid-template-columns: 1fr 1fr;
+}
+.addon-row {
+  grid-template-columns: 1fr 1fr;
+}
+.addon-inputs {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
