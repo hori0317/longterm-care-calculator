@@ -241,7 +241,7 @@ function updateResults(){
   const rate = rateMap[idtyRaw] ?? 0.16;
 
   // 各池額度（主池＋留用；GA/SC 專屬池）
-  const grantBA = ((limitTable[idtyRaw] && limitTable[idtyRaw][cms]) ? limitTable[idtyRaw][cms] : 0) + keep;
+  // BA 主額度不受身分別影響，只依 CMS 等級＋留用額度 const grantBA = (cmsQuota[cms] || 0) + keep;
   const grantGA = GA_CAP[cms] || 0;
   const grantSC = SC_CAP[cms] || 0;
 
@@ -332,3 +332,4 @@ function resetAll(){
   const hint=$("#addonHint");
   if(hint){ hint.textContent="請儲存加成次數"; hint.classList.add("warn"); }
 }
+
