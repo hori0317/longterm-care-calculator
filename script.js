@@ -1,6 +1,9 @@
 /**********************
  * script.js（三結構版：完整檔）
- * 2025-10-31 修正：BA 額度僅依 CMS + 留用，不受身分別影響
+ * 2025-10-31
+ * - 週→月→總：總次數預設跟月次數相同；若使用者手動改總次數，之後週次數不再覆蓋總次數
+ * - 金額依總次數計算（若未手動覆寫，採用月次數）
+ * - BA 額度僅依 CMS + 留用，不受身分別影響
  **********************/
 
 /**********************
@@ -90,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $("#btnSaveAddons")?.addEventListener("click", saveAddons);
   $("#btnReset")?.addEventListener("click", resetAll);
 
-  // 事件委派：任何在 #tables 的 input/select 變更都會重算（避免漏綁）
+  // 事件委派：任何在 #tables 的 input/select 變更都會重算
   $("#tables")?.addEventListener("input", (e)=>{
     if(e.target.tagName === "INPUT" || e.target.tagName === "SELECT"){
       updateResults();
@@ -152,6 +155,7 @@ function renderTables(){
 
     serviceData[code].forEach((item,i)=>{
       const tr=document.createElement("tr");
+      tr.dataset.manual = "0"; // 是否手動覆寫總次數：0=否 1=是
       tr.innerHTML=`
         <td>${item.code} ${item.name}</td>
         <td>${item.price.toLocaleString()}</td>
@@ -159,11 +163,28 @@ function renderTables(){
         <td><input type="number" value="0" readonly /></td>
         <td><input type="number" min="0" step="1" value="0" /></td>
         <td>0</td>`;
-      const week = tr.cells[2].querySelector("input");
+      const week  = tr.cells[2].querySelector("input");
+      const month = tr.cells[3].querySelector("input");
       const total = tr.cells[4].querySelector("input");
 
-      week.addEventListener("input", ()=>updateRow(code,i,false));
-      total.addEventListener("input",()=>updateRow(code,i,true));
+      // 週次數改變：更新月次數；若未手動覆寫總次數，連總次數一起帶入
+      week.addEventListener("input", ()=>{
+        const w = Math.max(0, parseInt(week.value)||0);
+        const m = Math.ceil(w * WEEKS_PER_MONTH);
+        month.value = m;
+        if(tr.dataset.manual !== "1"){ // 尚未手動覆寫
+          total.value = m;
+        }
+        updateOneRow(code, i); // 只重算本列金額
+        updateResults();       // 重新彙總
+      });
+
+      // 總次數改變：標記為手動覆寫；金額以總次數為準
+      total.addEventListener("input", ()=>{
+        tr.dataset.manual = "1";
+        updateOneRow(code, i);
+        updateResults();
+      });
 
       tbody.appendChild(tr);
     });
@@ -172,23 +193,24 @@ function renderTables(){
 }
 
 /**********************
- * 每行更新（週→月：無條件進位 4.5）
+ * 單列金額更新（依「總次數」；未手動覆寫則採用月次數）
  **********************/
-function updateRow(code, idx, fromTotal=false){
+function updateOneRow(code, idx){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table = document.querySelectorAll("#tables table")[tIndex];
   const tr = table.tBodies[0].rows[idx];
 
   const price = serviceData[code][idx].price;
-  const w = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
-  const m = Math.ceil(w * WEEKS_PER_MONTH);
-  tr.cells[3].querySelector("input").value = m;
+  const week  = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
+  const month = Math.ceil(week * WEEKS_PER_MONTH);
+  tr.cells[3].querySelector("input").value = month; // 再保險同步
 
-  const t = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
-  const use = t > 0 ? t : m;
+  const manual = tr.dataset.manual === "1";
+  const tVal = tr.cells[4].querySelector("input").value;
+  const total = Math.max(0, parseInt(tVal===""? "0": tVal) || 0);
+  const use = manual ? total : month;
 
   tr.cells[5].textContent = (price * use).toLocaleString();
-  updateResults();
 }
 
 /**********************
@@ -206,7 +228,6 @@ function bindHeaderInputs(){
 function updateSCAvailability(){
   const tables = document.querySelectorAll("#tables table");
   if(!tables.length) return;
-  // 找到 SC 表
   const scTable = [...tables].find(t=>t.previousSibling && t.previousSibling.textContent.includes("SC"));
   if(!scTable) return;
   const hasForeign = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
@@ -219,7 +240,7 @@ function updateSCAvailability(){
 }
 
 /**********************
- * 計算核心（分池；部分負擔僅對額度內）
+ * 計算核心（分池；部分負擔僅對額度內；總次數優先）
  **********************/
 function updateResults(){
   // 匯總各池（BD / C 併入 BA 主池）
@@ -231,10 +252,13 @@ function updateResults(){
     const tbody = tables[idx]?.tBodies[0]; if(!tbody) return;
     [...tbody.rows].forEach((tr,i)=>{
       const price = serviceData[g][i].price;
+
       const w = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
       const m = Math.ceil(w * WEEKS_PER_MONTH);  // 週→月 無條件進位 4.5
+      const manual = tr.dataset.manual === "1";
       const t = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
-      const use = t > 0 ? t : m;
+
+      const use = manual ? t : m;
       const amt = price * use;
 
       if(g==="GA") sumGA += amt;
@@ -257,7 +281,7 @@ function updateResults(){
   const grantGA = GA_CAP[cms] || 0;
   const grantSC = SC_CAP[cms] || 0;
 
-  // 額度內可補助金額
+  // 額度內可補助金額（各池分開取 min）
   const allowBA = Math.min(sumBA, grantBA);
   const allowGA = Math.min(sumGA, grantGA);
   const allowSC = Math.min(sumSC, grantSC);
@@ -310,9 +334,6 @@ function updateResults(){
   toggle("#overMain", overBA>0);
   toggle("#overGA",   overGA>0);
   toggle("#overSC",   overSC>0);
-
-  // 除錯可開：
-  // console.log({sumBA,sumGA,sumSC,grantBA,grantGA,grantSC,allowBA,allowGA,allowSC,overBA,overGA,overSC,rate,copay,govSubsidy,selfpay,grandTotal});
 }
 
 /**********************
@@ -339,8 +360,12 @@ function resetAll(){
   if(foreignNo) foreignNo.checked = true;
   const keep = $("#keepQuota"); if(keep) keep.value = "";
 
-  document.querySelectorAll("#tables input").forEach(inp=>{ inp.value = 0; });
-  document.querySelectorAll("#tables td:last-child").forEach(td=>td.textContent="0");
+  // 清空所有欄位與金額、解除手動覆寫
+  document.querySelectorAll("#tables table tbody tr").forEach(tr=>{
+    tr.dataset.manual = "0";
+    tr.querySelectorAll("input").forEach(inp=>{ inp.value = 0; });
+    const lastCell = tr.cells[5]; if(lastCell) lastCell.textContent = "0";
+  });
 
   updateSCAvailability();
   updateResults();
