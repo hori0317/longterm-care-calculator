@@ -1,7 +1,7 @@
 /**********************
  * script.js（三結構版：完整檔）
  * 2025-10-31
- * - 週→月→總：總次數預設跟月次數相同；若使用者手動改總次數，之後週次數不再覆蓋總次數
+ * - 週→月→總：總次數預設跟月次數相同；若使用者手動改總次數，之後週次數再變更時，總次數會重新跟週→月同步（覆蓋手動值）
  * - 金額依總次數計算（若未手動覆寫，採用月次數）
  * - BA 額度僅依 CMS + 留用，不受身分別影響
  **********************/
@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
   $("#btnSaveAddons")?.addEventListener("click", saveAddons);
   $("#btnReset")?.addEventListener("click", resetAll);
 
-  // 事件委派：任何在 #tables 的 input/select 變更都會重算
   $("#tables")?.addEventListener("input", (e)=>{
     if(e.target.tagName === "INPUT" || e.target.tagName === "SELECT"){
       updateResults();
@@ -167,16 +166,15 @@ function renderTables(){
       const month = tr.cells[3].querySelector("input");
       const total = tr.cells[4].querySelector("input");
 
-      // 週次數改變：更新月次數；若未手動覆寫總次數，連總次數一起帶入
+      // ✅ 週次數改變：更新月次數，並「總次數=月次數」（覆蓋任何手動值）
       week.addEventListener("input", ()=>{
         const w = Math.max(0, parseInt(week.value)||0);
         const m = Math.ceil(w * WEEKS_PER_MONTH);
         month.value = m;
-        if(tr.dataset.manual !== "1"){ // 尚未手動覆寫
-          total.value = m;
-        }
-        updateOneRow(code, i); // 只重算本列金額
-        updateResults();       // 重新彙總
+        tr.dataset.manual = "0";   // 取消手動覆寫狀態
+        total.value = m;           // 總次數回到跟月次數一致
+        updateOneRow(code, i);
+        updateResults();
       });
 
       // 總次數改變：標記為手動覆寫；金額以總次數為準
@@ -272,22 +270,22 @@ function updateResults(){
   const cms  = Number((document.querySelector("input[name='cms']:checked")||{}).value || 2);
   const keep = Math.max(0, parseInt($("#keepQuota")?.value)||0);
 
-  // 身分別 → 部分負擔率（支援代碼/中文）
+  // 身分別 → 部分負擔率
   const rateMap = { "一般戶":0.16, "中低收入戶":0.05, "低收入戶":0, "normal":0.16, "midlow":0.05, "low":0 };
   const rate = rateMap[idtyRaw] ?? 0.16;
 
-  // 各池額度（⚠️ BA 只依 CMS＋留用，不依身分別）
+  // 各池額度
   const grantBA = (cmsQuota[cms] || 0) + keep;
   const grantGA = GA_CAP[cms] || 0;
   const grantSC = SC_CAP[cms] || 0;
 
-  // 額度內可補助金額（各池分開取 min）
+  // 額度內
   const allowBA = Math.min(sumBA, grantBA);
   const allowGA = Math.min(sumGA, grantGA);
   const allowSC = Math.min(sumSC, grantSC);
   const subsidyBase = allowBA + allowGA + allowSC;
 
-  // 超額（額度外）：不計部分負擔
+  // 超額（不計部分負擔）
   const overBA = Math.max(0, sumBA - grantBA);
   const overGA = Math.max(0, sumGA - grantGA);
   const overSC = Math.max(0, sumSC - grantSC);
@@ -298,12 +296,11 @@ function updateResults(){
   // 政府補助 & 自付 & 總金額
   const govSubsidy = subsidyBase - copay;
   const selfpay    = copay + overBA + overGA + overSC;
-  const grandTotal = govSubsidy + selfpay; // ＝ sumBA + sumGA + sumSC
+  const grandTotal = govSubsidy + selfpay;
 
-  // 中區：給付額度（BA 主額度＋留用）
+  // 顯示
   const grantQuotaEl = $("#grantQuota"); if(grantQuotaEl) grantQuotaEl.value = grantBA.toLocaleString();
 
-  // 右區：分池額度/剩餘
   const remainBA = Math.max(0, grantBA - allowBA);
   const remainGA = Math.max(0, grantGA - allowGA);
   const remainSC = Math.max(0, grantSC - allowSC);
@@ -315,12 +312,10 @@ function updateResults(){
   setText("#sumGrantSC", grantSC);
   setText("#sumRemainSC", remainSC);
 
-  // 底部同步（存在才更新）
   setText("#sumRemainBA_foot", remainBA);
   setText("#sumRemainGA_foot", remainGA);
   setText("#sumRemainSC_foot", remainSC);
 
-  // 費用總結
   setText("#sumCopay", copay);
   setText("#sumSelfpay", selfpay);
   setText("#sumGovSubsidy", govSubsidy);
@@ -330,7 +325,6 @@ function updateResults(){
   setText("#sumSelfpay_foot", selfpay);
   setText("#sumGrand_foot", grandTotal);
 
-  // 超額提醒
   toggle("#overMain", overBA>0);
   toggle("#overGA",   overGA>0);
   toggle("#overSC",   overSC>0);
@@ -360,7 +354,6 @@ function resetAll(){
   if(foreignNo) foreignNo.checked = true;
   const keep = $("#keepQuota"); if(keep) keep.value = "";
 
-  // 清空所有欄位與金額、解除手動覆寫
   document.querySelectorAll("#tables table tbody tr").forEach(tr=>{
     tr.dataset.manual = "0";
     tr.querySelectorAll("input").forEach(inp=>{ inp.value = 0; });
