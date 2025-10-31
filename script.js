@@ -1,14 +1,14 @@
 /**********************
- * script.js（三結構版：完整檔）
+ * script.js（完整版）
  * 2025-10-31
- * - 週→月→總（BA/BD/GA/SC）：總次數預設跟月次數相同；若使用者手動改總次數，之後週次數再變更時，總次數會重新跟週→月同步（覆蓋手動值）
- * - 金額依總次數計算（若未手動覆寫，採用月次數）
- * - BA 額度僅依 CMS + 留用，不受身分別影響
- * - ✅ C碼為「一包＝多次」的月組數邏輯：顯示【單價(每組)／每月組數／總金額】，不使用週/總次數欄
+ * - 週→月→總（BA/BD/GA/SC）
+ * - C碼：一包制（月組數 × 單價）
+ * - SC09 不被底欄遮擋（CSS 控制）
+ * - 居服薪資(6/4)：AA碼＋額度合計 ×0.6
  **********************/
 
 /**********************
- * 服務清單與單價（依你提供＋C碼新規）
+ * 服務清單與單價
  **********************/
 const serviceData = {
   BA: [
@@ -44,14 +44,10 @@ const serviceData = {
     { code: "BD02", name: "社區式晚餐", price: 150 },
     { code: "BD03", name: "社區式服務交通接送", price: 115 },
   ],
-  // ✅ C碼為「每組」單價；僅輸入「每月組數」
   C: [
-    // 規格：CA07(3次*1500=4500)、CA08(4*1500=6000)、CB01(3*2000=6000)、
-    // CB02(6*1500=9000)、CB03(3*1500=4500)、CB04(6*1500=9000)、
-    // CC01(2*1000=2000)、CD02(4*1500=6000)
     { code: "CA07", name: "IADLs/ADLs 復能照護(3次含評估)", price: 4500 },
     { code: "CA08", name: "ISP擬定與執行(4次含評估)", price: 6000 },
-    { code: "CB01", name: "營養照護(3次含評估)", price: 6000 }, // ⬅ 依新規改為 6000
+    { code: "CB01", name: "營養照護(3次含評估)", price: 6000 },
     { code: "CB02", name: "進食與吞嚥照護(6次含評估)", price: 9000 },
     { code: "CB03", name: "困擾行為照護(3次含評估)", price: 4500 },
     { code: "CB04", name: "臥床/長期活動受限照護(6次含評估)", price: 9000 },
@@ -63,15 +59,12 @@ const serviceData = {
 };
 
 /**********************
- * 額度表（主池與專屬池）
+ * 額度表
  **********************/
-// BA 主(補助)額度：僅依 CMS 等級
 const cmsQuota = {
   2: 10020, 3: 15460, 4: 18580,
   5: 24100, 6: 28070, 7: 32090, 8: 36180
 };
-
-// GA/SC 專屬池（依你提供）
 const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
@@ -105,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**********************
- * 左卡加成（本機儲存，不參與金額計算）
+ * 左卡加成（AA碼）
  **********************/
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
@@ -130,6 +123,7 @@ function saveAddons(){
   });
   localStorage.setItem("addons", JSON.stringify(data));
   const hint=$("#addonHint"); if(hint){ hint.textContent="已儲存加成次數"; hint.classList.remove("warn"); }
+  updateResults(); // 儲存後立即更新薪資
 }
 
 /**********************
@@ -148,9 +142,8 @@ function renderTables(){
 
   Object.keys(serviceData).forEach(code=>{
     const h3=document.createElement("h3"); h3.textContent=titles[code]; container.appendChild(h3);
-
     const table=document.createElement("table");
-    // ✅ C碼專用欄位
+
     if(code === "C"){
       table.innerHTML = `
         <thead><tr>
@@ -158,8 +151,7 @@ function renderTables(){
           <th>單價(每組)</th>
           <th>每月組數</th>
           <th>總金額</th>
-        </tr></thead>
-        <tbody></tbody>`;
+        </tr></thead><tbody></tbody>`;
     }else{
       table.innerHTML=`
         <thead><tr>
@@ -169,295 +161,271 @@ function renderTables(){
           <th>月次數</th>
           <th>總次數</th>
           <th>總金額</th>
-        </tr></thead>
-        <tbody></tbody>`;
+        </tr></thead><tbody></tbody>`;
     }
 
     const tbody=table.querySelector("tbody");
-
     serviceData[code].forEach((item,i)=>{
       const tr=document.createElement("tr");
-      tr.dataset.manual = "0"; // 只對非C碼有意義
+      tr.dataset.manual="0";
 
-      if(code === "C"){
-        tr.dataset.cmode = "1";
-        tr.innerHTML = `
+      if(code==="C"){
+        tr.dataset.cmode="1";
+        tr.innerHTML=`
           <td>${item.code} ${item.name}</td>
-          <td class="cell-price">${item.price.toLocaleString()}</td>
-          <td><input class="inp-c-groups" type="number" min="0" step="1" value="0" /></td>
-          <td class="cell-amount">0</td>
-        `;
-        const gInp = tr.querySelector(".inp-c-groups");
-        gInp.addEventListener("input", ()=>{
-          updateOneRow(code, i);
+          <td>${item.price.toLocaleString()}</td>
+          <td><input class="inp-c-groups" type="number" min="0" step="1" value="0"/></td>
+          <td class="cell-amount">0</td>`;
+        tr.querySelector(".inp-c-groups").addEventListener("input",()=>{
+          updateOneRow(code,i);
           updateResults();
         });
       }else{
         tr.innerHTML=`
           <td>${item.code} ${item.name}</td>
-          <td class="cell-price">${item.price.toLocaleString()}</td>
-          <td><input class="inp-week"  type="number" min="0" step="1" value="0" /></td>
-          <td><input class="inp-month" type="number" value="0" readonly /></td>
-          <td><input class="inp-total" type="number" min="0" step="1" value="0" /></td>
-          <td class="cell-amount">0</td>
-        `;
-        const week  = tr.querySelector(".inp-week");
-        const month = tr.querySelector(".inp-month");
-        const total = tr.querySelector(".inp-total");
-
-        // ✅ 週次數改變：更新月次數，並「總次數=月次數」（覆蓋任何手動值）
-        week.addEventListener("input", ()=>{
-          const w = Math.max(0, parseInt(week.value)||0);
-          const m = Math.ceil(w * WEEKS_PER_MONTH);
-          month.value = m;
-          tr.dataset.manual = "0";   // 取消手動覆寫狀態
-          total.value = m;           // 總次數回到跟月次數一致
-          updateOneRow(code, i);
+          <td>${item.price.toLocaleString()}</td>
+          <td><input class="inp-week" type="number" min="0" step="1" value="0"/></td>
+          <td><input class="inp-month" value="0" readonly/></td>
+          <td><input class="inp-total" type="number" min="0" step="1" value="0"/></td>
+          <td class="cell-amount">0</td>`;
+        const week=tr.querySelector(".inp-week");
+        const month=tr.querySelector(".inp-month");
+        const total=tr.querySelector(".inp-total");
+        week.addEventListener("input",()=>{
+          const w=Math.max(0,parseInt(week.value)||0);
+          const m=Math.ceil(w*WEEKS_PER_MONTH);
+          month.value=m;
+          tr.dataset.manual="0";
+          total.value=m;
+          updateOneRow(code,i);
           updateResults();
         });
-
-        // 總次數改變：標記為手動覆寫；金額以總次數為準
-        total.addEventListener("input", ()=>{
-          tr.dataset.manual = "1";
-          updateOneRow(code, i);
+        total.addEventListener("input",()=>{
+          tr.dataset.manual="1";
+          updateOneRow(code,i);
           updateResults();
         });
       }
-
       tbody.appendChild(tr);
     });
-
     container.appendChild(table);
   });
 }
 
 /**********************
  * 單列金額更新
- * - 非C碼：依「總次數」（未手動覆寫採用月次數）
- * - C碼：依「每月組數 × 每組單價」
  **********************/
-function updateOneRow(code, idx){
-  const tIndex = Object.keys(serviceData).indexOf(code);
-  const table = document.querySelectorAll("#tables table")[tIndex];
-  const tr = table.tBodies[0].rows[idx];
-  const price = serviceData[code][idx].price;
+function updateOneRow(code,idx){
+  const tIndex=Object.keys(serviceData).indexOf(code);
+  const table=document.querySelectorAll("#tables table")[tIndex];
+  const tr=table.tBodies[0].rows[idx];
+  const price=serviceData[code][idx].price;
 
-  // ✅ C碼：每月組數 × 每組單價
-  if(tr.dataset.cmode === "1"){
-    const groups = Math.max(0, parseInt(tr.querySelector(".inp-c-groups").value)||0);
-    tr.querySelector(".cell-amount").textContent = (price * groups).toLocaleString();
+  if(tr.dataset.cmode==="1"){
+    const g=Math.max(0,parseInt(tr.querySelector(".inp-c-groups").value)||0);
+    tr.querySelector(".cell-amount").textContent=(price*g).toLocaleString();
     return;
   }
-
-  // 其他碼別（沿用週→月→總邏輯）
-  const weekInp  = tr.querySelector(".inp-week");
-  const monthInp = tr.querySelector(".inp-month");
-  const totalInp = tr.querySelector(".inp-total");
-
-  const week  = Math.max(0, parseInt(weekInp.value)||0);
-  const month = Math.ceil(week * WEEKS_PER_MONTH);
-  monthInp.value = month; // 再保險同步
-
-  const manual = tr.dataset.manual === "1";
-  const tVal = totalInp.value;
-  const total = Math.max(0, parseInt(tVal===""? "0": tVal) || 0);
-  const use = manual ? total : month;
-
-  tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
+  const week=parseInt(tr.querySelector(".inp-week").value)||0;
+  const month=Math.ceil(week*WEEKS_PER_MONTH);
+  tr.querySelector(".inp-month").value=month;
+  const manual=tr.dataset.manual==="1";
+  const tVal=parseInt(tr.querySelector(".inp-total").value)||0;
+  const use=manual?tVal:month;
+  tr.querySelector(".cell-amount").textContent=(price*use).toLocaleString();
 }
 
 /**********************
  * 綁定條件輸入
  **********************/
 function bindHeaderInputs(){
-  document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
-    .forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
-  $("#keepQuota")?.addEventListener("input", updateResults);
+  document.querySelectorAll("input[name='idty'],input[name='cms'],input[name='foreign']")
+    .forEach(el=>el.addEventListener("change",()=>{updateSCAvailability();updateResults();}));
+  $("#keepQuota")?.addEventListener("input",updateResults);
 }
 
 /**********************
- * SC 僅外籍看護「有」可用
+ * SC 僅外籍看護可用
  **********************/
 function updateSCAvailability(){
-  const tables = document.querySelectorAll("#tables table");
-  if(!tables.length) return;
-  const scTable = [...tables].find(t=>t.previousSibling && t.previousSibling.textContent.includes("SC"));
-  if(!scTable) return;
-  const hasForeign = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
+  const tables=document.querySelectorAll("#tables table");
+  if(!tables.length)return;
+  const scTable=[...tables].find(t=>t.previousSibling&&t.previousSibling.textContent.includes("SC"));
+  if(!scTable)return;
+  const hasForeign=(document.querySelector("input[name='foreign']:checked")||{}).value==="1";
   scTable.querySelectorAll("input").forEach(inp=>{
-    inp.disabled = !hasForeign;
-    if(!hasForeign){ inp.value = 0; }
+    inp.disabled=!hasForeign;
+    if(!hasForeign)inp.value=0;
   });
   const warn=$("#warnSCfg");
-  if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
+  if(warn){!hasForeign?warn.classList.remove("hidden"):warn.classList.add("hidden");}
 }
 
 /**********************
- * 計算核心（分池；部分負擔僅對額度內）
- * - C碼併入 BA 主池，金額 = 每組單價 × 每月組數
- * - 其餘碼別沿用週→月→總次數邏輯
+ * 計算核心
  **********************/
 function updateResults(){
-  let sumBA = 0, sumGA = 0, sumSC = 0;
-
-  const tables = document.querySelectorAll("#tables table");
-  const groups = Object.keys(serviceData); // ["BA","BD","C","GA","SC"]
+  let sumBA=0,sumGA=0,sumSC=0;
+  const tables=document.querySelectorAll("#tables table");
+  const groups=Object.keys(serviceData);
   groups.forEach((g,idx)=>{
-    const tbody = tables[idx]?.tBodies[0]; if(!tbody) return;
+    const tbody=tables[idx]?.tBodies[0]; if(!tbody)return;
     [...tbody.rows].forEach((tr,i)=>{
-      const price = serviceData[g][i].price;
-
-      // ✅ C碼：以每月組數計
-      if(tr.dataset.cmode === "1"){
-        const groupsCnt = Math.max(0, parseInt(tr.querySelector(".inp-c-groups").value)||0);
-        const amt = price * groupsCnt;
-        sumBA += amt; // C併主池
-        tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
+      const price=serviceData[g][i].price;
+      if(tr.dataset.cmode==="1"){
+        const gCnt=parseInt(tr.querySelector(".inp-c-groups").value)||0;
+        const amt=price*gCnt;
+        sumBA+=amt;
+        tr.querySelector(".cell-amount").textContent=amt.toLocaleString();
         return;
       }
-
-      // 其他碼別
-      const wInp = tr.querySelector(".inp-week");
-      const tInp = tr.querySelector(".inp-total");
-
-      const w = Math.max(0, parseInt(wInp.value)||0);
-      const m = Math.ceil(w * WEEKS_PER_MONTH);  // 週→月 無條件進位 4.5
-      const manual = tr.dataset.manual === "1";
-      const t = Math.max(0, parseInt(tInp.value)||0);
-
-      const use = manual ? t : m;
-      const amt = price * use;
-
-      if(g==="GA") sumGA += amt;
-      else if(g==="SC") sumSC += amt;
-      else sumBA += amt; // BA / BD -> 主池
-      tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
+      const w=parseInt(tr.querySelector(".inp-week").value)||0;
+      const m=Math.ceil(w*WEEKS_PER_MONTH);
+      const manual=tr.dataset.manual==="1";
+      const t=parseInt(tr.querySelector(".inp-total").value)||0;
+      const use=manual?t:m;
+      const amt=price*use;
+      if(g==="GA")sumGA+=amt;
+      else if(g==="SC")sumSC+=amt;
+      else sumBA+=amt;
+      tr.querySelector(".cell-amount").textContent=amt.toLocaleString();
     });
   });
 
-  // 條件值
-  const idtyRaw = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
-  const cms  = Number((document.querySelector("input[name='cms']:checked")||{}).value || 2);
-  const keep = Math.max(0, parseInt($("#keepQuota")?.value)||0);
+  const idtyRaw=(document.querySelector("input[name='idty']:checked")||{}).value||"一般戶";
+  const cms=Number((document.querySelector("input[name='cms']:checked")||{}).value||2);
+  const keep=Math.max(0,parseInt($("#keepQuota")?.value)||0);
+  const rateMap={"一般戶":0.16,"中低收入戶":0.05,"低收入戶":0};
+  const rate=rateMap[idtyRaw]??0.16;
 
-  // 身分別 → 部分負擔率
-  const rateMap = { "一般戶":0.16, "中低收入戶":0.05, "低收入戶":0, "normal":0.16, "midlow":0.05, "low":0 };
-  const rate = rateMap[idtyRaw] ?? 0.16;
+  const grantBA=(cmsQuota[cms]||0)+keep;
+  const grantGA=GA_CAP[cms]||0;
+  const grantSC=SC_CAP[cms]||0;
 
-  // 各池額度
-  const grantBA = (cmsQuota[cms] || 0) + keep;
-  const grantGA = GA_CAP[cms] || 0;
-  const grantSC = SC_CAP[cms] || 0;
+  const allowBA=Math.min(sumBA,grantBA);
+  const allowGA=Math.min(sumGA,grantGA);
+  const allowSC=Math.min(sumSC,grantSC);
+  const subsidyBase=allowBA+allowGA+allowSC;
 
-  // 額度內
-  const allowBA = Math.min(sumBA, grantBA);
-  const allowGA = Math.min(sumGA, grantGA);
-  const allowSC = Math.min(sumSC, grantSC);
-  const subsidyBase = allowBA + allowGA + allowSC;
+  const overBA=Math.max(0,sumBA-grantBA);
+  const overGA=Math.max(0,sumGA-grantGA);
+  const overSC=Math.max(0,sumSC-grantSC);
 
-  // 超額（不計部分負擔）
-  const overBA = Math.max(0, sumBA - grantBA);
-  const overGA = Math.max(0, sumGA - grantGA);
-  const overSC = Math.max(0, sumSC - grantSC);
+  const copay=Math.round(subsidyBase*rate);
+  const govSubsidy=subsidyBase-copay;
+  const selfpay=copay+overBA+overGA+overSC;
+  const grandTotal=govSubsidy+selfpay;
 
-  // 部分負擔（僅額度內）
-  const copay = Math.round(subsidyBase * rate);
+  setText("#sumGrantBA",grantBA);
+  setText("#sumRemainBA",Math.max(0,grantBA-allowBA));
+  setText("#sumGrantGA",grantGA);
+  setText("#sumRemainGA",Math.max(0,grantGA-allowGA));
+  setText("#sumGrantSC",grantSC);
+  setText("#sumRemainSC",Math.max(0,grantSC-allowSC));
 
-  // 政府補助 & 自付 & 總金額
-  const govSubsidy = subsidyBase - copay;
-  const selfpay    = copay + overBA + overGA + overSC;
-  const grandTotal = govSubsidy + selfpay;
+  setText("#sumRemainBA_foot",Math.max(0,grantBA-allowBA));
+  setText("#sumRemainGA_foot",Math.max(0,grantGA-allowGA));
+  setText("#sumRemainSC_foot",Math.max(0,grantSC-allowSC));
 
-  // 顯示
-  const grantQuotaEl = $("#grantQuota"); if(grantQuotaEl) grantQuotaEl.value = grantBA.toLocaleString();
+  setText("#sumCopay",copay);
+  setText("#sumSelfpay",selfpay);
+  setText("#sumGovSubsidy",govSubsidy);
+  setText("#sumGrand",grandTotal);
 
-  const remainBA = Math.max(0, grantBA - allowBA);
-  const remainGA = Math.max(0, grantGA - allowGA);
-  const remainSC = Math.max(0, grantSC - allowSC);
+  setText("#sumGovSubsidy_foot",govSubsidy);
+  setText("#sumSelfpay_foot",selfpay);
+  setText("#sumGrand_foot",grandTotal);
 
-  setText("#sumGrantBA", grantBA);
-  setText("#sumRemainBA", remainBA);
-  setText("#sumGrantGA", grantGA);
-  setText("#sumRemainGA", remainGA);
-  setText("#sumGrantSC", grantSC);
-  setText("#sumRemainSC", remainSC);
+  toggle("#overMain",overBA>0);
+  toggle("#overGA",overGA>0);
+  toggle("#overSC",overSC>0);
 
-  setText("#sumRemainBA_foot", remainBA);
-  setText("#sumRemainGA_foot", remainGA);
-  setText("#sumRemainSC_foot", remainSC);
-
-  setText("#sumCopay", copay);
-  setText("#sumSelfpay", selfpay);
-  setText("#sumGovSubsidy", govSubsidy);
-  setText("#sumGrand", grandTotal);
-
-  setText("#sumGovSubsidy_foot", govSubsidy);
-  setText("#sumSelfpay_foot", selfpay);
-  setText("#sumGrand_foot", grandTotal);
-
-  toggle("#overMain", overBA>0);
-  toggle("#overGA",   overGA>0);
-  toggle("#overSC",   overSC>0);
+  updateCaregiverSalary(); // ➕ 計算居服薪資
 }
 
 /**********************
- * 小工具
+ * 居服薪資(6/4) 計算邏輯
  **********************/
-function setText(sel, num){
-  const el=$(sel); if(!el) return;
-  el.textContent = Number(num).toLocaleString();
+function updateCaregiverSalary(){
+  const AA_PRICE={AA05:200,AA06:200,AA08:385,AA09:770,AA11:50};
+  const saved=JSON.parse(localStorage.getItem("addons")||"{}");
+  let aaTotal=0;
+  Object.keys(AA_PRICE).forEach(code=>{
+    const p=parseInt(saved[`${code}_p`]||0);
+    const n=parseInt(saved[`${code}_n`]||0);
+    aaTotal+=(p+n)*AA_PRICE[code];
+  });
+  const gov=parseInt($("#sumGovSubsidy").textContent.replace(/,/g,""))||0;
+  const self=parseInt($("#sumSelfpay").textContent.replace(/,/g,""))||0;
+  const total=Math.round((aaTotal+gov+self)*0.6);
+
+  let target=$("#caregiverSalary");
+  if(!target){
+    const card=[...document.querySelectorAll(".card h2.card-title")]
+      .find(el=>el.textContent.includes("居服薪資"));
+    if(card){
+      const box=document.createElement("div");
+      box.id="caregiverSalary";
+      box.style.marginTop="10px";
+      box.style.fontWeight="700";
+      box.style.textAlign="right";
+      box.style.color="#2e7d32";
+      card.parentElement.appendChild(box);
+      target=box;
+    }
+  }
+  if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
-function toggle(sel, show){
-  const el=$(sel); if(!el) return;
-  show ? el.classList.remove("hidden") : el.classList.add("hidden");
-}
+
+/**********************
+ * 工具
+ **********************/
+function setText(sel,num){const el=$(sel);if(!el)return;el.textContent=Number(num).toLocaleString();}
+function toggle(sel,show){const el=$(sel);if(!el)return;show?el.classList.remove("hidden"):el.classList.add("hidden");}
 
 /**********************
  * 重置
  **********************/
 function resetAll(){
-  const idN = document.getElementById("id-normal");
-  if(idN) idN.checked = true;
-  const cms2 = document.getElementById("cms2");
-  if(cms2) cms2.checked = true;
-  const foreignNo = document.querySelector("input[name='foreign'][value='0']");
-  if(foreignNo) foreignNo.checked = true;
-  const keep = $("#keepQuota"); if(keep) keep.value = "";
-
+  const idN=document.getElementById("id-normal");
+  if(idN)idN.checked=true;
+  const cms2=document.getElementById("cms2");
+  if(cms2)cms2.checked=true;
+  const foreignNo=document.querySelector("input[name='foreign'][value='0']");
+  if(foreignNo)foreignNo.checked=true;
+  const keep=$("#keepQuota");if(keep)keep.value="";
   document.querySelectorAll("#tables table tbody tr").forEach(tr=>{
-    tr.dataset.manual = "0";
-    // C碼與非C碼欄位不同，分開處理
-    if(tr.dataset.cmode === "1"){
-      tr.querySelector(".inp-c-groups").value = 0;
-      tr.querySelector(".cell-amount").textContent = "0";
+    tr.dataset.manual="0";
+    if(tr.dataset.cmode==="1"){
+      tr.querySelector(".inp-c-groups").value=0;
+      tr.querySelector(".cell-amount").textContent="0";
     }else{
-      tr.querySelectorAll("input").forEach(inp=>{ inp.value = 0; });
-      const lastCell = tr.querySelector(".cell-amount"); if(lastCell) lastCell.textContent = "0";
+      tr.querySelectorAll("input").forEach(inp=>inp.value=0);
+      const last=tr.querySelector(".cell-amount");if(last)last.textContent="0";
     }
   });
-
   updateSCAvailability();
   updateResults();
-
   const hint=$("#addonHint");
-  if(hint){ hint.textContent="請儲存加成次數"; hint.classList.add("warn"); }
+  if(hint){hint.textContent="請儲存加成次數";hint.classList.add("warn");}
 }
-/* === 🔹底部工具列避位設定（自動計算高度） === */
+
+/**********************
+ * 底部工具列避位
+ **********************/
 function adjustDockPadding(){
-  const dock = document.getElementById('bottomDock');
-  if(!dock) return;
-  const h = dock.offsetHeight || 0;
-  document.documentElement.style.setProperty('--dock-h', h + 'px');
+  const dock=document.getElementById('bottomDock');
+  if(!dock)return;
+  const h=dock.offsetHeight||0;
+  document.documentElement.style.setProperty('--dock-h',h+'px');
 }
-
-document.addEventListener('DOMContentLoaded', ()=>{
+document.addEventListener('DOMContentLoaded',()=>{
   adjustDockPadding();
-  window.addEventListener('resize', adjustDockPadding);
-  window.addEventListener('orientationchange', adjustDockPadding);
-
-  const dock = document.getElementById('bottomDock');
-  if(window.ResizeObserver && dock){
-    const ro = new ResizeObserver(()=>adjustDockPadding());
+  window.addEventListener('resize',adjustDockPadding);
+  window.addEventListener('orientationchange',adjustDockPadding);
+  const dock=document.getElementById('bottomDock');
+  if(window.ResizeObserver&&dock){
+    const ro=new ResizeObserver(()=>adjustDockPadding());
     ro.observe(dock);
   }
 });
