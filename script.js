@@ -194,24 +194,26 @@ function updateSCAvailability(){
 }
 
 /********* 總額度/自付計算（BA/GA/SC 分池） *********/
+/********* 總額度/自付計算（BA/GA/SC 分池；部分負擔僅對額度內金額） *********/
 function updateResults(){
-  // 先彙總各池消耗
-  let sumBA=0, sumGA=0, sumSC=0;
+  // 先彙總各池消耗（BD/C 併入 BA 主池）
+  let sumBA = 0, sumGA = 0, sumSC = 0;
 
   const tables = document.querySelectorAll("#tables table");
-  const groups = Object.keys(serviceData);
+  const groups = Object.keys(serviceData); // ["BA","BD","C","GA","SC"]
   groups.forEach((g,idx)=>{
     const tbody = tables[idx]?.tBodies[0]; if(!tbody) return;
     [...tbody.rows].forEach((tr,i)=>{
       const price = serviceData[g][i].price;
       const w = Math.max(0, parseInt(tr.cells[2].querySelector("input").value)||0);
-      const m = Math.ceil(w * WEEKS_PER_MONTH);
+      const m = Math.ceil(w * WEEKS_PER_MONTH);  // 週→月 無條件進位 4.5
       const t = Math.max(0, parseInt(tr.cells[4].querySelector("input").value)||0);
       const use = t > 0 ? t : m;
       const amt = price * use;
+
       if(g==="GA") sumGA += amt;
       else if(g==="SC") sumSC += amt;
-      else sumBA += amt;
+      else sumBA += amt; // BA / BD / C 都算在主池
     });
   });
 
@@ -219,31 +221,42 @@ function updateResults(){
   const idty = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
   const cms  = parseInt((document.querySelector("input[name='cms']:checked")||{}).value || "2");
   const keep = Math.max(0, parseInt($("#keepQuota").value)||0);
-  const rate = idty==="一般戶" ? 0.16 : (idty==="中低收入戶" ? 0.05 : 0);
+
+  // 部分負擔率（身分別）
+  const rate = (idty==="一般戶") ? 0.16 : (idty==="中低收入戶" ? 0.05 : 0);
 
   // 各池額度
-  const grantBA = (limitTable[idty][cms]||0) + keep;
-  const grantGA = GA_CAP[cms] || 0;
-  const grantSC = SC_CAP[cms] || 0;
+  const grantBA = (limitTable[idty][cms]||0) + keep; // 主額度 + 留用
+  const grantGA = GA_CAP[cms] || 0;                  // 專屬池
+  const grantSC = SC_CAP[cms] || 0;                  // 專屬池
 
-  // 超額 / 剩餘
+  // 額度內可補助金額（各池分開取 min）
+  const allowBA = Math.min(sumBA, grantBA);
+  const allowGA = Math.min(sumGA, grantGA);
+  const allowSC = Math.min(sumSC, grantSC);
+  const subsidyBase = allowBA + allowGA + allowSC;
+
+  // 超額（額度外）：不計部分負擔，直接成為自付
   const overBA = Math.max(0, sumBA - grantBA);
   const overGA = Math.max(0, sumGA - grantGA);
   const overSC = Math.max(0, sumSC - grantSC);
 
-  const remainBA = Math.max(0, grantBA - sumBA);
-  const remainGA = Math.max(0, grantGA - sumGA);
-  const remainSC = Math.max(0, grantSC - sumSC);
+  // 部分負擔（僅對額度內的補助金額）
+  const copay = Math.round(subsidyBase * rate);
 
-  // 部分負擔 & 自付總計（你指定的計算）
-  const totalUsed = sumBA + sumGA + sumSC;
-  const copay = Math.round(totalUsed * rate);
-  const selfpay = copay + overBA + overGA + overSC;
+  // 政府補助 & 自付 & 總金額
+  const govSubsidy = subsidyBase - copay;
+  const selfpay    = copay + overBA + overGA + overSC;
+  const grandTotal = govSubsidy + selfpay; // ＝ sumBA + sumGA + sumSC
 
   // 中卡顯示：給付額度（BA 主額度＋留用）
   $("#grantQuota").value = grantBA.toLocaleString();
 
   // 右卡顯示（分池）
+  const remainBA = Math.max(0, grantBA - allowBA);
+  const remainGA = Math.max(0, grantGA - allowGA);
+  const remainSC = Math.max(0, grantSC - allowSC);
+
   $("#sumGrantBA").textContent  = grantBA.toLocaleString();
   $("#sumRemainBA").textContent = remainBA.toLocaleString();
 
@@ -253,10 +266,15 @@ function updateResults(){
   $("#sumGrantSC").textContent  = grantSC.toLocaleString();
   $("#sumRemainSC").textContent = remainSC.toLocaleString();
 
+  // 費用總結
   $("#sumCopay").textContent    = copay.toLocaleString();
   $("#sumSelfpay").textContent  = selfpay.toLocaleString();
 
-  // 超額提醒
+  // 若你頁面有補助與總額欄位，可一併更新（沒有就忽略）
+  const elGov = $("#sumGovSubsidy"); if(elGov) elGov.textContent = govSubsidy.toLocaleString();
+  const elAll = $("#sumGrand");      if(elAll) elAll.textContent = grandTotal.toLocaleString();
+
+  // 超額提醒（若你的 HTML 有這幾個 id）
   toggle("#overMain", overBA>0);
   toggle("#overGA",   overGA>0);
   toggle("#overSC",   overSC>0);
@@ -279,5 +297,6 @@ function resetAll(){
   $("#addonHint").textContent="請儲存加成次數";
   $("#addonHint").classList.add("warn");
 }
+
 
 
