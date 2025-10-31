@@ -70,7 +70,7 @@
       </div>
 
       <div class="field">
-        <label>給付額度（主額度＋留用）</label>
+        <label>給付額度（BA 主額度＋留用）</label>
         <input id="grantQuota" type="text" readonly>
       </div>
     </section>
@@ -78,12 +78,20 @@
     <!-- 右：個案額度與自付額 -->
     <section class="card">
       <h2>個案額度及自付額</h2>
-      <div class="kv"><div>額度總計：</div><div id="sumGrant">0</div></div>
-      <div class="kv"><div>剩餘額度：</div><div id="sumRemain">0</div></div>
+
+      <div class="kv"><div>額度總計(BA)：</div><div id="sumGrantBA">0</div></div>
+      <div class="kv"><div>剩餘額度(BA)：</div><div id="sumRemainBA">0</div></div>
+
+      <div class="kv"><div>額度總計(GA)：</div><div id="sumGrantGA">0</div></div>
+      <div class="kv"><div>剩餘額度(GA)：</div><div id="sumRemainGA">0</div></div>
+
+      <div class="kv"><div>額度總計(SC)：</div><div id="sumGrantSC">0</div></div>
+      <div class="kv"><div>剩餘額度(SC)：</div><div id="sumRemainSC">0</div></div>
+
       <div class="kv"><div>部分負擔：</div><div id="sumCopay">0</div></div>
       <div class="kv strong"><div>自付總計：</div><div id="sumSelfpay">0</div></div>
 
-      <div id="overMain" class="alert hidden">主額度已超額，超出部分將列入自付。</div>
+      <div id="overMain" class="alert hidden">BA 主額度已超額，超出部分將列入自付。</div>
       <div id="overGA" class="alert hidden">GA09 喘息額度已超額，超出部分將列入自付。</div>
       <div id="overSC" class="alert hidden">SC09 短照額度已超額，超出部分將列入自付。</div>
     </section>
