@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>額度試算</title>
-   <!-- 新增 favicon -->
+
+  <!-- favicon（前面已設定過，可保留或改成你的 ico） -->
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
+
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 </head>
@@ -13,7 +15,8 @@
   <!-- 頂部列 -->
   <header class="topbar">
     <div class="brand">
-      <img src="logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      <!-- ★ 換圖：使用 org-logo.png -->
+      <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       <span>額度試算</span>
     </div>
     <div class="actions">
@@ -42,20 +45,19 @@
             <span>價格</span>
             <span>次數</span>
           </div>
-          <!-- 由 script.js 產生：每列 3 欄（code / p / n） -->
           <div id="addonRows" class="addon-body"></div>
         </div>
 
-        <!-- QR 與說明 -->
+        <!-- ★ 換圖：使用 qrcode.png -->
         <div class="qrbox">
           <div class="qr-left">
-            <img src="qr.png" alt="QR" onerror="this.style.opacity=0.2" />
+            <img src="qrcode.png" alt="QR" onerror="this.style.opacity=0.2" />
           </div>
           <div class="qr-right">
-            <p class="bold">廣告文字待補</p>
-            <p>負責區域為新莊、板橋、土城、樹林、中和、永和<br>歡迎洽詢：</p>
-            <p>諮詢電話：02-8952-0607</p>
-            <p class="orange">廣告文字待補</p>
+            <p class="bold">我們是億家人居家長照機構</p>
+            <p>負責區域為新莊、板橋、樹林、五股<br>歡迎洽詢：</p>
+            <p>諮詢電話：02-2276-0087</p>
+            <p class="orange">在億家人，大家都是一家人</p>
           </div>
         </div>
       </div>
@@ -129,7 +131,6 @@
           <div class="kv-row"><span>部分負擔：</span><b id="sumCopay">0</b></div>
           <div class="kv-row"><span>自付總計：</span><b id="sumSelfpay">0</b></div>
 
-          <!-- 可選（script.js 若有更新會自動帶值） -->
           <div class="kv-row optional"><span>政府補助：</span><b id="sumGovSubsidy">0</b></div>
           <div class="kv-row optional"><span>總金額：</span><b id="sumGrand">0</b></div>
         </div>
@@ -143,7 +144,7 @@
     </section>
   </main>
 
-  <!-- 底部資訊條（保持相容，非必要可移除） -->
+  <!-- 底部資訊條 -->
   <footer class="footerbar">
     <div class="foot">
       <span>BA 剩餘：<b id="sumRemainBA_foot">0</b></span>
@@ -156,5 +157,3 @@
   </footer>
 </body>
 </html>
-
-
