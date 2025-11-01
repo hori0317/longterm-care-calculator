@@ -1,6 +1,9 @@
 /**********************
- * script.js（最終整合版）
- * - 安全數字轉換 toInt()：避免逗號/全形數字/空白導致 ×10 錯算
+ * script.js（最終整合版｜data-use 修正）
+ * - 安全數字轉換 toInt()：避免逗號/全形數字/空白導致錯算
+ * - data-use：每列「最終次數」只由最新一次輸入決定（不被覆蓋）
+ *   · 週次數變動 → data-use = 月次數，manual=0
+ *   · 總次數變動 → data-use = 總次數，manual=1
  * - 非 C 碼：週→月→總（總可手動覆寫）
  * - C 碼：一包制（每組價 × 每月組數）
  * - AA 區：單一輸入欄，localStorage 保存
@@ -10,16 +13,12 @@
  **********************/
 
 /* ---------- 小工具：安全數字轉整數 ---------- */
-// 將任何輸入安全轉成整數（移除逗號、全形數字、空白等）
 function toInt(v){
   if (typeof v === "number") return Number.isFinite(v) ? Math.trunc(v) : 0;
   if (v === null || v === undefined) return 0;
-  // 全形數字與標點轉半形
-  const fullWidthMap = {'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','，':',','．':'.','＋':'+','－':'-'};
-  let s = String(v).replace(/[０-９，．＋－]/g, ch => fullWidthMap[ch] ?? ch);
-  // 去千分位與空白
+  const fw = {'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','，':',','．':'.','＋':'+','－':'-'};
+  let s = String(v).replace(/[０-９，．＋－]/g, ch => fw[ch] ?? ch);
   s = s.replace(/,/g, '').trim();
-  // 只取前段整數
   const m = s.match(/^[+-]?\d+/);
   return m ? parseInt(m[0], 10) : 0;
 }
@@ -186,7 +185,9 @@ function renderTables(){
 
     serviceData[code].forEach((item,i)=>{
       const tr=document.createElement("tr");
-      tr.dataset.manual = "0";
+      tr.dataset.manual = "0";        // 是否手動覆寫總次數
+      tr.dataset.use    = "0";        // ★「最終次數」預設 0
+
       if(code === "C"){
         tr.dataset.cmode = "1";
         tr.innerHTML = `
@@ -194,7 +195,13 @@ function renderTables(){
           <td class="cell-price">${item.price.toLocaleString()}</td>
           <td><input class="inp-c-groups" type="number" min="0" step="1" value="0" /></td>
           <td class="cell-amount">0</td>`;
-        tr.querySelector(".inp-c-groups").addEventListener("input", ()=>{ updateOneRow(code, i); updateResults(); });
+        const gInp = tr.querySelector(".inp-c-groups");
+        gInp.addEventListener("input", ()=>{
+          const groups = toInt(gInp.value);
+          tr.dataset.use = String(groups);       // ★ data-use = 每月組數
+          updateOneRow(code, i);
+          updateResults();
+        });
       }else{
         tr.innerHTML=`
           <td>${item.code} ${item.name}</td>
@@ -206,16 +213,26 @@ function renderTables(){
         const week  = tr.querySelector(".inp-week");
         const month = tr.querySelector(".inp-month");
         const total = tr.querySelector(".inp-total");
+
+        // 週次數改變：同步月次數與總次數；取消手動；data-use = 月次數
         week.addEventListener("input", ()=>{
           const w = toInt(week.value);
           const m = Math.ceil(w * WEEKS_PER_MONTH);
-          month.value = m;
+          month.value     = m;
           tr.dataset.manual = "0";
-          total.value = m;
+          total.value     = m;
+          tr.dataset.use  = String(m);           // ★ 最終次數
           updateOneRow(code, i);
           updateResults();
         });
-        total.addEventListener("input", ()=>{ tr.dataset.manual = "1"; updateOneRow(code, i); updateResults(); });
+
+        // 總次數改變：標記手動；data-use = 總次數
+        total.addEventListener("input", ()=>{
+          tr.dataset.manual = "1";
+          tr.dataset.use    = String(toInt(total.value)); // ★ 最終次數
+          updateOneRow(code, i);
+          updateResults();
+        });
       }
       tbody.appendChild(tr);
     });
@@ -228,36 +245,30 @@ function renderTables(){
   applyUnitEffects(); // 初始依單位顯示/隱藏 C
 }
 
-/* ---------- 單列金額更新（使用 toInt） ---------- */
+/* ---------- 單列金額更新（一律讀 data-use） ---------- */
 function updateOneRow(code, idx){
   const tIndex = Object.keys(serviceData).indexOf(code);
-  const table = document.querySelectorAll("#tables table")[tIndex];
+  const table  = document.querySelectorAll("#tables table")[tIndex];
   if(!table) return;
-  const tr = table.tBodies[0].rows[idx];
+  const tr     = table.tBodies[0].rows[idx];
   if(!tr) return;
 
-  const price = Number(serviceData[code][idx].price) || 0;
+  const price  = Number(serviceData[code][idx].price) || 0;
 
-  // C 碼：每月組數 × 每組單價
-  if(tr.dataset.cmode === "1"){
-    const groups = toInt(tr.querySelector(".inp-c-groups")?.value);
-    const amt    = price * groups;
-    tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
+  // C 碼：data-use 已在輸入時直接等於每月組數
+  if (tr.dataset.cmode === "1"){
+    const use = toInt(tr.dataset.use);
+    tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
     return;
   }
 
-  // 其他碼別：週→月→總（總可手動覆蓋）
-  const week  = toInt(tr.querySelector(".inp-week")?.value);
-  const month = Math.ceil(week * WEEKS_PER_MONTH);
-  const mInp  = tr.querySelector(".inp-month");
-  if(mInp) mInp.value = month;
-
-  const manual = tr.dataset.manual === "1";
-  const total  = toInt(tr.querySelector(".inp-total")?.value);
-  const use    = manual ? total : month;
-
-  const amt    = price * use;
-  tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
+  // 非 C 碼：保險起見，若沒有 data-use，根據週→月補上
+  if (tr.dataset.use === undefined){
+    const w = toInt(tr.querySelector(".inp-week")?.value);
+    tr.dataset.use = String(Math.ceil(w * WEEKS_PER_MONTH));
+  }
+  const use = toInt(tr.dataset.use);
+  tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
 }
 
 /* ---------- 條件輸入綁定 ---------- */
@@ -287,27 +298,28 @@ function updateResults(){
   const tables = document.querySelectorAll("#tables table");
   const groups = Object.keys(serviceData);
 
-  groups.forEach((g,idx)=>{
+  groups.forEach((g, idx) => {
     const tbody = tables[idx]?.tBodies[0]; if(!tbody) return;
-    [...tbody.rows].forEach((tr,i)=>{
+    [...tbody.rows].forEach((tr, i) => {
       const price = Number(serviceData[g][i].price) || 0;
 
-      if(tr.dataset.cmode === "1"){
-        const cnt = toInt(tr.querySelector(".inp-c-groups")?.value);
-        const amt = price * cnt;
-        sumBA += amt;  // C 併入主池
-        sumC  += amt;  // 另存給「排 C」
+      // C 碼：data-use（每月組數）
+      if (tr.dataset.cmode === "1"){
+        const use = toInt(tr.dataset.use);
+        const amt = price * use;
+        sumBA += amt; sumC += amt;                          // C 併入主池，另存 sumC 供排 C 用
         tr.querySelector(".cell-amount").textContent = amt.toLocaleString();
         return;
       }
 
-      const w  = toInt(tr.querySelector(".inp-week")?.value);
-      const m  = Math.ceil(w * WEEKS_PER_MONTH);
-      const manual = tr.dataset.manual === "1";
-      const t  = toInt(tr.querySelector(".inp-total")?.value);
-      const use = manual ? t : m;
-
+      // 非 C 碼：若 data-use 未建立，先以週→月補上
+      if (tr.dataset.use === undefined){
+        const w = toInt(tr.querySelector(".inp-week")?.value);
+        tr.dataset.use = String(Math.ceil(w * WEEKS_PER_MONTH));
+      }
+      const use = toInt(tr.dataset.use);
       const amt = price * use;
+
       if (g === "GA") sumGA += amt;
       else if (g === "SC") sumSC += amt;
       else sumBA += amt;
