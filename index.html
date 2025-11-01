@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>額度計算機</title>
+  <title>額度試算機</title>
 
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
@@ -14,53 +14,54 @@
   <header class="topbar">
     <div class="brand">
       <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-      <span>額度計算機</span>
+      <span>額度試算機</span>
     </div>
     <div class="actions">
-      <!-- A/B 切換按鈕：預設 B；切換時會在畫面與計算上生效 -->
+      <!-- A/B 單位切換（B 時會隱藏 C 碼、薪資不計 C） -->
       <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="B">B單位</button>
       <button class="btn pill btn-green" id="btnReset" type="button">重置</button>
       <button class="btn pill btn-gray" type="button" onclick="window.print()">列印</button>
     </div>
   </header>
-
-  <!-- 🔝 頂端墊片（高度由 JS 寫入 --topbar-h） -->
-  <div id="topSpacer" aria-hidden="true"></div>
+  <div class="divider"></div>
 
   <main class="container">
-    <!-- 上方三欄 -->
+    <!-- 三欄卡片 -->
     <section class="grid-3">
-      <!-- 左：居服薪資(6/4) -->
+      <!-- 左：居服薪資(6/4)（只有項目＋次數；無價格欄） -->
       <div class="card">
         <h2 class="card-title">居服薪資(6/4)</h2>
 
         <div class="row space-between">
-          <span class="hint warn" id="addonHint">請儲存</span>
-          <button class="btn btn-primary" id="btnSaveAddons" type="button">儲存</button>
+          <span class="hint warn" id="addonHint">請儲存加成次數</span>
+          <button class="btn btn-green" id="btnSaveAddons" type="button">儲存</button>
         </div>
 
-        <!-- AA 區（項目＋單一「次數」欄） -->
         <div class="addon">
           <div class="addon-head">
             <span>項目</span>
-            <span>次數</span>
+            <span class="text-right">次數</span>
           </div>
           <div id="addonRows" class="addon-body"></div>
         </div>
 
-        <!-- 可留宣傳/QR，不影響計算 -->
+        <!-- 顯示居服員薪資 -->
+        <div id="caregiverSalary" style="margin-top:10px;font-weight:800;text-align:right;color:#2e7d32;">
+          居服員薪資合計：0 元
+        </div>
+
+        <!-- 小廣告 / QR -->
         <div class="qrbox">
           <div class="qr-left">
             <img src="qrcode.png" alt="QR" onerror="this.style.opacity=0.2" />
           </div>
           <div class="qr-right">
             <p class="bold">我們是XX居家長照機構</p>
-            <p>負責區域為XXXXXXXX<br>歡迎洽詢：</p>
+            <p>負責區域為 XXXXXX<br>歡迎洽詢：</p>
             <p>諮詢電話：02-XXXX-XXXX</p>
             <p class="orange">廣告待補</p>
           </div>
         </div>
-        <!-- 居服員薪資合計由 script.js 動態插入在此卡底部 -->
       </div>
 
       <!-- 中：基本資料 -->
@@ -112,38 +113,40 @@
       <!-- 右：個案額度及自付額 -->
       <div class="card">
         <h2 class="card-title">個案額度及自付額</h2>
+
         <div class="kv">
           <div class="kv-row"><span>額度總計：</span><b id="sumGrantBA">0</b></div>
           <div class="kv-row"><span>剩餘額度：</span><b id="sumRemainBA">0</b></div>
           <div id="overMain" class="note warn hidden">已超過 BA 額度</div>
           <hr>
+
           <div class="kv-row"><span>GA 額度：</span><b id="sumGrantGA">0</b></div>
           <div class="kv-row"><span>剩餘額度：</span><b id="sumRemainGA">0</b></div>
           <div id="overGA" class="note warn hidden">已超過 GA 額度</div>
           <hr>
+
           <div class="kv-row"><span>SC 額度：</span><b id="sumGrantSC">0</b></div>
           <div class="kv-row"><span>剩餘額度：</span><b id="sumRemainSC">0</b></div>
           <div id="overSC" class="note warn hidden">已超過 SC 額度</div>
           <hr>
+
           <div class="kv-row"><span>部分負擔：</span><b id="sumCopay">0</b></div>
           <div class="kv-row"><span>自付總計：</span><b id="sumSelfpay">0</b></div>
+
           <div class="kv-row optional"><span>政府補助：</span><b id="sumGovSubsidy">0</b></div>
           <div class="kv-row optional"><span>總金額：</span><b id="sumGrand">0</b></div>
         </div>
       </div>
     </section>
 
-    <!-- 下方服務表格（由 script.js 產生） -->
+    <!-- 服務表格（JS 產生） -->
     <section class="card service-card">
       <h2 class="card-title">服務項目</h2>
       <div id="tables"></div>
     </section>
   </main>
 
-  <!-- 🔻 底部墊片（高度由 JS 寫入 --dock-h；避免內容被底部資訊條遮住） -->
-  <div id="dockSpacer" aria-hidden="true"></div>
-
-  <!-- 底部資訊條 -->
+  <!-- 底部資訊條（固定） -->
   <footer id="bottomDock" class="footerbar">
     <div class="foot">
       <span>BA 剩餘：<b id="sumRemainBA_foot">0</b></span>
@@ -156,7 +159,3 @@
   </footer>
 </body>
 </html>
-
-
-
-
