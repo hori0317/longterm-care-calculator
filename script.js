@@ -1,5 +1,6 @@
 /**********************
- * script.js（總次數修正版｜穩定）
+ * script.js（修正版｜手動總次數優先）
+ * 要點：manual=1 時，改「週次」只更新月次，不改「總次」與 data-use
  **********************/
 
 /* ── 公用 ── */
@@ -172,8 +173,8 @@ function renderTables(){
 
     serviceData[code].forEach((item,i)=>{
       const tr=document.createElement("tr");
-      tr.dataset.manual = "0";  // 0=未手動，1=手動
-      tr.dataset.use    = "0";  // 最終使用的「次數」（或 C 的組數）
+      tr.dataset.manual = "0";  // 0=未手動，1=手動輸入總次
+      tr.dataset.use    = "0";  // 最終使用次數（或 C 的組數）
 
       if(code === "C"){
         tr.dataset.cmode = "1";
@@ -204,19 +205,22 @@ function renderTables(){
         const month = tr.querySelector(".inp-month");
         const total = tr.querySelector(".inp-total");
 
-        // ✅ 週次數一改：月次數=ceil(週*4.5)，總次數=月次數（覆蓋任何手動），manual=0
+        // ✅ 週次變更：只要 manual=1（使用者曾手動輸入），就「不覆蓋」總次與 data-use
         const onWeekChange = ()=>{
           const w = toInt(week.value);
           const m = Math.ceil(w * WEEKS_PER_MONTH);
-          month.value      = m;
-          tr.dataset.manual= "0";
-          total.value      = m;
-          tr.dataset.use   = String(m);
+          month.value = m;
+          if(tr.dataset.manual === "0"){
+            // 還沒手動過：總次 = 月次，並更新 data-use
+            total.value    = m;
+            tr.dataset.use = String(m);
+          }
+          // 若 manual=1：僅顯示月次，不動 total 與 data-use
           updateOneRow(code, i);
           updateResults();
         };
 
-        // ✅ 總次數一改：manual=1，之後金額一律用總次數
+        // ✅ 總次變更：標記 manual=1，data-use 永遠採用總次
         const onTotalChange = ()=>{
           tr.dataset.manual = "1";
           const t = toInt(total.value);
@@ -242,7 +246,7 @@ function renderTables(){
   applyUnitEffects(); // B 單位隱藏 C
 }
 
-/* ── 單列金額（**只讀 data-use**）── */
+/* ── 單列金額（只讀 data-use）── */
 function updateOneRow(code, idx){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table  = document.querySelectorAll("#tables table")[tIndex];
@@ -288,7 +292,7 @@ function updateResults(){
       const price = Number(serviceData[g][i].price) || 0;
       let use = toInt(tr.dataset.use);
 
-      // 第一次還沒建立 data-use 且為非 C：以週→月推一次（不覆蓋手動邏輯，因 manual 初始為 0）
+      // 初次無 data-use（非 C）→ 依週→月推一次（不改 manual 狀態；僅種初值）
       if(!use && tr.dataset.cmode!=="1"){
         const w = toInt(tr.querySelector(".inp-week")?.value);
         const m = Math.ceil(w * WEEKS_PER_MONTH);
@@ -296,7 +300,7 @@ function updateResults(){
           tr.dataset.use = String(m);
           tr.querySelector(".inp-month").value = m;
           tr.querySelector(".inp-total").value = m;
-          tr.dataset.manual = "0";
+          // manual 保持原樣（預設 0）
           use = m;
         }
       }
