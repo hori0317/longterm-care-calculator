@@ -1,12 +1,13 @@
 /**********************
- * script.js（最終整合版｜data-use 修正）1
+ * script.js（最終整合版｜全項目修正）1
  * - 安全數字轉換 toInt()：避免逗號/全形數字/空白導致錯算
  * - data-use：每列「最終次數」只由最新一次輸入決定（不被覆蓋）
- *   · 週次數變動 → data-use = 月次數，manual=0
- *   · 總次數變動 → data-use = 總次數，manual=1
+ *   · 週次數變動 → data-use = 月次數，manual=0（綁 input+change）
+ *   · 總次數變動 → data-use = 總次數，manual=1（綁 input+change）
+ *   · C 碼「每月組數」同理（綁 input+change）
  * - 非 C 碼：週→月→總（總可手動覆寫）
  * - C 碼：一包制（每組價 × 每月組數）
- * - AA 區：單一輸入欄，localStorage 保存
+ * - AA 區：項目＋單欄「次數」，localStorage 保存
  * - A/B 切換：B 隱藏 C，且薪資排除 C
  * - 居服薪資(6/4)：(AA 總 + 政府補助 + 自付) × 0.6
  * - 頂/底工具列動態避位
@@ -196,12 +197,14 @@ function renderTables(){
           <td><input class="inp-c-groups" type="number" min="0" step="1" value="0" /></td>
           <td class="cell-amount">0</td>`;
         const gInp = tr.querySelector(".inp-c-groups");
-        gInp.addEventListener("input", ()=>{
+        const onCGroupChange = ()=>{
           const groups = toInt(gInp.value);
           tr.dataset.use = String(groups);       // ★ data-use = 每月組數
           updateOneRow(code, i);
           updateResults();
-        });
+        };
+        gInp.addEventListener("input", onCGroupChange);
+        gInp.addEventListener("change", onCGroupChange);
       }else{
         tr.innerHTML=`
           <td>${item.code} ${item.name}</td>
@@ -215,7 +218,7 @@ function renderTables(){
         const total = tr.querySelector(".inp-total");
 
         // 週次數改變：同步月次數與總次數；取消手動；data-use = 月次數
-        week.addEventListener("input", ()=>{
+        const onWeekChange = ()=>{
           const w = toInt(week.value);
           const m = Math.ceil(w * WEEKS_PER_MONTH);
           month.value     = m;
@@ -224,15 +227,19 @@ function renderTables(){
           tr.dataset.use  = String(m);           // ★ 最終次數
           updateOneRow(code, i);
           updateResults();
-        });
+        };
+        week.addEventListener("input", onWeekChange);
+        week.addEventListener("change", onWeekChange);
 
         // 總次數改變：標記手動；data-use = 總次數
-        total.addEventListener("input", ()=>{
+        const onTotalChange = ()=>{
           tr.dataset.manual = "1";
           tr.dataset.use    = String(toInt(total.value)); // ★ 最終次數
           updateOneRow(code, i);
           updateResults();
-        });
+        };
+        total.addEventListener("input", onTotalChange);
+        total.addEventListener("change", onTotalChange);
       }
       tbody.appendChild(tr);
     });
@@ -262,10 +269,13 @@ function updateOneRow(code, idx){
     return;
   }
 
-  // 非 C 碼：保險起見，若沒有 data-use，根據週→月補上
-  if (tr.dataset.use === undefined){
+  // 非 C 碼：保險起見，若沒有 data-use，根據「手動/週→月」seed 一次
+  if (tr.dataset.use === undefined || tr.dataset.use === null || tr.dataset.use === ""){
     const w = toInt(tr.querySelector(".inp-week")?.value);
-    tr.dataset.use = String(Math.ceil(w * WEEKS_PER_MONTH));
+    const m = Math.ceil(w * WEEKS_PER_MONTH);
+    const manual = tr.dataset.manual === "1";
+    const t = toInt(tr.querySelector(".inp-total")?.value);
+    tr.dataset.use = String(manual ? t : m);
   }
   const use = toInt(tr.dataset.use);
   tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
@@ -312,10 +322,13 @@ function updateResults(){
         return;
       }
 
-      // 非 C 碼：若 data-use 未建立，先以週→月補上
-      if (tr.dataset.use === undefined){
+      // 非 C 碼：若 data-use 未建立，seed 一次（不覆蓋已存在的手動輸入）
+      if (tr.dataset.use === undefined || tr.dataset.use === null || tr.dataset.use === ""){
         const w = toInt(tr.querySelector(".inp-week")?.value);
-        tr.dataset.use = String(Math.ceil(w * WEEKS_PER_MONTH));
+        const m = Math.ceil(w * WEEKS_PER_MONTH);
+        const manual = tr.dataset.manual === "1";
+        const t = toInt(tr.querySelector(".inp-total")?.value);
+        tr.dataset.use = String(manual ? t : m);
       }
       const use = toInt(tr.dataset.use);
       const amt = price * use;
