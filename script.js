@@ -1,5 +1,5 @@
 /**********************
- * script.js（最終整合版｜data-use 修正）
+ * script.js（最終整合版｜data-use 修正）1
  * - 安全數字轉換 toInt()：避免逗號/全形數字/空白導致錯算
  * - data-use：每列「最終次數」只由最新一次輸入決定（不被覆蓋）
  *   · 週次數變動 → data-use = 月次數，manual=0
@@ -475,4 +475,3 @@ function adjustTopbarPadding(){
   const h = topbar.offsetHeight || 0;
   document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
-
