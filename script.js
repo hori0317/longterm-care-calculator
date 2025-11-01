@@ -1,9 +1,9 @@
 /**********************
- * script.js（修正版｜手動總次數優先）
- * 要點：manual=1 時，改「週次」只更新月次，不改「總次」與 data-use
+ * script.js（總次數鎖定最終修正版）
+ * 重點：manual=1 後，任何地方都不覆寫總次數與 data-use
  **********************/
 
-/* ── 公用 ── */
+/* 公用 */
 function toInt(v){
   if (typeof v === "number") return Number.isFinite(v) ? Math.trunc(v) : 0;
   if (v === null || v === undefined) return 0;
@@ -16,11 +16,11 @@ function toInt(v){
 const $ = s => document.querySelector(s);
 const WEEKS_PER_MONTH = 4.5;
 
-/* ── AA 區（只顯示項目＋次數；計算用） ── */
+/* AA 區（只顯示項目＋次數；計算用） */
 const AA_PRICE = { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 };
 const ADDONS = Object.keys(AA_PRICE).map(code=>({code}));
 
-/* ── 服務清單 ── */
+/* 服務清單 */
 const serviceData = {
   BA: [
     { code:"BA01", name:"基本身體清潔", price:260 },
@@ -69,16 +69,16 @@ const serviceData = {
   SC: [{ code:"SC09", name:"短照 2 小時/支", price:770 }],
 };
 
-/* ── 額度 ── */
+/* 額度 */
 const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180 };
 const GA_CAP   = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP   = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/* ── 狀態 ── */
+/* 狀態 */
 let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
 const lastCalc  = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
-/* ── 初始化 ── */
+/* 初始化 */
 document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
@@ -91,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
   $("#btnSaveAddons")?.addEventListener("click", ()=>{ saveAddons(); updateResults(); });
   $("#btnReset")?.addEventListener("click", resetAll);
 
-  // 避位（頂/底列）
   adjustTopbarPadding();
   adjustDockPadding();
   window.addEventListener('resize', ()=>{ adjustTopbarPadding(); adjustDockPadding(); });
@@ -103,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if(window.ResizeObserver && topbar){ new ResizeObserver(()=>adjustTopbarPadding()).observe(topbar); }
 });
 
-/* ── AA 區 ── */
+/* AA 區 */
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
   const host = $("#addonRows"); if(!host) return;
@@ -128,7 +127,7 @@ function saveAddons(){
   const hint=$("#addonHint"); if(hint){ hint.textContent="已儲存加成次數"; hint.classList.remove("warn"); }
 }
 
-/* ── 表格：分群生成（C 與其餘邏輯不同） ── */
+/* 產表（C 與其餘邏輯不同） */
 function renderTables(){
   const container = $("#tables"); if(!container) return;
   container.innerHTML="";
@@ -205,22 +204,23 @@ function renderTables(){
         const month = tr.querySelector(".inp-month");
         const total = tr.querySelector(".inp-total");
 
-        // ✅ 週次變更：只要 manual=1（使用者曾手動輸入），就「不覆蓋」總次與 data-use
+        // 週次變更：manual=1 時，只更新月次，不改總次與 data-use
         const onWeekChange = ()=>{
           const w = toInt(week.value);
           const m = Math.ceil(w * WEEKS_PER_MONTH);
           month.value = m;
+
           if(tr.dataset.manual === "0"){
-            // 還沒手動過：總次 = 月次，並更新 data-use
+            // 未手動：總次 = 月次，並同步到 data-use
             total.value    = m;
             tr.dataset.use = String(m);
           }
-          // 若 manual=1：僅顯示月次，不動 total 與 data-use
+          // manual=1：不動 total / data-use
           updateOneRow(code, i);
           updateResults();
         };
 
-        // ✅ 總次變更：標記 manual=1，data-use 永遠採用總次
+        // 總次變更：手動鎖定，之後不再被週次覆蓋
         const onTotalChange = ()=>{
           tr.dataset.manual = "1";
           const t = toInt(total.value);
@@ -243,10 +243,10 @@ function renderTables(){
     container.appendChild(groupBox);
   });
 
-  applyUnitEffects(); // B 單位隱藏 C
+  applyUnitEffects();
 }
 
-/* ── 單列金額（只讀 data-use）── */
+/* 單列金額（只讀 data-use） */
 function updateOneRow(code, idx){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table  = document.querySelectorAll("#tables table")[tIndex];
@@ -259,14 +259,14 @@ function updateOneRow(code, idx){
   tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
 }
 
-/* ── 條件輸入 ── */
+/* 條件輸入 */
 function bindHeaderInputs(){
   document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
     .forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
   $("#keepQuota")?.addEventListener("input", updateResults);
 }
 
-/* ── SC 只能外籍看護用 ── */
+/* SC 只能外籍看護用 */
 function updateSCAvailability(){
   const scBox = document.querySelector('[data-group="SC"]');
   if(!scBox) return;
@@ -279,7 +279,7 @@ function updateSCAvailability(){
   if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
 }
 
-/* ── 統計（含 C / 排 C 兩組；不動 data-use） ── */
+/* 統計（含 C / 排 C 兩組；**不覆蓋 manual=1 的列**） */
 function updateResults(){
   let sumBA=0, sumGA=0, sumSC=0, sumC=0;
 
@@ -292,15 +292,15 @@ function updateResults(){
       const price = Number(serviceData[g][i].price) || 0;
       let use = toInt(tr.dataset.use);
 
-      // 初次無 data-use（非 C）→ 依週→月推一次（不改 manual 狀態；僅種初值）
-      if(!use && tr.dataset.cmode!=="1"){
+      // 只有在「非 C 且 manual !== 1」時，才允許用週→月初始化 data-use
+      if(tr.dataset.cmode!=="1" && tr.dataset.manual!=="1" && !use){
         const w = toInt(tr.querySelector(".inp-week")?.value);
         const m = Math.ceil(w * WEEKS_PER_MONTH);
         if(m>0){
           tr.dataset.use = String(m);
           tr.querySelector(".inp-month").value = m;
           tr.querySelector(".inp-total").value = m;
-          // manual 保持原樣（預設 0）
+          // manual 維持 0
           use = m;
         }
       }
@@ -377,14 +377,14 @@ function updateResults(){
   toggle("#overGA",   inc.overGA>0);
   toggle("#overSC",   inc.overSC>0);
 
-  // 薪資兩組值（含C／排C）
+  // 薪資（含C／排C）
   lastCalc.gov_inc = inc.gov;   lastCalc.self_inc = inc.self;
   lastCalc.gov_exC = exC.gov;   lastCalc.self_exC = exC.self;
 
   updateCaregiverSalary();
 }
 
-/* ── 居服薪資(6/4) = (AA總 + 補助 + 自付) × 0.6 ── */
+/* 居服薪資(6/4) = (AA總 + 補助 + 自付) × 0.6 */
 function updateCaregiverSalary(){
   const saved=JSON.parse(localStorage.getItem("addons")||"{}");
   let aaTotal=0;
@@ -400,7 +400,7 @@ function updateCaregiverSalary(){
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* ── A/B 切換：B 隱藏 C、薪資不含 C ── */
+/* A/B 切換：B 隱藏 C、薪資不含 C */
 function bindUnitToggle(){
   const btn=$("#btnUnitToggle"); if(!btn) return;
   btn.addEventListener("click", ()=>{
@@ -422,12 +422,12 @@ function applyUnitEffects(){
   if(cBox){ currentUnit==="B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden"); }
 }
 
-/* ── 小工具 ── */
+/* 小工具 */
 function setText(sel, num){ const el=$(sel); if(!el) return; el.textContent = Number(num).toLocaleString(); }
 function toggle(sel, show){ const el=$(sel); if(!el) return; show ? el.classList.remove("hidden") : el.classList.add("hidden"); }
 function resetAll(){ localStorage.removeItem("addons"); location.reload(); }
 
-/* ── 避位：量測頂/底列高度 ── */
+/* 避位 */
 function adjustDockPadding(){
   const dock = document.getElementById('bottomDock');
   if(!dock) return;
