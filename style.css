@@ -329,5 +329,16 @@ a:hover{ text-decoration:underline; }
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
 }
+/* 禁止選取文字與拖曳圖片 */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+img, a img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
 
 
