@@ -65,7 +65,15 @@ a:hover{ text-decoration:underline; }
   padding:8px 12px;
   padding-bottom:max(8px, env(safe-area-inset-bottom));
 }
-.foot{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-weight:600; }
+.foot {
+  display: flex;
+  justify-content: center;   /* ← 加這行！置中對齊 */
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-weight: 600;
+  text-align: center;        /* 讓多行文字也置中 */
+}
 .foot .ok{ color:var(--green); }
 .foot .warn{ color:var(--warn); }
 
@@ -190,3 +198,4 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
 }
+
