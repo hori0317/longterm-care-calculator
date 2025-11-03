@@ -254,31 +254,34 @@ a:hover{ text-decoration:underline; }
   #tables thead th{ position:static; }
 }
 
-/* ✅ 讓「身分類別」與「CMS 等級」選項都排成一行 */
-.form-row:has(.chips),
-.form-row:has(.cms) {
-  flex-wrap: nowrap;
+/* === 讓「身分類別」與「CMS 等級」都在同一行 === */
+.form-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;                 /* 不要自動換行 */
 }
 
-/* 選項之間間距稍微縮小，避免擠太滿 */
-.chips {
-  flex-wrap: nowrap;
+/* 左側標籤固定寬度且不換行，避免變成兩行「CMS」「等級」 */
+.form-row > label{
+  flex: 0 0 88px;                    /* 標籤欄固定寬度，可調 80~100px */
+  white-space: nowrap;               /* 標籤文字不換行 */
+}
+
+/* 右側選項容器佔滿剩餘寬度，且選項不換行 */
+.form-row .chips,
+.form-row .cms{
+  flex: 1 1 auto;
+  display: flex;
   gap: 6px;
+  flex-wrap: nowrap;                 /* 選項不換行 */
+  min-width: 0;                      /* 防止被撐爆時怪異折行 */
 }
 
-.cms {
-  flex-wrap: nowrap;
-  gap: 6px;
-}
-
-/* 小螢幕時自動恢復可換行，避免壓縮爆版 */
-@media (max-width: 860px) {
-  .form-row:has(.chips),
-  .form-row:has(.cms) {
-    flex-wrap: wrap;
-  }
-  .chips,
-  .cms {
-    flex-wrap: wrap;
-  }
+/* 小螢幕時恢復可換行，避免擠爆 */
+@media (max-width: 860px){
+  .form-row{ flex-wrap: wrap; }
+  .form-row > label{ flex: 0 0 100%; }   /* 標籤占整行，上方一列 */
+  .form-row .chips,
+  .form-row .cms{ flex-wrap: wrap; }
 }
