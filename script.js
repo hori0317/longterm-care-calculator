@@ -203,7 +203,7 @@ function renderTables(){
         const month = tr.querySelector(".inp-month");
         const total = tr.querySelector(".inp-total");
 
-        // ✅ 週次一改：月次=ceil(週*4.5)，且「總次數=月次數」（強制回同步），manual=0，use=月次
+        // ✅ 週次一改：月次=ceil(週*4.5)，且「總次數=月次數」（強制回同步）
         const onWeekChange = ()=>{
           const w = toInt(week.value);
           const m = Math.ceil(w * WEEKS_PER_MONTH);
@@ -287,14 +287,13 @@ function updateResults(){
       const price = Number(serviceData[g][i].price) || 0;
       let use = toInt(tr.dataset.use);
 
-      // 初次（use=0 且非 C）：依週→月種初值一次（不動 total；避免覆寫你的手動輸入）
+      // 初次（use=0 且非 C）：依週→月種初值一次（不動 total）
       if(tr.dataset.cmode!=="1" && !use){
         const w = toInt(tr.querySelector(".inp-week")?.value);
         const m = Math.ceil(w * WEEKS_PER_MONTH);
         if(m>0){
           tr.dataset.use = String(m);
           tr.querySelector(".inp-month").value = m;
-          // 不寫回 .inp-total（交給週次事件或使用者）
           use = m;
         }
       }
