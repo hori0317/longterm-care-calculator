@@ -48,11 +48,21 @@ a:hover{ text-decoration:underline; }
   backdrop-filter:blur(6px);
   border-bottom:1px solid var(--line);
 }
-.brand{ display:flex; align-items:center; gap:16px; font-weight:700; letter-spacing:1px; }
-.brand img{ height:60px; width:auto; transition:transform 0.3s ease; }
+.brand{ display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:1px; }
+.brand img{ height:60px; width:auto; transition:transform .3s ease; }
 .brand img:hover{ transform:scale(1.08); }
 .actions{ display:flex; gap:8px; }
 .divider{ height:8px; }
+
+.site-title{ font-size:20px; font-weight:700; margin-right:24px; }
+.nav-links{ display:flex; gap:20px; }
+.nav-links a{
+  text-decoration:none;
+  color:#333;
+  font-weight:600;
+  transition:color .2s, transform .2s;
+}
+.nav-links a:hover{ color:#ff9800; transform:translateY(-1px); }
 
 /* =====================
    底部資訊條（固定）
@@ -65,14 +75,14 @@ a:hover{ text-decoration:underline; }
   padding:8px 12px;
   padding-bottom:max(8px, env(safe-area-inset-bottom));
 }
-.foot {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  font-weight: 600;
-  text-align: center;
+.foot{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+  font-weight:600;
+  text-align:center;
 }
 .foot .ok{ color:var(--green); }
 .foot .warn{ color:var(--warn); }
@@ -109,73 +119,80 @@ a:hover{ text-decoration:underline; }
 
 .kv .kv-row{ display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-weight:600; }
 
-.chips{ display:flex; flex-wrap:wrap; gap:8px; }
-.chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#fff; cursor:pointer; user-select:none; }
+/* =====================
+   基本資料區樣式優化
+===================== */
+.form-row {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:8px 0;
+  font-size:15px;
+}
+.form-row:has(#keepQuota),
+.form-row:has(#grantQuota),
+.form-row:has(input[name="foreign"]) {
+  margin-top:14px;
+  margin-bottom:14px;
+}
+.form-row input[type="number"],
+.form-row input[type="text"] {
+  height:32px;
+  font-size:15px;
+  border-radius:6px;
+  width:90px;
+  padding:2px 4px;
+}
+
+/* 膠囊按鈕群組 */
+.chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fff;
+  font-size:14px;
+  cursor:pointer;
+  user-select:none;
+}
 .chip input{ transform:translateY(1px); }
 
-.cms{ display:flex; gap:10px; flex-wrap:wrap; }
-.cms label{ display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:6px 8px; }
+/* CMS 群組 */
+.cms{ display:flex; flex-wrap:wrap; gap:6px; }
+.cms label{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:4px 6px;
+  font-size:14px;
+}
 .cms input{ transform:translateY(1px); }
 
-input[type="number"]{
-  width:72px; height:36px; font-size:16px; text-align:center; color:var(--ink);
-  background:#fff; border:1px solid var(--line); border-radius:8px; outline:none;
-}
-input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba(46,125,50,.1); }
+.note.warn{ margin-top:8px; font-size:13px; }
 
 /* =====================
-   左卡：AA 加成區（只有項目＋次數）
+   左卡：AA 加成區
 ===================== */
-.addon {
-  margin-top: 8px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  overflow: hidden;
-}
+.addon{ margin-top:8px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.addon-head, .addon-row{ display:grid; grid-template-columns: 1fr 160px; align-items:center; }
+.addon-head{ background:#faf6e4; border-bottom:1px solid var(--line); font-weight:800; padding:8px 12px; }
+.addon-row{ padding:8px 12px; border-top:1px dashed var(--line); }
+.addon-row:first-child{ border-top:none; }
+.addon-row .addon-inputs{ display:flex; justify-content:flex-end; }
+.addon-row input[type="number"]{ width:90px; }
+.text-right{ text-align:right; }
 
-.addon-head, 
-.addon-row {
-  display: grid;
-  grid-template-columns: 1fr 160px;  /* ✅ 改回原本寬度 */
-  align-items: center;
-}
-
-/* 標題列 */
-.addon-head {
-  background: #faf6e4;
-  border-bottom: 1px solid var(--line);
-  font-weight: 800;
-  padding: 8px 12px;
-}
-
-/* ✅ 讓「次數」兩字往左一點 */
+/* ✅ 微調「次數」文字往左 */
 .addon-head span:last-child {
   text-align: right;
-  padding-right: 16px;   /* 可調整，12~25px 之間 */
+  padding-right: 18px;
 }
-
-/* 各列 */
-.addon-row {
-  padding: 8px 12px;
-  border-top: 1px dashed var(--line);
-}
-.addon-row:first-child { border-top: none; }
-
-/* ✅ 輸入框恢復靠右 */
-.addon-row .addon-inputs {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.addon-row input[type="number"] {
-  width: 90px;
-  height: 34px;
-  font-size: 15px;
-  text-align: center;
-}
-
-.text-right { text-align: right; }
 
 /* QR 區 */
 .qrbox{ margin-top:12px; display:flex; gap:12px; align-items:center; }
@@ -189,7 +206,6 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
 ===================== */
 .service-card h3{ margin:20px 0 8px 2px; font-size:16px; font-weight:800; color:#6b6544; }
 #tables{ width:100%; }
-
 #tables table{
   width:100%;
   border-collapse:separate; border-spacing:0;
@@ -206,16 +222,25 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
 #tables input[type="number"]{ width:64px; height:34px; font-size:15px; }
 
 /* =====================
-   手機優化（<= 860px）
+   手機優化
 ===================== */
 @media (max-width: 860px){
   .grid-3{ grid-template-columns:1fr; gap:12px; }
   .card{ padding:12px; }
   .topbar{ padding-top:max(10px, env(safe-area-inset-top)); }
   .footerbar{ padding-bottom:max(8px, env(safe-area-inset-bottom)); }
+
   #tables{ overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom: calc(var(--dock-h) + 12px); }
   #tables table{ min-width:760px; table-layout:fixed; }
+
+  #tables th:nth-child(1){ width:42%; }
+  #tables th:nth-child(2){ width:12%; }
+  #tables th:nth-child(3),#tables th:nth-child(4),#tables th:nth-child(5){ width:12%; }
+  #tables th:nth-child(6){ width:10%; }
+
   #tables th,#tables td{ padding:8px 10px; font-size:14px; line-height:1.2; white-space:nowrap; }
+  #tables input[type="number"]{ width:58px; height:32px; font-size:14px; }
+
   .foot{ gap:10px; font-size:14px; }
 }
 
@@ -227,31 +252,4 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
   body{ padding:0; background:#fff; }
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
-}
-
-/* ======= 導覽列（僅保留間距設定） ======= */
-.site-title { margin-right:48px; }
-.nav-links { display:flex; gap:40px; }
-.nav-links a { text-decoration:none; color:#333; font-weight:600; transition:color 0.2s, transform 0.2s; }
-.nav-links a:hover { color:#ff9800; transform:translateY(-1px); }
-
-/* 基本資料區：通用的列間距稍微放鬆一點 */
-.form-row{
-  display:flex;
-  align-items:center;
-  gap:10px;          /* 標籤與內容的水平間距 */
-  margin:10px 0;     /* 每一列的上下間距（通用） */
-}
-
-/* 只有這三列再加大一點：留用額度、給付額度、是否有外籍看護 */
-.form-row:has(#keepQuota),
-.form-row:has(#grantQuota),
-.form-row:has(input[name="foreign"]){
-  margin-top:16px;
-  margin-bottom:16px;   /* 想更鬆可改 18px/20px */
-}
-
-/* 視覺更舒服：radio 的膠囊群組稍微拉開 */
-.form-row:has(input[name="foreign"]) .chips{
-  gap:12px;             /* 原本 8px，想維持原值就刪掉這行 */
 }
