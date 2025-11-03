@@ -285,3 +285,12 @@ a:hover{ text-decoration:underline; }
   .form-row .chips,
   .form-row .cms{ flex-wrap: wrap; }
 }
+
+/* 讓金額相關欄位（單價、總金額等）在表頭與內容對齊 */
+#tables th:nth-child(2),
+#tables th:last-child,
+#tables th:has(.cell-price),
+#tables th:has(.cell-amount) {
+  text-align: right;
+  padding-right: 12px;
+}
