@@ -286,14 +286,14 @@ a:hover{ text-decoration:underline; }
   .form-row .cms{ flex-wrap: wrap; }
 }
 
-/* === 單價欄與金額欄對齊優化 === */
+/* === 單價欄與金額欄置中對齊 === */
 #tables th:nth-child(2),
-#tables th:last-child,
-#tables th:has(.cell-price),
-#tables th:has(.cell-amount),
-.cell-price,
-.cell-amount {
-  text-align: right;
-  padding-right: 24px;   /* ← 原本 12px，改成 24px，看起來更舒適 */
+#tables td.cell-price {
+  text-align: center;      /* 讓表頭與數字都置中 */
 }
 
+/* 若你希望「總金額」欄也置中，就加這段 */
+#tables th:last-child,
+#tables td.cell-amount {
+  text-align: center;
+}
