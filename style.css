@@ -151,7 +151,7 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
 /* ✅ 讓「次數」兩字往左一點 */
 .addon-head span:last-child {
   text-align: right;
-  padding-right: 18px;   /* 可調整，12~25px 之間 */
+  padding-right: 16px;   /* 可調整，12~25px 之間 */
 }
 
 /* 各列 */
@@ -234,3 +234,24 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
 .nav-links { display:flex; gap:40px; }
 .nav-links a { text-decoration:none; color:#333; font-weight:600; transition:color 0.2s, transform 0.2s; }
 .nav-links a:hover { color:#ff9800; transform:translateY(-1px); }
+
+/* 基本資料區：通用的列間距稍微放鬆一點 */
+.form-row{
+  display:flex;
+  align-items:center;
+  gap:10px;          /* 標籤與內容的水平間距 */
+  margin:10px 0;     /* 每一列的上下間距（通用） */
+}
+
+/* 只有這三列再加大一點：留用額度、給付額度、是否有外籍看護 */
+.form-row:has(#keepQuota),
+.form-row:has(#grantQuota),
+.form-row:has(input[name="foreign"]){
+  margin-top:16px;
+  margin-bottom:16px;   /* 想更鬆可改 18px/20px */
+}
+
+/* 視覺更舒服：radio 的膠囊群組稍微拉開 */
+.form-row:has(input[name="foreign"]) .chips{
+  gap:12px;             /* 原本 8px，想維持原值就刪掉這行 */
+}
