@@ -8,51 +8,9 @@
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
-
-  <!-- ✅ 浮水印樣式 -->
-  <style>
-    :root{
-      --wm-text: "@hori版權所有";
-      --wm-size: 36px;
-      --wm-angle: -25deg;
-      --wm-alpha: 0.05;     /* 調整透明度 */
-      --wm-shift: 120px;    /* 左右擺幅 */
-    }
-
-    .watermark {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-      overflow: hidden;
-    }
-
-    .topbar { z-index: 10000; position: sticky; top: 0; }
-
-    .wm-item{
-      position: absolute;
-      font-weight: 700;
-      font-size: var(--wm-size);
-      color: rgba(0,0,0,var(--wm-alpha));
-      transform: rotate(var(--wm-angle));
-      white-space: nowrap;
-      user-select: none;
-      will-change: transform;
-      animation: wm-sway var(--dur, 12s) ease-in-out infinite alternate;
-    }
-
-    @keyframes wm-sway{
-      0%   { transform: translateX(0) rotate(var(--wm-angle)); }
-      100% { transform: translateX(var(--wm-shift)) rotate(var(--wm-angle)); }
-    }
-
-    @media print{
-      .watermark { opacity: 0.08; } /* 改 display:none; 即可關掉列印浮水印 */
-    }
-  </style>
 </head>
 <body>
-  <!-- ✅ 浮水印（鋪滿整頁） -->
+  <!-- ✅ 浮水印（鋪滿整頁；文案：@hori版權所有） -->
   <div class="watermark" aria-hidden="true">
     <!-- 上方 -->
     <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
@@ -79,30 +37,24 @@
     <span class="wm-item" style="top:90%; left:45%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
-  <!-- 若改成 LOGO 浮水印：
-  <div class="watermark" aria-hidden="true">
-    <img class="wm-item" src="org-logo.png" style="top:20%; left:10%; width:240px; opacity:0.06; --dur:12s;" />
-    ...
-  </div>
-  -->
 
   <!-- 頂部列（固定） -->
   <header class="topbar">
-<div class="brand">
-  <a href="https://billionfamily.org" target="_blank" class="logo-link">
-    <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-  </a>
-  <span class="site-title">額度試算機</span>
+    <div class="brand">
+      <a href="https://billionfamily.org" target="_blank" class="logo-link">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title">額度試算機</span>
 
-  <!-- ✅ 新增的導覽連結 -->
-  <nav class="nav-links">
-    <a href="index.html">首頁</a>
-    <a href="care-info.html">長照相關資訊</a>
-    <a href="news.html">最新公告</a>
-    <a href="contact.html">聯繫方式</a>
-    <a href="about.html">關於我們</a>
-  </nav>
-</div>
+      <!-- 導覽連結 -->
+      <nav class="nav-links">
+        <a href="index.html" data-nav="home">首頁</a>
+        <a href="care-info.html" data-nav="care">長照相關資訊</a>
+        <a href="news.html" data-nav="news">最新公告</a>
+        <a href="contact.html" data-nav="contact">聯繫方式</a>
+        <a href="about.html" data-nav="about">關於我們</a>
+      </nav>
+    </div>
 
     <div class="actions">
       <!-- A/B 單位切換（B 時會隱藏 C 碼、薪資不計 C） -->
@@ -247,8 +199,3 @@
   </footer>
 </body>
 </html>
-
-
-
-
-
