@@ -90,7 +90,22 @@ a:hover{ text-decoration:underline; }
    容器與卡片
 ===================== */
 .container{ max-width:1220px; margin:0 auto; padding:20px 24px; }
-.grid-3{ display:grid; grid-template-columns:1.1fr 1fr 1fr; gap:20px; }
+/* 三欄卡片：左右變寬、中間略窄，取消間距 */
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr 1.15fr;  /* 左右略寬，中間略窄 */
+  gap: 0px;                                     /* 卡片之間無縫隙 */
+}
+
+/* 每張卡片邊框仍保留圓角 */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  height: 100%;
+}
 .card{
   background:var(--card);
   border:1px solid var(--line);
@@ -307,3 +322,4 @@ a:hover{ text-decoration:underline; }
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
 }
+
