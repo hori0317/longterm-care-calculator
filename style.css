@@ -50,7 +50,7 @@ a:hover{ text-decoration:underline; }
   border-bottom:1px solid var(--line);
 }
 .brand{ display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:1px; }
-.brand img{ height:24px; width:auto; }
+.brand img{ height:32px; width:auto; }
 .actions{ display:flex; gap:8px; }
 .divider{ height:8px; }
 
@@ -198,4 +198,5 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
 }
+
 
