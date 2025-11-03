@@ -133,11 +133,10 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
   overflow: hidden;
 }
 
-/* ✅ 改成次數欄更靠左（原 160px → 150px） */
 .addon-head, 
 .addon-row {
   display: grid;
-  grid-template-columns: 1fr 150px;
+  grid-template-columns: 1fr 160px;  /* ✅ 改回原本寬度 */
   align-items: center;
 }
 
@@ -149,6 +148,12 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
   padding: 8px 12px;
 }
 
+/* ✅ 讓「次數」兩字往左一點 */
+.addon-head span:last-child {
+  text-align: right;
+  padding-right: 18px;   /* 可調整，12~25px 之間 */
+}
+
 /* 各列 */
 .addon-row {
   padding: 8px 12px;
@@ -156,10 +161,10 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
 }
 .addon-row:first-child { border-top: none; }
 
-/* ✅ 讓輸入框往左對齊 */
+/* ✅ 輸入框恢復靠右 */
 .addon-row .addon-inputs {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: center;
 }
 
