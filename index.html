@@ -9,28 +9,27 @@
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 
-  <!-- ✅ 新增：浮水印樣式（左右擺動、不擋操作） -->
+  <!-- ✅ 浮水印樣式 -->
   <style>
     :root{
-      /* 可調參數 */
-      --wm-text: "優家長照內部使用";
-      --wm-size: 36px;           /* 文字大小 */
-      --wm-angle: -25deg;        /* 斜角 */
-      --wm-alpha: 0.06;          /* 透明度 0.03~0.1 建議 */
-      --wm-shift: 120px;         /* 左右擺幅 */
+      --wm-text: "@hori版權所有";
+      --wm-size: 36px;
+      --wm-angle: -25deg;
+      --wm-alpha: 0.05;     /* 調整透明度 */
+      --wm-shift: 120px;    /* 左右擺幅 */
     }
 
     .watermark {
       position: fixed;
       inset: 0;
-      pointer-events: none;      /* 不阻擋點擊/選取 */
-      z-index: 9999;             /* 疊在內容上 */
+      pointer-events: none;
+      z-index: 9999;
       overflow: hidden;
     }
-    /* 如果不想覆蓋工具列，把 topbar 設高一點 z-index */
+
     .topbar { z-index: 10000; position: sticky; top: 0; }
 
-    .watermark .wm-item{
+    .wm-item{
       position: absolute;
       font-weight: 700;
       font-size: var(--wm-size);
@@ -41,28 +40,44 @@
       will-change: transform;
       animation: wm-sway var(--dur, 12s) ease-in-out infinite alternate;
     }
-    /* 左右擺動動畫 */
+
     @keyframes wm-sway{
       0%   { transform: translateX(0) rotate(var(--wm-angle)); }
       100% { transform: translateX(var(--wm-shift)) rotate(var(--wm-angle)); }
     }
 
-    /* 列印行為：想要列印時也帶浮水印就保留；若不想列印顯示就 display:none */
     @media print{
-      .watermark { opacity: 0.08; } /* 或改為 display:none; */
+      .watermark { opacity: 0.08; } /* 改 display:none; 即可關掉列印浮水印 */
     }
   </style>
-  <!-- ✅ 以上為新增 -->
 </head>
 <body>
-
-  <!-- ✅ 新增：浮水印層（想換成圖片可把 <span> 換 <img>，見下方註解） -->
+  <!-- ✅ 浮水印（鋪滿整頁） -->
   <div class="watermark" aria-hidden="true">
-    <span class="wm-item" style="top:10%; left:6%;  --dur:10s;">@hori版權所有</span>
-    <span class="wm-item" style="top:30%; left:18%; --dur:12s;">@hori版權所有</span>
-    <span class="wm-item" style="top:50%; left:8%;  --dur:14s;">@hori版權所有</span>
-    <span class="wm-item" style="top:70%; left:24%; --dur:11s;">@hori版權所有</span>
-    <span class="wm-item" style="top:85%; left:14%; --dur:13s;">@hori版權所有</span>
+    <!-- 上方 -->
+    <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:65%; --dur:10s;">@hori版權所有</span>
+
+    <!-- 中上 -->
+    <span class="wm-item" style="top:25%; left:10%; --dur:13s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:40%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:70%; --dur:14s;">@hori版權所有</span>
+
+    <!-- 中段 -->
+    <span class="wm-item" style="top:50%; left:5%;  --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:35%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:65%; --dur:9s;">@hori版權所有</span>
+
+    <!-- 下方 -->
+    <span class="wm-item" style="top:75%; left:10%; --dur:13s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:40%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:70%; --dur:10s;">@hori版權所有</span>
+
+    <!-- 最底 -->
+    <span class="wm-item" style="top:90%; left:15%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:45%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
   <!-- 若改成 LOGO 浮水印：
   <div class="watermark" aria-hidden="true">
@@ -220,4 +235,5 @@
   </footer>
 </body>
 </html>
+
 
