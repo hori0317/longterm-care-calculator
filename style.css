@@ -198,5 +198,47 @@ input[type="number"]:focus{ border-color:var(--green); box-shadow:0 0 0 3px rgba
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
 }
+/* LOGO 與標題保持水平排列 */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* LOGO 大小 */
+.brand img {
+  height: 60px;
+  width: auto;
+  transition: transform 0.3s ease;
+}
+.brand img:hover {
+  transform: scale(1.08);
+}
+
+/* 網站名稱與導覽分開 */
+.site-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-right: 24px;
+}
+
+/* 導覽連結區 */
+.nav-links {
+  display: flex;
+  gap: 16px;
+}
+
+/* 連結樣式 */
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.nav-links a:hover {
+  color: #ff9800;          /* 滑過變橘色 */
+  transform: translateY(-1px);
+}
 
 
