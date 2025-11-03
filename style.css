@@ -214,6 +214,13 @@ a:hover{ text-decoration:underline; }
 .qr-right .bold{ font-weight:800; }
 .qr-right .orange{ color:var(--orange); font-weight:700; }
 
+/* 若 QR 移至中間卡片，稍微調整間距 */
+.card .qrbox {
+  margin-top: 20px;
+  border-top: 1px dashed var(--line);
+  padding-top: 14px;
+}
+
 /* =====================
    服務表格（新版）
 ===================== */
@@ -322,4 +329,5 @@ a:hover{ text-decoration:underline; }
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
 }
+
 
