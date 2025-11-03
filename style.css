@@ -120,23 +120,42 @@ a:hover{ text-decoration:underline; }
 .kv .kv-row{ display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-weight:600; }
 
 /* =====================
-   基本資料區樣式優化
+   基本資料區 — 緊實版
 ===================== */
-.form-row {
+.form-row{
   display:flex;
   align-items:center;
   gap:8px;
   margin:8px 0;
   font-size:15px;
 }
+
+/* 讓「身分類別 / CMS 等級」桌機維持單行；標籤不換行 */
+.form-row{ flex-wrap:nowrap; }
+.form-row > label{
+  flex:0 0 88px;           /* 左側標籤欄固定寬 */
+  white-space:nowrap;
+}
+.form-row .chips,
+.form-row .cms{
+  flex:1 1 auto;
+  display:flex;
+  gap:6px;
+  flex-wrap:nowrap;        /* 選項單行 */
+  min-width:0;
+}
+
+/* 特定行再留多一點空隙 */
 .form-row:has(#keepQuota),
 .form-row:has(#grantQuota),
-.form-row:has(input[name="foreign"]) {
+.form-row:has(input[name="foreign"]){
   margin-top:14px;
   margin-bottom:14px;
 }
+
+/* 欄位尺寸較小、精緻 */
 .form-row input[type="number"],
-.form-row input[type="text"] {
+.form-row input[type="text"]{
   height:32px;
   font-size:15px;
   border-radius:6px;
@@ -144,43 +163,39 @@ a:hover{ text-decoration:underline; }
   padding:2px 4px;
 }
 
-/* 膠囊按鈕群組 */
-.chips{ display:flex; flex-wrap:wrap; gap:6px; }
+/* 膠囊群組（radio）*/
+.chips{ display:flex; gap:6px; }
 .chip{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 8px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  background:#fff;
-  font-size:14px;
-  cursor:pointer;
-  user-select:none;
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 8px; border:1px solid var(--line);
+  border-radius:999px; background:#fff; font-size:14px;
+  cursor:pointer; user-select:none;
 }
 .chip input{ transform:translateY(1px); }
 
 /* CMS 群組 */
-.cms{ display:flex; flex-wrap:wrap; gap:6px; }
+.cms{ display:flex; gap:6px; }
 .cms label{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:4px 6px;
-  font-size:14px;
+  display:inline-flex; align-items:center; gap:4px;
+  background:#fff; border:1px solid var(--line);
+  border-radius:12px; padding:4px 6px; font-size:14px;
 }
 .cms input{ transform:translateY(1px); }
 
 .note.warn{ margin-top:8px; font-size:13px; }
 
+/* 手機寬度時允許換行，避免擠爆 */
+@media (max-width:860px){
+  .form-row{ flex-wrap:wrap; }
+  .form-row > label{ flex:0 0 100%; }
+  .form-row .chips, .form-row .cms{ flex-wrap:wrap; }
+}
+
 /* =====================
    左卡：AA 加成區
 ===================== */
 .addon{ margin-top:8px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
-.addon-head, .addon-row{ display:grid; grid-template-columns: 1fr 160px; align-items:center; }
+.addon-head, .addon-row{ display:grid; grid-template-columns:1fr 160px; align-items:center; }
 .addon-head{ background:#faf6e4; border-bottom:1px solid var(--line); font-weight:800; padding:8px 12px; }
 .addon-row{ padding:8px 12px; border-top:1px dashed var(--line); }
 .addon-row:first-child{ border-top:none; }
@@ -188,11 +203,8 @@ a:hover{ text-decoration:underline; }
 .addon-row input[type="number"]{ width:90px; }
 .text-right{ text-align:right; }
 
-/* ✅ 微調「次數」文字往左 */
-.addon-head span:last-child {
-  text-align: right;
-  padding-right: 18px;
-}
+/* 「次數」兩字往左縮一些（輸入框不動） */
+.addon-head span:last-child{ text-align:right; padding-right:18px; }
 
 /* QR 區 */
 .qrbox{ margin-top:12px; display:flex; gap:12px; align-items:center; }
@@ -206,6 +218,7 @@ a:hover{ text-decoration:underline; }
 ===================== */
 .service-card h3{ margin:20px 0 8px 2px; font-size:16px; font-weight:800; color:#6b6544; }
 #tables{ width:100%; }
+
 #tables table{
   width:100%;
   border-collapse:separate; border-spacing:0;
@@ -218,8 +231,30 @@ a:hover{ text-decoration:underline; }
 }
 #tables tbody td{ padding:10px 12px; border-top:1px solid var(--line); vertical-align:middle; }
 #tables tbody tr:nth-child(even){ background:#fffef9; }
-.cell-price,.cell-amount{ text-align:right; font-variant-numeric:tabular-nums; }
-#tables input[type="number"]{ width:64px; height:34px; font-size:15px; }
+
+/* 數字欄位統一寬度＋置中：單價、週、月、總次、總金額 */
+#tables th:nth-child(2),
+#tables th:nth-child(3),
+#tables th:nth-child(4),
+#tables th:nth-child(5),
+#tables th:nth-child(6){
+  width:100px;                 /* 可調 90~110px */
+  text-align:center;
+}
+#tables td:nth-child(2),
+#tables td:nth-child(3),
+#tables td:nth-child(4),
+#tables td:nth-child(5),
+#tables td:nth-child(6){
+  text-align:center;
+  vertical-align:middle;
+}
+
+/* 讓數字輸入框置中顯示 */
+#tables input[type="number"]{
+  width:64px; height:34px; font-size:15px;
+  text-align:center; margin:0 auto; display:block;
+}
 
 /* =====================
    手機優化
@@ -230,13 +265,9 @@ a:hover{ text-decoration:underline; }
   .topbar{ padding-top:max(10px, env(safe-area-inset-top)); }
   .footerbar{ padding-bottom:max(8px, env(safe-area-inset-bottom)); }
 
+  /* 表格可水平滑動，並預留底列高度 */
   #tables{ overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom: calc(var(--dock-h) + 12px); }
   #tables table{ min-width:760px; table-layout:fixed; }
-
-  #tables th:nth-child(1){ width:42%; }
-  #tables th:nth-child(2){ width:12%; }
-  #tables th:nth-child(3),#tables th:nth-child(4),#tables th:nth-child(5){ width:12%; }
-  #tables th:nth-child(6){ width:10%; }
 
   #tables th,#tables td{ padding:8px 10px; font-size:14px; line-height:1.2; white-space:nowrap; }
   #tables input[type="number"]{ width:58px; height:32px; font-size:14px; }
@@ -252,48 +283,4 @@ a:hover{ text-decoration:underline; }
   body{ padding:0; background:#fff; }
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
-}
-
-/* === 讓「身分類別」與「CMS 等級」都在同一行 === */
-.form-row{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: nowrap;                 /* 不要自動換行 */
-}
-
-/* 左側標籤固定寬度且不換行，避免變成兩行「CMS」「等級」 */
-.form-row > label{
-  flex: 0 0 88px;                    /* 標籤欄固定寬度，可調 80~100px */
-  white-space: nowrap;               /* 標籤文字不換行 */
-}
-
-/* 右側選項容器佔滿剩餘寬度，且選項不換行 */
-.form-row .chips,
-.form-row .cms{
-  flex: 1 1 auto;
-  display: flex;
-  gap: 6px;
-  flex-wrap: nowrap;                 /* 選項不換行 */
-  min-width: 0;                      /* 防止被撐爆時怪異折行 */
-}
-
-/* 小螢幕時恢復可換行，避免擠爆 */
-@media (max-width: 860px){
-  .form-row{ flex-wrap: wrap; }
-  .form-row > label{ flex: 0 0 100%; }   /* 標籤占整行，上方一列 */
-  .form-row .chips,
-  .form-row .cms{ flex-wrap: wrap; }
-}
-
-/* === 單價欄與金額欄置中對齊 === */
-#tables th:nth-child(2),
-#tables td.cell-price {
-  text-align: center;      /* 讓表頭與數字都置中 */
-}
-
-/* 若你希望「總金額」欄也置中，就加這段 */
-#tables th:last-child,
-#tables td.cell-amount {
-  text-align: center;
 }
