@@ -253,3 +253,32 @@ a:hover{ text-decoration:underline; }
   .card{ box-shadow:none; }
   #tables thead th{ position:static; }
 }
+
+/* ✅ 讓「身分類別」與「CMS 等級」選項都排成一行 */
+.form-row:has(.chips),
+.form-row:has(.cms) {
+  flex-wrap: nowrap;
+}
+
+/* 選項之間間距稍微縮小，避免擠太滿 */
+.chips {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.cms {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+/* 小螢幕時自動恢復可換行，避免壓縮爆版 */
+@media (max-width: 860px) {
+  .form-row:has(.chips),
+  .form-row:has(.cms) {
+    flex-wrap: wrap;
+  }
+  .chips,
+  .cms {
+    flex-wrap: wrap;
+  }
+}
