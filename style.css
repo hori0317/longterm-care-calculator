@@ -119,7 +119,7 @@ a:hover{ text-decoration:underline; }
 .kv .kv-row{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-weight:600; }
 
 /* =====================
-   基本資料區 — 放寬間距
+   基本資料區
 ===================== */
 .form-row{
   display:flex;
@@ -200,46 +200,84 @@ a:hover{ text-decoration:underline; }
 .qr-right .orange{ color:var(--orange); font-weight:700; }
 
 /* =====================
-   服務表格
+   服務表格（新版）
 ===================== */
-.service-card h3{ margin:24px 0 10px 2px; font-size:16px; font-weight:800; color:#6b6544; }
-#tables{ width:100%; }
-
-#tables table{
-  width:100%;
-  border-collapse:separate; border-spacing:0;
-  background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden;
+.service-card h3 {
+  margin: 24px 0 10px 2px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #6b6544;
 }
-#tables thead th{
-  position:sticky; top:0; z-index:5;
-  background:#f6f1d9; color:#584f2a;
-  text-align:center; padding:12px 16px; border-bottom:1px solid var(--line); font-weight:800;
-}
-#tables tbody td{ padding:12px 16px; border-top:1px solid var(--line); vertical-align:middle; }
-#tables tbody tr:nth-child(even){ background:#fffef9; }
 
-/* 數字欄統一寬度＋置中：單價、週、月、總次、總金額 */
+#tables {
+  width: 100%;
+}
+
+#tables table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 表頭樣式 */
+#tables thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #f6f1d9;
+  color: #584f2a;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 800;
+}
+
+/* 服務項目欄靠左 */
+#tables th:first-child,
+#tables td:first-child {
+  text-align: left;
+  padding-left: 18px;
+}
+
+/* 單價～總金額欄間距放大 */
 #tables th:nth-child(2),
 #tables th:nth-child(3),
 #tables th:nth-child(4),
 #tables th:nth-child(5),
-#tables th:nth-child(6){
-  width:120px;                 /* 寬版間距 */
-  text-align:center;
+#tables th:nth-child(6) {
+  width: 140px;
+  text-align: center;
 }
 #tables td:nth-child(2),
 #tables td:nth-child(3),
 #tables td:nth-child(4),
 #tables td:nth-child(5),
-#tables td:nth-child(6){
-  text-align:center;
-  vertical-align:middle;
+#tables td:nth-child(6) {
+  text-align: center;
+  vertical-align: middle;
 }
 
-/* 數字輸入框置中顯示 */
-#tables input[type="number"]{
-  width:68px; height:36px; font-size:15px;
-  text-align:center; margin:0 auto; display:block;
+/* 內容列樣式 */
+#tables tbody td {
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+  vertical-align: middle;
+}
+#tables tbody tr:nth-child(even) {
+  background: #fffef9;
+}
+
+/* 數字輸入框 */
+#tables input[type="number"] {
+  width: 70px;
+  height: 36px;
+  font-size: 15px;
+  text-align: center;
+  margin: 0 auto;
+  display: block;
 }
 
 /* =====================
