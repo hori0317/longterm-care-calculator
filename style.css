@@ -341,4 +341,63 @@ img, a img {
   user-drag: none;
 }
 
+/* ======== 置中導覽選單（不破壞原結構） ======== */
+/* 1) 讓 header 內的 nav 撐滿一行（不影響旁邊的 logo/按鈕區） */
+header nav,
+.site-header nav,
+.navbar nav {
+  width: 100%;
+}
+
+/* 2) 把「首頁、長照相關資訊、最新公告、聯繫方式、關於我們」這個 UL 水平置中 */
+header nav ul,
+.site-header nav ul,
+.navbar nav ul,
+header .nav-list,
+.site-header .nav-list,
+.navbar .nav-list,
+header .menu,
+.site-header .menu,
+.navbar .menu {
+  display: flex;
+  justify-content: center;   /* 關鍵：置中 */
+  align-items: center;
+  gap: 28px;                  /* 連結間距，可調整 */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 3) 清掉可能把項目推開的樣式（例如 space-between） */
+header .nav,
+header .navbar,
+.site-header .nav,
+.site-header .navbar,
+.navbar {
+  justify-content: initial;
+}
+
+/* 4) 連結外觀（保留你原本的顏色設定就好；這段是保守增強，可刪） */
+header nav a,
+.site-header nav a,
+.navbar nav a {
+  text-decoration: none;
+  line-height: 1;
+}
+
+/* 5) 手機版：窄螢幕改直排，仍置中 */
+@media (max-width: 768px) {
+  header nav ul,
+  .site-header nav ul,
+  .navbar nav ul,
+  header .nav-list,
+  .site-header .nav-list,
+  .navbar .nav-list,
+  header .menu,
+  .site-header .menu,
+  .navbar .menu {
+    flex-direction: column;
+    gap: 14px;
+  }
+}
 
