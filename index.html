@@ -238,7 +238,19 @@
       <span>總額：<b id="sumGrand_foot">0</b></span>
     </div>
   </footer>
+<script>
+// 禁止右鍵與檢視原始碼
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
+  if (e.key === 'F12') e.preventDefault();
+});
+// 禁止選取與複製
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('copy', e => e.preventDefault());
+</script>
 </body>
 </html>
+
 
 
