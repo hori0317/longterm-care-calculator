@@ -1,483 +1,502 @@
-/* =====================
-   顏色主題（奶油黃×森綠）
-===================== */
-:root{
-  --bg:#fff6d5;
-  --card:#fffdf5;
-  --line:#e6dca8;
+/**********************
+ * script.js（週→月→總；總可改，但改週即重置同步）
+ * 重點修正：服務列改用 DOM 建構，每欄獨立 <td>，避免「沐浴0」黏在一起
+ **********************/
 
-  --ink:#2f2f20;
-  --muted:#7a7557;
+/* 公用 */
+function toInt(v){
+  if (typeof v === "number") return Number.isFinite(v) ? Math.trunc(v) : 0;
+  if (v === null || v === undefined) return 0;
+  const fw={'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','，':',','．':'.','＋':'+','－':'-'};
+  let s=String(v).replace(/[０-９，．＋－]/g,ch=>fw[ch]??ch);
+  s=s.replace(/,/g,'').trim();
+  const m=s.match(/^[+-]?\d+/);
+  return m?parseInt(m[0],10):0;
+}
+const $ = s => document.querySelector(s);
+const WEEKS_PER_MONTH = 4.5;
 
-  --green:#2e7d32;
-  --green-2:#0f766e;
-  --orange:#f59e0b;
-  --graybtn:#9ca3af;
-  --warn:#b00020;
+/* AA 區（只顯示項目＋次數；計算用） */
+const AA_PRICE = { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 };
+const ADDONS = Object.keys(AA_PRICE).map(code=>({code}));
 
-  --topbar-h:56px;
-  --dock-h:56px;
-}
+/* 服務清單 */
+const serviceData = {
+  BA: [
+    { code:"BA01", name:"基本身體清潔", price:260 },
+    { code:"BA02", name:"基本日常照顧", price:195 },
+    { code:"BA03", name:"測量生命徵象", price:35 },
+    { code:"BA04", name:"協助進食或管灌", price:130 },
+    { code:"BA05", name:"餐食照顧", price:310 },
+    { code:"BA07", name:"協助沐浴及洗頭", price:325 },
+    { code:"BA08", name:"足部照護", price:500 },
+    { code:"BA09", name:"到宅沐浴-1", price:2200 },
+    { code:"BA09a", name:"到宅沐浴-2", price:2500 },
+    { code:"BA10", name:"翻身拍背", price:155 },
+    { code:"BA11", name:"肢體關節活動", price:195 },
+    { code:"BA12", name:"協助上下樓梯", price:130 },
+    { code:"BA13", name:"陪同外出", price:195 },
+    { code:"BA14", name:"陪同就醫", price:685 },
+    { code:"BA15", name:"家務協助", price:195 },
+    { code:"BA16", name:"代購", price:130 },
+    { code:"BA17a", name:"人工氣道管抽吸", price:75 },
+    { code:"BA17b", name:"口腔內抽吸", price:65 },
+    { code:"BA17c", name:"管路清潔", price:50 },
+    { code:"BA17d", name:"通便/驗血糖", price:50 },
+    { code:"BA17e", name:"依指示置入藥盒", price:50 },
+    { code:"BA18", name:"安全看視", price:200 },
+    { code:"BA20", name:"陪伴服務", price:175 },
+    { code:"BA22", name:"巡視服務", price:130 },
+    { code:"BA23", name:"協助洗頭", price:200 },
+    { code:"BA24", name:"協助排泄", price:220 },
+  ],
+  BD: [
+    { code:"BD01", name:"社區式協助沐浴", price:200 },
+    { code:"BD02", name:"社區式晚餐", price:150 },
+    { code:"BD03", name:"社區式服務交通接送", price:115 },
+  ],
+  C: [
+    { code:"CA07", name:"IADLs/ADLs 復能照護(3次含評估)", price:4500 },
+    { code:"CA08", name:"ISP擬定與執行(4次含評估)", price:6000 },
+    { code:"CB01", name:"營養照護(3次含評估)", price:6000 },
+    { code:"CB02", name:"進食與吞嚥照護(6次含評估)", price:9000 },
+    { code:"CB03", name:"困擾行為照護(3次含評估)", price:4500 },
+    { code:"CB04", name:"臥床/長期活動受限照護(6次含評估)", price:9000 },
+    { code:"CC01", name:"居家環境安全或無障礙空間規劃", price:2000 },
+    { code:"CD02", name:"居家護理指導與諮詢(3次+1次評估)", price:6000 },
+  ],
+  GA: [{ code:"GA09", name:"喘息 2 小時/支", price:770 }],
+  SC: [{ code:"SC09", name:"短照 2 小時/支", price:770 }],
+};
 
-/* =====================
-   全域
-===================== */
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
-  color:var(--ink);
-  background:var(--bg);
-  line-height:1.5;
-  padding-bottom: var(--dock-h);
-}
-.hidden{ display:none !important; }
-a{ color:var(--green); text-decoration:none; }
-a:hover{ text-decoration:underline; }
+/* 額度 */
+const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180 };
+const GA_CAP   = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
+const SC_CAP   = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/* =====================
-   頂部列（固定）
-===================== */
-.topbar{
-  position:sticky; top:0; z-index:1000;
-  display:grid;
-  grid-template-columns:auto 1fr auto;
-  align-items:center;
-  padding:12px 24px;
-  background:rgba(255,253,245,.9);
-  backdrop-filter:blur(6px);
-  border-bottom:1px solid var(--line);
-}
-.brand{
-  display:flex; align-items:center; gap:16px;
-}
-.brand img{
-  height:60px; width:auto;
-  transition:transform .3s ease;
-}
-.brand img:hover{ transform:scale(1.08); }
+/* 狀態 */
+let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
+const lastCalc  = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
-.site-title{
-  font-size:20px; font-weight:700;
-  margin-right:28px;
-  white-space:nowrap;
-}
+/* 初始化 */
+document.addEventListener('DOMContentLoaded', () => {
+  renderAddons();
+  renderTables();
+  bindHeaderInputs();
+  bindUnitToggle();
+  applyUnitEffects();
+  updateSCAvailability();
+  updateResults();
 
-/* 導覽列 */
-.nav-links{
-  flex:1 1 auto;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:24px;
-  white-space:nowrap;
-}
-.nav-links a{
-  text-decoration:none;
-  color:#333;
-  font-weight:600;
-  transition:color .2s, transform .2s;
-  white-space:nowrap;
-}
-.nav-links a:hover{
-  color:#ff9800;
-  transform:translateY(-1px);
-}
+  $("#btnSaveAddons")?.addEventListener("click", ()=>{ saveAddons(); updateResults(); });
+  $("#btnReset")?.addEventListener("click", resetAll);
 
-/* 右側按鈕區 */
-.actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex:0 0 auto;
-  white-space:nowrap;
-}
-.divider{ height:10px; }
+  adjustTopbarPadding();
+  adjustDockPadding();
+  window.addEventListener('resize', ()=>{ adjustTopbarPadding(); adjustDockPadding(); });
+  window.addEventListener('orientationchange', ()=>{ adjustTopbarPadding(); adjustDockPadding(); });
 
-/* =====================
-   底部資訊條（固定）
-===================== */
-.footerbar{
-  position:sticky; bottom:0; z-index:1000;
-  background:rgba(255,253,245,.9);
-  backdrop-filter:blur(6px);
-  border-top:1px solid var(--line);
-  padding:10px 18px;
-  padding-bottom:max(10px, env(safe-area-inset-bottom));
-}
-.foot{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:20px;
-  flex-wrap:wrap;
-  font-weight:600;
-  text-align:center;
-}
-.foot .ok{ color:var(--green); }
-.foot .warn{ color:var(--warn); }
+  const dock = document.getElementById('bottomDock');
+  if(window.ResizeObserver && dock){ new ResizeObserver(()=>adjustDockPadding()).observe(dock); }
+  const topbar = document.querySelector('.topbar');
+  if(window.ResizeObserver && topbar){ new ResizeObserver(()=>adjustTopbarPadding()).observe(topbar); }
+});
 
-/* =====================
-   容器與卡片
-===================== */
-.container{ max-width:1220px; margin:0 auto; padding:20px 24px; }
-.grid-3 {
-  display:grid;
-  grid-template-columns:1.15fr 0.95fr 1.15fr;
-  gap:0px;
+/* AA 區 */
+function renderAddons(){
+  const saved = JSON.parse(localStorage.getItem("addons")||"{}");
+  const host = $("#addonRows"); if(!host) return;
+  host.innerHTML="";
+  ADDONS.forEach(a=>{
+    const row = document.createElement("div");
+    row.className="addon-row";
+    row.innerHTML = `
+      <div>${a.code}</div>
+      <div class="addon-inputs">
+        <input type="number" id="${a.code}_count" value="${toInt(saved[`${a.code}_count`])}" min="0" step="1" />
+      </div>`;
+    host.appendChild(row);
+  });
 }
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:20px;
-  box-shadow:0 1px 2px rgba(0,0,0,.05);
-  height:100%;
-}
-.card-title{ margin:0 0 12px 0; font-size:18px; font-weight:800; }
-
-/* =====================
-   元件
-===================== */
-.btn{
-  border:none;
-  cursor:pointer;
-  padding:8px 14px;
-  border-radius:10px;
-  font-weight:700;
-  color:#fff;
-  background:var(--green);
-}
-.btn:hover{ filter:brightness(1.05); }
-.btn:active{ transform:translateY(1px); }
-.btn.pill{ border-radius:999px; padding:8px 16px; }
-.btn-green{ background:var(--green); color:#fff; }
-.btn-orange{ background:var(--orange); color:#fff; }
-.btn-gray{ background:var(--graybtn); color:#fff; }
-
-.row{ display:flex; align-items:center; gap:10px; }
-.space-between{ justify-content:space-between; }
-.hint{ color:var(--muted); font-size:13px; }
-.note.warn,.hint.warn{ color:var(--warn); }
-
-.kv .kv-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:6px 0;
-  font-weight:600;
+function saveAddons(){
+  const data={};
+  ADDONS.forEach(a=>{
+    data[`${a.code}_count`] = toInt($(`#${a.code}_count`)?.value);
+  });
+  localStorage.setItem("addons", JSON.stringify(data));
+  const hint=$("#addonHint"); if(hint){ hint.textContent="已儲存加成次數"; hint.classList.remove("warn"); }
 }
 
-/* =====================
-   基本資料區
-===================== */
-.form-row{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin:12px 0;
-  font-size:15px;
-}
-.form-row > label{
-  flex:0 0 90px;
-  white-space:nowrap;
-}
-.form-row .chips,
-.form-row .cms{
-  flex:1 1 auto;
-  display:flex;
-  gap:8px;
-  flex-wrap:nowrap;
-  min-width:0;
-}
-.form-row input[type="number"],
-.form-row input[type="text"]{
-  height:34px;
-  font-size:15px;
-  border-radius:6px;
-  width:100px;
-  padding:2px 6px;
+/* 產表（C 與其餘邏輯不同） */
+function renderTables(){
+  const container = $("#tables"); if(!container) return;
+  container.innerHTML="";
+  const titles = {
+    BA:"BA碼（照顧服務）",
+    BD:"BD碼（社區服務）",
+    C :"C碼（專業服務｜一包制）",
+    GA:"GA碼（喘息服務）",
+    SC:"SC碼（居家短照服務）"
+  };
+
+  Object.keys(serviceData).forEach(code=>{
+    const groupBox = document.createElement("div");
+    groupBox.dataset.group = code;
+
+    const h3=document.createElement("h3"); h3.textContent=titles[code];
+    const table=document.createElement("table");
+
+    if(code === "C"){
+      table.innerHTML = `
+        <thead><tr>
+          <th style="min-width:260px">服務項目</th>
+          <th>單價(每組)</th>
+          <th>每月組數</th>
+          <th>總金額</th>
+        </tr></thead>
+        <tbody></tbody>`;
+    }else{
+      table.innerHTML=`
+        <thead><tr>
+          <th style="min-width:260px">服務項目</th>
+          <th>單價</th>
+          <th>週次數</th>
+          <th>月次數</th>
+          <th>總次數</th>
+          <th>總金額</th>
+        </tr></thead>
+        <tbody></tbody>`;
+    }
+
+    const tbody=table.querySelector("tbody");
+
+    serviceData[code].forEach((item,i)=>{
+      const tr=document.createElement("tr");
+      tr.dataset.manual = "0";  // 0=自動(總次跟月次同步)；1=使用者手動輸入總次
+      tr.dataset.use    = "0";  // 最終使用次數（或 C 的組數）
+
+      if(code === "C"){
+        // --- C 類：每列用「DOM 節點」建構 ---
+        const tdItem  = document.createElement("td");
+        const tdPrice = document.createElement("td");
+        const tdGrp   = document.createElement("td");
+        const tdAmt   = document.createElement("td");
+
+        tdItem.textContent  = `${item.code} ${item.name}`;
+        tdPrice.className   = "cell-price";
+        tdPrice.textContent = (Number(item.price)||0).toLocaleString();
+        tdAmt.className     = "cell-amount";
+        tdAmt.textContent   = "0";
+
+        const gInp = document.createElement("input");
+        gInp.className = "inp-c-groups";
+        gInp.type = "number"; gInp.min="0"; gInp.step="1"; gInp.value="0";
+        const onCGroupChange = ()=>{
+          tr.dataset.use = String(toInt(gInp.value));
+          updateOneRow(code, i);
+          updateResults();
+        };
+        gInp.addEventListener("input", onCGroupChange);
+        gInp.addEventListener("change", onCGroupChange);
+        tdGrp.appendChild(gInp);
+
+        tr.appendChild(tdItem);
+        tr.appendChild(tdPrice);
+        tr.appendChild(tdGrp);
+        tr.appendChild(tdAmt);
+
+      }else{
+        // --- 其他類別：每列用「DOM 節點」建構，確保每欄獨立 ---
+        const tdItem  = document.createElement("td");
+        const tdPrice = document.createElement("td");
+        const tdWk    = document.createElement("td");
+        const tdMon   = document.createElement("td");
+        const tdTot   = document.createElement("td");
+        const tdAmt   = document.createElement("td");
+
+        tdItem.textContent  = `${item.code} ${item.name}`;
+        tdPrice.className   = "cell-price";
+        tdPrice.textContent = (Number(item.price)||0).toLocaleString();
+
+        const week  = document.createElement("input");
+        const month = document.createElement("input");
+        const total = document.createElement("input");
+        week.className="inp-week";  week.type="number";  week.min="0"; week.step="1"; week.value="0";
+        month.className="inp-month"; month.type="number"; month.value="0"; month.readOnly = true;
+        total.className="inp-total"; total.type="number"; total.min="0"; total.step="1"; total.value="0";
+
+        // ✅ 週次一改：月次=ceil(週*4.5)，且「總次數=月次數」（強制回同步），manual=0，use=月次
+        const onWeekChange = ()=>{
+          const w = toInt(week.value);
+          const m = Math.ceil(w * WEEKS_PER_MONTH);
+          month.value       = m;
+          total.value       = m;          // 強制回同步
+          tr.dataset.manual = "0";        // 回到自動模式
+          tr.dataset.use    = String(m);  // 計算使用月次
+          updateOneRow(code, i);
+          updateResults();
+        };
+
+        // ✅ 總次可自由改：manual=1，之後都用總次計；直到你再次改「週次」才會被重設
+        const onTotalChange = ()=>{
+          tr.dataset.manual = "1";
+          const t = toInt(total.value);
+          tr.dataset.use = String(t);
+          updateOneRow(code, i);
+          updateResults();
+        };
+
+        week.addEventListener("input", onWeekChange);
+        week.addEventListener("change", onWeekChange);
+        total.addEventListener("input", onTotalChange);
+        total.addEventListener("change", onTotalChange);
+
+        tdWk.appendChild(week);
+        tdMon.appendChild(month);
+        tdTot.appendChild(total);
+
+        tdAmt.className="cell-amount";
+        tdAmt.textContent="0";
+
+        tr.appendChild(tdItem);
+        tr.appendChild(tdPrice);
+        tr.appendChild(tdWk);
+        tr.appendChild(tdMon);
+        tr.appendChild(tdTot);
+        tr.appendChild(tdAmt);
+      }
+
+      tbody.appendChild(tr);
+    });
+
+    groupBox.appendChild(h3);
+    groupBox.appendChild(table);
+    container.appendChild(groupBox);
+  });
+
+  applyUnitEffects(); // B 單位隱藏 C
 }
 
-.chips{ display:flex; gap:8px; }
-.chip{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:5px 10px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  background:#fff;
-  font-size:14px;
-  cursor:pointer;
-  user-select:none;
-}
-.chip input{ transform:translateY(1px); }
+/* 單列金額（只讀 data-use） */
+function updateOneRow(code, idx){
+  const tIndex = Object.keys(serviceData).indexOf(code);
+  const table  = document.querySelectorAll("#tables table")[tIndex];
+  if(!table) return;
+  const tr     = table.tBodies[0].rows[idx];
+  if(!tr) return;
 
-.cms{ display:flex; gap:8px; }
-.cms label{
-  display:inline-flex; align-items:center; gap:4px;
-  background:#fff; border:1px solid var(--line);
-  border-radius:12px; padding:5px 8px; font-size:14px;
-}
-.cms input{ transform:translateY(1px); }
-
-.note.warn{ margin-top:8px; font-size:13px; }
-
-/* 手機寬度時允許換行 */
-@media (max-width:860px){
-  .form-row{ flex-wrap:wrap; }
-  .form-row > label{ flex:0 0 100%; }
-  .form-row .chips, .form-row .cms{ flex-wrap:wrap; }
+  const price  = Number(serviceData[code][idx].price) || 0;
+  const use    = toInt(tr.dataset.use);
+  const cell   = tr.querySelector(".cell-amount");
+  if(cell) cell.textContent = (price * use).toLocaleString();
 }
 
-/* =====================
-   左卡：AA 加成區
-===================== */
-.addon{ margin-top:8px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
-.addon-head, .addon-row{ display:grid; grid-template-columns:1fr 160px; align-items:center; }
-.addon-head{ background:#faf6e4; border-bottom:1px solid var(--line); font-weight:800; padding:10px 16px; }
-.addon-row{ padding:10px 16px; border-top:1px dashed var(--line); }
-.addon-row:first-child{ border-top:none; }
-.addon-row .addon-inputs{ display:flex; justify-content:flex-end; }
-.addon-row input[type="number"]{ width:90px; }
-.text-right{ text-align:right; }
-.addon-head span:last-child{ text-align:right; padding-right:18px; }
-
-/* QR 區 */
-.qrbox{ margin-top:16px; display:flex; gap:16px; align-items:center; }
-.qr-left img{ width:84px; height:84px; object-fit:contain; border-radius:10px; border:1px solid var(--line); background:#fff; }
-.qr-right p{ margin:4px 0; }
-.qr-right .bold{ font-weight:800; }
-.qr-right .orange{ color:var(--orange); font-weight:700; }
-
-.card .qrbox {
-  margin-top: 20px;
-  border-top: 1px dashed var(--line);
-  padding-top: 14px;
+/* 條件輸入 */
+function bindHeaderInputs(){
+  document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
+    .forEach(el=>el.addEventListener("change", ()=>{ updateSCAvailability(); updateResults(); }));
+  $("#keepQuota")?.addEventListener("input", updateResults);
 }
 
-/* =====================
-   服務表格（新版）
-===================== */
-.service-card h3 {
-  margin:24px 0 10px 2px;
-  font-size:16px;
-  font-weight:800;
-  color:#6b6544;
-}
-#tables { width:100%; }
-#tables table {
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:12px;
-  overflow:hidden;
-}
-#tables thead th {
-  position:sticky;
-  top:0;
-  z-index:5;
-  background:#f6f1d9;
-  color:#584f2a;
-  padding:12px 18px;
-  border-bottom:1px solid var(--line);
-  font-weight:800;
-}
-#tables th:first-child,
-#tables td:first-child {
-  text-align:left;
-  padding-left:18px;
-}
-#tables th:nth-child(2),
-#tables th:nth-child(3),
-#tables th:nth-child(4),
-#tables th:nth-child(5),
-#tables th:nth-child(6){
-  width:140px;
-  text-align:center;
-}
-#tables td:nth-child(2),
-#tables td:nth-child(3),
-#tables td:nth-child(4),
-#tables td:nth-child(5),
-#tables td:nth-child(6){
-  text-align:center;
-  vertical-align:middle;
-}
-#tables tbody td {
-  padding:12px 18px;
-  border-top:1px solid var(--line);
-  vertical-align:middle;
-}
-#tables tbody tr:nth-child(even){ background:#fffef9; }
-#tables input[type="number"] {
-  width:70px; height:36px;
-  font-size:15px;
-  text-align:center;
-  margin:0 auto;
-  display:block;
+/* SC 只能外籍看護用 */
+function updateSCAvailability(){
+  const scBox = document.querySelector('[data-group="SC"]');
+  if(!scBox) return;
+  const hasForeign = (document.querySelector("input[name='foreign']:checked")||{}).value === "1";
+  scBox.querySelectorAll("input").forEach(inp=>{
+    inp.disabled = !hasForeign;
+    if(!hasForeign) inp.value = 0;
+  });
+  const warn=$("#warnSCfg");
+  if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
 }
 
-/* =====================
-   手機優化
-===================== */
-@media (max-width:860px){
-  .grid-3{ grid-template-columns:1fr; gap:14px; }
-  .card{ padding:14px; }
-  .topbar{ padding-top:max(10px, env(safe-area-inset-top)); }
-  .footerbar{ padding-bottom:max(10px, env(safe-area-inset-bottom)); }
-  #tables{ overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:calc(var(--dock-h) + 14px); }
-  #tables table{ min-width:780px; table-layout:fixed; }
-  #tables th,#tables td{ padding:10px 12px; font-size:14px; line-height:1.2; white-space:nowrap; }
-  #tables input[type="number"]{ width:58px; height:32px; font-size:14px; }
-  .foot{ gap:12px; font-size:14px; }
+/* 統計（含 C / 排 C 兩組；不主動覆寫使用者的 total） */
+function updateResults(){
+  let sumBA=0, sumGA=0, sumSC=0, sumC=0;
+
+  const tables = document.querySelectorAll("#tables table");
+  const groups = Object.keys(serviceData);
+
+  groups.forEach((g, idx) => {
+    const tbody = tables[idx]?.tBodies[0]; if(!tbody) return;
+    [...tbody.rows].forEach((tr, i) => {
+      const price = Number(serviceData[g][i].price) || 0;
+      let use = toInt(tr.dataset.use);
+
+      // 初次（use=0 且非 C）：依週→月種初值一次（不動 total；避免覆寫你的手動輸入）
+      if(tr.dataset.cmode!=="1" && !use){
+        const w = toInt(tr.querySelector(".inp-week")?.value);
+        const m = Math.ceil(w * WEEKS_PER_MONTH);
+        if(m>0){
+          tr.dataset.use = String(m);
+          const mon = tr.querySelector(".inp-month");
+          if (mon) mon.value = m;
+          use = m;
+        }
+      }
+
+      const amt = price * use;
+
+      if (tr.dataset.cmode === "1"){ sumBA += amt; sumC += amt; }
+      else if (g==="GA") sumGA += amt;
+      else if (g==="SC") sumSC += amt;
+      else sumBA += amt;
+
+      const cell=tr.querySelector(".cell-amount");
+      if(cell) cell.textContent = amt.toLocaleString();
+    });
+  });
+
+  // 身分/額度
+  const idtyRaw = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
+  const cms  = toInt((document.querySelector("input[name='cms']:checked")||{}).value || 2);
+  const keep = Math.max(0, toInt($("#keepQuota")?.value));
+
+  const rateMap = { "一般戶":0.16, "中低收入戶":0.05, "低收入戶":0 };
+  const rate = rateMap[idtyRaw] ?? 0.16;
+
+  const grantBA = (cmsQuota[cms] || 0) + keep;
+  const grantGA = GA_CAP[cms] || 0;
+  const grantSC = SC_CAP[cms] || 0;
+
+  const calc = (ba,ga,sc)=>{
+    const allowBA = Math.min(ba, grantBA);
+    const allowGA = Math.min(ga, grantGA);
+    const allowSC = Math.min(sc, grantSC);
+    const subsidyBase = allowBA + allowGA + allowSC;
+    const overBA = Math.max(0, ba - grantBA);
+    const overGA = Math.max(0, ga - grantGA);
+    const overSC = Math.max(0, sc - grantSC);
+    const copay = Math.round(subsidyBase * rate);
+    const gov   = subsidyBase - copay;
+    const self  = copay + overBA + overGA + overSC;
+    const grand = gov + self;
+    return {allowBA,allowGA,allowSC,overBA,overGA,overSC,copay,gov,self,grand};
+  };
+
+  const inc = calc(sumBA, sumGA, sumSC);          // 含 C
+  const exC = calc(sumBA - sumC, sumGA, sumSC);   // 排 C（B 單位薪資用）
+
+  // 顯示（採含 C）
+  $("#grantQuota") && ($("#grantQuota").value = grantBA.toLocaleString());
+  const rBA = Math.max(0, grantBA - inc.allowBA);
+  const rGA = Math.max(0, grantGA - inc.allowGA);
+  const rSC = Math.max(0, grantSC - inc.allowSC);
+
+  setText("#sumGrantBA", grantBA);
+  setText("#sumRemainBA", rBA);
+  setText("#sumGrantGA", grantGA);
+  setText("#sumRemainGA", rGA);
+  setText("#sumGrantSC", grantSC);
+  setText("#sumRemainSC", rSC);
+
+  setText("#sumRemainBA_foot", rBA);
+  setText("#sumRemainGA_foot", rGA);
+  setText("#sumRemainSC_foot", rSC);
+
+  setText("#sumCopay", inc.copay);
+  setText("#sumSelfpay", inc.self);
+  setText("#sumGovSubsidy", inc.gov);
+  setText("#sumGrand", inc.grand);
+
+  setText("#sumGovSubsidy_foot", inc.gov);
+  setText("#sumSelfpay_foot", inc.self);
+  setText("#sumGrand_foot", inc.grand);
+
+  toggle("#overMain", inc.overBA>0);
+  toggle("#overGA",   inc.overGA>0);
+  toggle("#overSC",   inc.overSC>0);
+
+  // 薪資（含C／排C）
+  lastCalc.gov_inc = inc.gov;   lastCalc.self_inc = inc.self;
+  lastCalc.gov_exC = exC.gov;   lastCalc.self_exC = exC.self;
+
+  updateCaregiverSalary();
 }
 
-/* =====================
-   列印
-===================== */
-@media print{
-  .topbar,.footerbar{ display:none !important; }
-  body{ padding:0; background:#fff; }
-  .card{ box-shadow:none; }
-  #tables thead th{ position:static; }
+/* 居服薪資(6/4) = (AA總 + 補助 + 自付) × 0.6 */
+function updateCaregiverSalary(){
+  const saved=JSON.parse(localStorage.getItem("addons")||"{}");
+  let aaTotal=0;
+  Object.keys(AA_PRICE).forEach(c=>{
+    aaTotal += toInt(saved[`${c}_count`]) * AA_PRICE[c];
+  });
+
+  const baseGov  = (currentUnit==="B") ? lastCalc.gov_exC  : lastCalc.gov_inc;
+  const baseSelf = (currentUnit==="B") ? lastCalc.self_exC : lastCalc.self_inc;
+  const total=Math.round((aaTotal + baseGov + baseSelf) * 0.6);
+
+  const target=$("#caregiverSalary");
+  if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* =====================
-   禁止選取文字與拖曳圖片
-===================== */
-* {
-  -webkit-user-select:none;
-  -moz-user-select:none;
-  -ms-user-select:none;
-  user-select:none;
+/* A/B 切換：B 隱藏 C、薪資不含 C */
+function bindUnitToggle(){
+  const btn=$("#btnUnitToggle"); if(!btn) return;
+  btn.addEventListener("click", ()=>{
+    currentUnit = (currentUnit==="A") ? "B" : "A";
+    localStorage.setItem("unit", currentUnit);
+    applyUnitEffects();
+    updateResults();
+  });
 }
-img, a img {
-  -webkit-user-drag:none;
-  user-drag:none;
-}
-
-/* === 手機板表格：維持單行、允許橫向滑動 === */
-#tables {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  display: block;
-}
-#tables table {
-  width: max-content;
-  min-width: 100%;
-  border-collapse: collapse;
-  table-layout: auto;
-}
-#tables th, #tables td {
-  white-space: nowrap !important;
-  text-align: right;
-  padding: 6px 10px;
-}
-#tables th:first-child, #tables td:first-child {
-  text-align: left;
-}
-#tables .cell-price {
-  width: 80px;
-  text-align: right;
-}
-@media (max-width: 600px) {
-  #tables th, #tables td { font-size: 14px; line-height: 1.3; padding: 6px 8px; }
-  #tables .cell-price { width: 70px; }
-}
-@media (max-width: 420px) {
-  #tables th, #tables td { font-size: 13px; padding: 5px 6px; }
-}
-
-/* 導覽：目前頁面高亮 */
-.nav-links a.active{
-  color:#ff9800;
-  border-bottom: 2px solid #ff9800;
-  padding-bottom: 2px;
-}
-
-/* ==== 手機頂部不互擋（<= 720px）==== */
-@media (max-width: 720px){
-  .topbar{
-    display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: start;
-    row-gap: 6px;
+function applyUnitEffects(){
+  const btn=$("#btnUnitToggle");
+  if(btn){
+    btn.textContent = `${currentUnit}單位`;
+    btn.dataset.unit = currentUnit;
+    btn.classList.remove("btn-green","btn-orange");
+    btn.classList.add(currentUnit==="A" ? "btn-green" : "btn-orange");
   }
-  .brand{
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 10px;
-    white-space: normal;
-    align-items: center;
-  }
-  .brand img{ height: 48px; }
-  .site-title{
-    font-size: 18px;
-    line-height: 1.2;
-    margin-right: 0;
-  }
-  .actions{
-    grid-column: 1 / -1;
-    justify-self: end;
-    margin-top: 2px;
-    gap: 8px;
-  }
+  const cBox = document.querySelector('[data-group="C"]');
+  if(cBox){ currentUnit==="B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden"); }
 }
 
-/* ==== 手機導覽列置中（舊版保留但會被覆蓋）==== */
-@media (max-width: 720px){
-  .nav-links{
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 14px;
-    width: 100%;
-    margin: 6px 0 2px;
-  }
-  .nav-links a{
-    flex: 0 0 auto;
-    padding: 6px 0;
-  }
+/* 小工具 */
+function setText(sel, num){ const el=$(sel); if(!el) return; el.textContent = Number(num).toLocaleString(); }
+function toggle(sel, show){ const el=$(sel); if(!el) return; show ? el.classList.remove("hidden") : el.classList.add("hidden"); }
+function resetAll(){ localStorage.removeItem("addons"); location.reload(); }
+
+/* 避位 */
+function adjustDockPadding(){
+  const dock = document.getElementById('bottomDock');
+  if(!dock) return;
+  const h = dock.offsetHeight || 0;
+  document.documentElement.style.setProperty('--dock-h', h + 'px');
+}
+function adjustTopbarPadding(){
+  const topbar = document.querySelector('.topbar');
+  if(!topbar) return;
+  const h = topbar.offsetHeight || 0;
+  document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
 
-/* ==== 桌面版導覽間距加大 ==== */
-@media (min-width: 1024px){
-  .nav-links{
-    gap: 40px;
-  }
-  .nav-links a{
-    padding: 8px 0;
-  }
-}
-@media (min-width: 721px) and (max-width: 1023px){
-  .nav-links{ gap: 32px; }
-}
+/* ---- 導覽：依當前網址自動高亮（支援 /page 與 page.html） ---- */
+(function(){
+  function norm(href){
+    try{
+      const u = new URL(href, location.origin);
+      let p = u.pathname.trim();
 
-/* ==== 手機版導覽可滑動、不換行 ==== */
-@media (max-width: 720px){
-  .nav-links{
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    gap: 18px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 2px;
+      // 去尾斜線
+      if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+
+      // / → /index；移除 .html
+      p = p.replace(/\/(index\.html?)?$/i, '/index')
+           .replace(/\.html?$/i, '');
+
+      const parts = p.split('/');
+      const last  = parts[parts.length - 1];
+      return last.toLowerCase();
+    }catch(e){
+      return '';
+    }
   }
-  .nav-links::-webkit-scrollbar{ display: none; }
-  .nav-links a{
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 8px 4px;
-  }
-}
+
+  const here = norm(location.href);   // 目前頁面
+  document.querySelectorAll('.nav-links a[href]').forEach(a=>{
+    const target = norm(a.getAttribute('href'));  // 連結目標
+    if (target && target === here) a.classList.add('active');
+  });
+})();
