@@ -480,3 +480,15 @@ function adjustTopbarPadding(){
     if (target === here) a.classList.add('active');
   });
 })();
+
+/**********************
+ * 其他功能...
+ **********************/
+// ---- 導覽：依當前網址自動高亮 ----
+(function(){
+  const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  document.querySelectorAll('.nav-links a[href]').forEach(a=>{
+    const target = a.getAttribute('href').split('/').pop().toLowerCase();
+    if (target === here) a.classList.add('active');
+  });
+})();
