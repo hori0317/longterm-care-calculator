@@ -1,5 +1,6 @@
 /**********************
  * script.js（週→月→總；總可改，但改週即重置同步）
+ * 重點修正：服務列改用 DOM 建構，每欄獨立 <td>，避免「沐浴0」黏在一起
  **********************/
 
 /* 公用 */
@@ -175,13 +176,21 @@ function renderTables(){
       tr.dataset.use    = "0";  // 最終使用次數（或 C 的組數）
 
       if(code === "C"){
-        tr.dataset.cmode = "1";
-        tr.innerHTML = `
-          <td>${item.code} ${item.name}</td>
-          <td class="cell-price">${item.price.toLocaleString()}</td>
-          <td><input class="inp-c-groups" type="number" min="0" step="1" value="0" /></td>
-          <td class="cell-amount">0</td>`;
-        const gInp = tr.querySelector(".inp-c-groups");
+        // --- C 類：每列用「DOM 節點」建構 ---
+        const tdItem  = document.createElement("td");
+        const tdPrice = document.createElement("td");
+        const tdGrp   = document.createElement("td");
+        const tdAmt   = document.createElement("td");
+
+        tdItem.textContent  = `${item.code} ${item.name}`;
+        tdPrice.className   = "cell-price";
+        tdPrice.textContent = (Number(item.price)||0).toLocaleString();
+        tdAmt.className     = "cell-amount";
+        tdAmt.textContent   = "0";
+
+        const gInp = document.createElement("input");
+        gInp.className = "inp-c-groups";
+        gInp.type = "number"; gInp.min="0"; gInp.step="1"; gInp.value="0";
         const onCGroupChange = ()=>{
           tr.dataset.use = String(toInt(gInp.value));
           updateOneRow(code, i);
@@ -189,19 +198,32 @@ function renderTables(){
         };
         gInp.addEventListener("input", onCGroupChange);
         gInp.addEventListener("change", onCGroupChange);
+        tdGrp.appendChild(gInp);
+
+        tr.appendChild(tdItem);
+        tr.appendChild(tdPrice);
+        tr.appendChild(tdGrp);
+        tr.appendChild(tdAmt);
 
       }else{
-        tr.innerHTML=`
-          <td>${item.code} ${item.name}</td>
-          <td class="cell-price">${item.price.toLocaleString()}</td>
-          <td><input class="inp-week"  type="number" min="0" step="1" value="0" /></td>
-          <td><input class="inp-month" type="number" value="0" readonly /></td>
-          <td><input class="inp-total" type="number" min="0" step="1" value="0" /></td>
-          <td class="cell-amount">0</td>`;
+        // --- 其他類別：每列用「DOM 節點」建構，確保每欄獨立 ---
+        const tdItem  = document.createElement("td");
+        const tdPrice = document.createElement("td");
+        const tdWk    = document.createElement("td");
+        const tdMon   = document.createElement("td");
+        const tdTot   = document.createElement("td");
+        const tdAmt   = document.createElement("td");
 
-        const week  = tr.querySelector(".inp-week");
-        const month = tr.querySelector(".inp-month");
-        const total = tr.querySelector(".inp-total");
+        tdItem.textContent  = `${item.code} ${item.name}`;
+        tdPrice.className   = "cell-price";
+        tdPrice.textContent = (Number(item.price)||0).toLocaleString();
+
+        const week  = document.createElement("input");
+        const month = document.createElement("input");
+        const total = document.createElement("input");
+        week.className="inp-week";  week.type="number";  week.min="0"; week.step="1"; week.value="0";
+        month.className="inp-month"; month.type="number"; month.value="0"; month.readOnly = true;
+        total.className="inp-total"; total.type="number"; total.min="0"; total.step="1"; total.value="0";
 
         // ✅ 週次一改：月次=ceil(週*4.5)，且「總次數=月次數」（強制回同步），manual=0，use=月次
         const onWeekChange = ()=>{
@@ -228,6 +250,20 @@ function renderTables(){
         week.addEventListener("change", onWeekChange);
         total.addEventListener("input", onTotalChange);
         total.addEventListener("change", onTotalChange);
+
+        tdWk.appendChild(week);
+        tdMon.appendChild(month);
+        tdTot.appendChild(total);
+
+        tdAmt.className="cell-amount";
+        tdAmt.textContent="0";
+
+        tr.appendChild(tdItem);
+        tr.appendChild(tdPrice);
+        tr.appendChild(tdWk);
+        tr.appendChild(tdMon);
+        tr.appendChild(tdTot);
+        tr.appendChild(tdAmt);
       }
 
       tbody.appendChild(tr);
@@ -251,7 +287,8 @@ function updateOneRow(code, idx){
 
   const price  = Number(serviceData[code][idx].price) || 0;
   const use    = toInt(tr.dataset.use);
-  tr.querySelector(".cell-amount").textContent = (price * use).toLocaleString();
+  const cell   = tr.querySelector(".cell-amount");
+  if(cell) cell.textContent = (price * use).toLocaleString();
 }
 
 /* 條件輸入 */
@@ -293,8 +330,8 @@ function updateResults(){
         const m = Math.ceil(w * WEEKS_PER_MONTH);
         if(m>0){
           tr.dataset.use = String(m);
-          tr.querySelector(".inp-month").value = m;
-          // 不寫回 .inp-total（交給週次事件或使用者）
+          const mon = tr.querySelector(".inp-month");
+          if (mon) mon.value = m;
           use = m;
         }
       }
