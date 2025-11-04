@@ -41,7 +41,6 @@
     .info-table td{ padding:10px; border-top:1px solid var(--line); font-weight:600; }
     .info-table tbody tr:nth-child(even){ background:#fffef9; }
 
-    /* 頁面自己的快捷按鈕（沿用全站風格） */
     .quick-links{ display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 8px; }
     .quick-links a{
       display:inline-block; padding:8px 14px; border-radius:999px;
@@ -49,7 +48,7 @@
     }
     .quick-links a:hover{ filter:brightness(1.02); transform:translateY(-1px); }
 
-    /* ========== 服務碼別說明（手風琴） ========== */
+    /* 服務碼別說明（手風琴） */
     .accordion{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff; }
     .acc-item + .acc-item{ border-top:1px solid var(--line); }
     .acc-head{
@@ -93,7 +92,7 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 頂部導覽列（右側保留空 actions 佔位，避免版頭位移） -->
+  <!-- 頂部導覽列 -->
   <header class="topbar">
     <div class="brand">
       <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
@@ -110,8 +109,8 @@
       <a href="about.html">關於我們</a>
     </nav>
 
-    <!-- 沒有按鈕也請保留，作為右側佔位，避免版頭位移 -->
-    <div class="actions" aria-hidden="true"></div>
+    <!-- 沒有按鈕，但保留右側寬度以對齊首頁 -->
+    <div class="actions actions-ghost" aria-hidden="true"></div>
   </header>
 
   <div class="divider"></div>
@@ -211,36 +210,23 @@
     </div>
   </footer>
 
-  <!-- ====== 服務碼別說明資料（把你的文字貼在這裡就會顯示） ====== -->
+  <!-- ====== 服務碼別說明資料 ====== -->
   <script>
-    // 長文以 HTML 條列呈現；支援 <p>、<ul><li>、<br>
     const SERVICE_DESC_BA = {
-      BA01: {
-        name: "基本身體清潔",
-        html: `
-          <p class="subttl">內容</p>
-          <ul>
-            <li>梳頭修面、穿脫衣服、床上擦澡、床上洗頭、排泄物清理（含會陰、尖翼尿片／倒尿袋或相關協助）。</li>
-            <li>床上洗頭與排泄物清理，個案如無需求得不執行。</li>
-          </ul>
-          <p class="subttl">使用原則</p>
-          <ul>
-            <li>原則一日一組合；必要時得早晚各一組合。</li>
-            <li>與 BA07、BA23 不得同一時段申報。</li>
-            <li>得依臨時性需求先提供，並於提供後立即通報社區整合型服務中心，且限當次使用。</li>
-          </ul>
-        `
-      },
-      BA02: {
-        name: "基本日常照顧",
-        html: `
-          <p class="subttl">內容（摘要）</p>
-          <ul>
-            <li>生活協助：穿脫衣物、床上/下移位、坐/站、倒尿瓶等。</li>
-            <li>環境維護：更換床單、簡易清潔等。</li>
-          </ul>
-        `
-      },
+      BA01:{ name:"基本身體清潔", html:`
+        <p class="subttl">內容</p>
+        <ul>
+          <li>梳頭修面、穿脫衣服、床上擦澡、床上洗頭、排泄物清理（含會陰、尖翼尿片／倒尿袋或相關協助）。</li>
+          <li>床上洗頭與排泄物清理，個案如無需求得不執行。</li>
+        </ul>
+        <p class="subttl">使用原則</p>
+        <ul>
+          <li>原則一日一組合；必要時得早晚各一組合。</li>
+          <li>與 BA07、BA23 不得同一時段申報。</li>
+          <li>得依臨時性需求先提供，並於提供後立即通報社區整合型服務中心，且限當次使用。</li>
+        </ul>`},
+      BA02:{ name:"基本日常照顧", html:`<p class="subttl">內容（摘要）</p>
+        <ul><li>生活協助：穿脫衣物、床上/下移位、坐/站、倒尿瓶等。</li><li>環境維護：更換床單、簡易清潔等。</li></ul>`},
       BA03:{ name:"測量生命徵象", html:`<p>測量血壓、體溫、脈搏或呼吸並紀錄；必要時回報。</p>` },
       BA04:{ name:"協助進食或管灌餵食", html:`<p>協助進食（含預約）；管灌需依評估指導。</p>` },
       BA05:{ name:"餐食照顧", html:`<p>備餐、餵食、餐後整理等。</p>` },
@@ -261,106 +247,79 @@
       BA17d:{ name:"血糖檢驗", html:`<p>協助檢測與紀錄。</p>` },
       BA17e:{ name:"依指示置入藥盒", html:`<p>依醫囑協助分裝藥盒並衛教。</p>` },
       BA18:{ name:"安全看視", html:`<p>風險情境的即時看視與提醒，維持安全。</p>` },
-
-      /* ===== 你提供的第二部分：BA20/BA22/BA23/BA24 ===== */
-      BA20:{
-        name:"陪伴服務",
-        html: `
-          <p class="subttl">內容</p>
-          <ul>
-            <li>至案家陪伴看視，日常生活參與、談話互動、收看電視或新聞資訊等非照顧性互動。</li>
-          </ul>
-          <p class="subttl">使用規定</p>
-          <ul>
-            <li>以三十分鐘為一單位（次）計算。</li>
-            <li>不得與照顧組合表之其他照顧組合併同使用，但可接續使用。</li>
-          </ul>
-        `
-      },
-      BA22:{
-        name:"巡視服務",
-        html: `
-          <p class="subttl">內容與時段</p>
-          <ul>
-            <li>於每日 <b>06:00–20:00</b> 至案家探視確認長照對象狀況，並進行簡易協助；<b>至少三次</b>。</li>
-          </ul>
-          <p class="subttl">使用規定</p>
-          <ul>
-            <li>不得搭配「照顧組合表」之其他照顧組合。</li>
-            <li>個案突發急變等臨時狀況，得臨時提供服務；服務後應立即通知社區整合型服務中心，且<b>限當次使用</b>。</li>
-            <li>非戶同址之巡視服務，得核實路程交通時間酌量認列後，依實際所需申報 <b>AA08</b>。</li>
-          </ul>
-        `
-      },
-      BA23:{
-        name:"協助洗頭",
-        html: `
-          <p class="subttl">內容</p>
-          <ul>
-            <li>依長照對象需求完成洗頭流程：洗髮、沖洗、擦乾、梳理等（含會陰部清潔除外）。</li>
-          </ul>
-          <p class="subttl">使用規定</p>
-          <ul>
-            <li>於床上或浴室（或類似之場所）單獨提供之洗頭服務；同一時段<b>不得併同申報 BA01 或 BA07</b>。</li>
-            <li>針對個案家屬照顧經驗較有負荷者，得持續提供衛教與照顧指導。</li>
-            <li>得依第二十一條臨時性規定先提供服務，並於提供後立即通知社區整合型服務中心；限當次使用。</li>
-          </ul>
-        `
-      },
-      BA24:{
-        name:"協助排泄",
-        html: `
-          <p class="subttl">內容</p>
-          <ul>
-            <li>協助移位或引導至廁所，支持與協助一般大小便。</li>
-            <li>尿器/便盆之更換與清理、會陰沖洗、臥床更換尿片。</li>
-            <li>尿袋更換與處理、排泄物清理與環境整復。</li>
-            <li>個案如無需求，得不執行。</li>
-          </ul>
-          <p class="subttl">使用規定</p>
-          <ul>
-            <li>如於執行 <b>BA01</b> 或 <b>BA07</b> 過程中同時執行者，不得另行申報 BA24。</li>
-            <li>得依第二十一條臨時性規定先提供服務，並於提供後立即通知社區整合型服務中心；限當次使用。</li>
-          </ul>
-        `
-      }
+      BA20:{ name:"陪伴服務", html:`
+        <p class="subttl">內容</p>
+        <ul><li>至案家陪伴看視，日常生活參與、談話互動、收看電視或新聞資訊等非照顧性互動。</li></ul>
+        <p class="subttl">使用規定</p>
+        <ul>
+          <li>以三十分鐘為一單位（次）計算。</li>
+          <li>不得與照顧組合表之其他照顧組合併同使用，但可接續使用。</li>
+        </ul>`},
+      BA22:{ name:"巡視服務", html:`
+        <p class="subttl">內容與時段</p>
+        <ul><li>於每日 <b>06:00–20:00</b> 至案家探視確認長照對象狀況，並進行簡易協助；<b>至少三次</b>。</li></ul>
+        <p class="subttl">使用規定</p>
+        <ul>
+          <li>不得搭配「照顧組合表」之其他照顧組合。</li>
+          <li>臨時狀況得先提供服務，事後立即通報社福中心，<b>限當次使用</b>。</li>
+          <li>非戶同址之巡視，路程時間得酌認後，依實際所需申報 <b>AA08</b>。</li>
+        </ul>`},
+      BA23:{ name:"協助洗頭", html:`
+        <p class="subttl">內容</p>
+        <ul><li>完成洗頭流程（洗髮、沖洗、擦乾、梳理等）。</li></ul>
+        <p class="subttl">使用規定</p>
+        <ul>
+          <li>於床上或浴室單獨提供；同一時段<b>不得併同申報 BA01 或 BA07</b>。</li>
+          <li>得依臨時性規定先提供，並立即通報；限當次使用。</li>
+        </ul>`},
+      BA24:{ name:"協助排泄", html:`
+        <p class="subttl">內容</p>
+        <ul>
+          <li>移位或引導至廁所，大小便協助。</li>
+          <li>尿器/便盆更換與清理、會陰沖洗、臥床更換尿片、尿袋處理與環境整復。</li>
+        </ul>
+        <p class="subttl">使用規定</p>
+        <ul>
+          <li>若在執行 <b>BA01</b>/<b>BA07</b> 過程中同時執行者，不得另報 BA24。</li>
+          <li>臨時提供可先行，事後通報；限當次使用。</li>
+        </ul>`}
     };
   </script>
 
-  <!-- ====== 自動產生 BA / GA / SC 額度表、服務碼別說明 ====== -->
+  <!-- ====== 產表 & 手風琴 ====== -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const fmt = n => Number(n || 0).toLocaleString('zh-TW');
       const levels = [2,3,4,5,6,7,8];
 
-      function ready() {
+      function ready(){
         return (typeof cmsQuota === 'object') && (typeof GA_CAP === 'object') && (typeof SC_CAP === 'object');
       }
-      function renderQuota() {
+      function renderQuota(){
         // BA
-        const baTbody = document.querySelector('#baQuotaTable tbody'); baTbody.innerHTML = '';
-        levels.forEach(cms => {
+        const baTbody = document.querySelector('#baQuotaTable tbody'); baTbody.innerHTML='';
+        levels.forEach(cms=>{
           const base = cmsQuota[cms] || 0;
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>CMS${cms}</td>
-            <td>${fmt(Math.round(base * 0.84))}</td>
-            <td>${fmt(Math.round(base * 0.95))}</td>
+            <td>${fmt(Math.round(base*0.84))}</td>
+            <td>${fmt(Math.round(base*0.95))}</td>
             <td>${fmt(base)}</td>
             <td>${fmt(base)}</td>`;
           baTbody.appendChild(tr);
         });
         // GA
-        const gaTbody = document.querySelector('#gaQuotaTable tbody'); gaTbody.innerHTML = '';
-        levels.forEach(cms => {
+        const gaTbody = document.querySelector('#gaQuotaTable tbody'); gaTbody.innerHTML='';
+        levels.forEach(cms=>{
           const val = GA_CAP[cms] || 0;
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
           gaTbody.appendChild(tr);
         });
         // SC
-        const scTbody = document.querySelector('#scQuotaTable tbody'); scTbody.innerHTML = '';
-        levels.forEach(cms => {
+        const scTbody = document.querySelector('#scQuotaTable tbody'); scTbody.innerHTML='';
+        levels.forEach(cms=>{
           const val = SC_CAP[cms] || 0;
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
@@ -368,24 +327,20 @@
         });
       }
       function renderServiceDesc(){
-        const host = document.getElementById('svcAcc'); host.innerHTML = '';
-        const order = Object.keys(SERVICE_DESC_BA);
-        order.forEach(code=>{
+        const host = document.getElementById('svcAcc'); host.innerHTML='';
+        Object.keys(SERVICE_DESC_BA).forEach(code=>{
           const item = SERVICE_DESC_BA[code]||{};
-          const name = item.name || '';
-          const html = item.html || '<p class="acc-note">（待補文字）</p>';
           const wrap = document.createElement('div');
-          wrap.className = 'acc-item';
+          wrap.className='acc-item';
           wrap.innerHTML = `
             <button class="acc-head" aria-expanded="false">
               <span class="code">${code}</span>
-              <span class="name">${name}</span>
+              <span class="name">${item.name||''}</span>
               <span class="hint">點我展開</span>
             </button>
-            <div class="acc-body">${html}</div>`;
+            <div class="acc-body">${item.html||'<p class="acc-note">（待補文字）</p>'}</div>`;
           host.appendChild(wrap);
         });
-        // 綁定展開/收起
         host.querySelectorAll('.acc-head').forEach(btn=>{
           btn.addEventListener('click', ()=>{
             const body = btn.nextElementSibling;
@@ -395,11 +350,9 @@
           });
         });
       }
-
-      // 等待 script.js 的全域變數（最多等 1 秒）
       let waited = 0;
-      const t = setInterval(() => {
-        if (ready() || waited >= 1000) {
+      const t = setInterval(()=>{
+        if (ready() || waited >= 1000){
           clearInterval(t);
           renderQuota();
           renderServiceDesc();
@@ -409,7 +362,7 @@
     });
   </script>
 
-  <!-- 導覽目前頁高亮（容錯：index / care-info / news / contact / about） -->
+  <!-- 導覽目前頁高亮（正規化網址） -->
   <script>
     (function(){
       function normalize(href){
