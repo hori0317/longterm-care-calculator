@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>hori自製網頁</title>
+  <title>額度試算機</title>
 
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
@@ -80,24 +80,26 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 頂部列（固定） -->
+  <!-- ✅ 頂部列（三欄：左品牌／中導覽／右功能） -->
   <header class="topbar">
-<div class="brand">
-  <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
-    <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-  </a>
-  <span class="site-title">hori自製網頁</span>
+    <!-- 左：品牌 -->
+    <div class="brand">
+      <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title">額度試算機</span>
+    </div>
 
-  <!-- ✅ 導覽連結 -->
-  <nav class="nav-links">
-    <a href="index.html">額度計算機</a>
-    <a href="care-info.html">長照相關資訊</a>
-    <a href="news.html">最新公告</a>
-    <a href="contact.html">聯繫方式</a>
-    <a href="about.html">關於我們</a>
-  </nav>
-</div>
+    <!-- 中：導覽（置中、放大間距） -->
+    <nav class="nav-links">
+      <a href="index.html">首頁</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
 
+    <!-- 右：功能按鈕 -->
     <div class="actions">
       <!-- A/B 單位切換（B 時會隱藏 C 碼、薪資不計 C） -->
       <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="B">B單位</button>
@@ -177,7 +179,8 @@
           </div>
         </div>
         <div id="warnSCfg" class="note warn">未勾選外籍看護，SC 目前不可用。</div>
-                <!-- 小廣告 / QR -->
+
+        <!-- 小廣告 / QR -->
         <div class="qrbox">
           <div class="qr-left">
             <img src="qrcode.png" alt="QR" onerror="this.style.opacity=0.2" />
@@ -251,8 +254,3 @@ document.addEventListener('copy', e => e.preventDefault());
 </script>
 </body>
 </html>
-
-
-
-
-
