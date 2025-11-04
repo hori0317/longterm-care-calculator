@@ -366,52 +366,73 @@ img, a img {
   user-drag:none;
 }
 
-/* ===== 手機版：避免頂部列文字互相重疊（覆寫補強） ===== */
+/* === 修正：手機版服務項目與單價重疊 === */
 
-/* 讓 topbar 的三個區塊有正確的壓縮行為，避免彼此擠壓重疊 */
-.topbar > * { min-width: 0; }
-
-/* 中間選單允許水平滑動、不擠壓到左右兩側 */
-.nav-links{
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+/* 表格欄位基本排版修正 */
+#tables table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* 固定表格佈局，防止欄位擠壓重疊 */
 }
 
-/* 手機寬度強化：縮小字級、縮小間距，保持單行＋可滑動 */
-@media (max-width: 480px){
-  .topbar{ padding: 10px 12px; gap: 8px; }
-  .brand img{ height: 40px; }
-  .site-title{ font-size: 16px; margin-right: 12px; }
+/* 服務項目欄允許自動換行 */
+#tables td:first-child,
+#tables th:first-child {
+  white-space: normal !important;
+  word-wrap: break-word;
+}
 
-  .nav-links{ gap: 12px; }
-  .nav-links a{
+/* 單價欄靠右顯示，避免貼到服務名稱 */
+#tables .cell-price {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 數字欄（週/月/總次數、金額）全部靠右 */
+#tables td:nth-child(n+3),
+#tables th:nth-child(n+3) {
+  text-align: right;
+}
+
+/* 手機版縮排、間距與字級調整 */
+@media (max-width: 600px) {
+  #tables th, #tables td {
+    padding: 6px 8px;
     font-size: 14px;
-    line-height: 1.2;     /* 避免行高過大造成擠壓 */
-    white-space: nowrap;   /* 文字不換行，改用橫向滑動 */
-    flex: 0 0 auto;        /* 每個連結視為固定寬，避免被擠壓變形 */
   }
 
-  .actions{ gap: 6px; }
-  .actions .btn{
-    padding: 6px 10px;
+  /* 第一欄太長時自動換行 */
+  #tables td:first-child {
+    max-width: 160px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* 保證單價不會貼到文字 */
+  #tables .cell-price {
+    width: 80px;
+    min-width: 70px;
+    text-align: right;
+  }
+
+  /* 表格橫向滑動避免擠壓 */
+  #tables {
+    overflow-x: auto;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 更小螢幕再壓縮一點 */
+@media (max-width: 420px) {
+  #tables td, #tables th {
     font-size: 13px;
-    line-height: 1.2;
+    padding: 5px 6px;
   }
-}
-
-/* 小手機再收一點 */
-@media (max-width: 360px){
-  .site-title{ font-size: 15px; }
-  .nav-links{ gap: 10px; }
-  .nav-links a{ font-size: 13px; }
-}
-
-/* 表格區本來就有橫向滑動；若仍擠可再強化 */
-@media (max-width: 860px){
-  #tables{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  #tables th, #tables td{
-    white-space: nowrap;    /* 數字欄不換行，改橫向滑動 */
-    line-height: 1.3;
+  #tables td:first-child {
+    max-width: 140px;
+  }
+  #tables .cell-price {
+    width: 70px;
   }
 }
