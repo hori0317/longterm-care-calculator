@@ -136,7 +136,7 @@ function renderTables(){
     BD:"BD碼（社區服務）",
     C :"C碼（專業服務｜一包制）",
     GA:"GA碼（喘息服務）",
-    SC:"SC碼（短期替代照顧）"
+    SC:"SC碼（居家短照服務）"
   };
 
   Object.keys(serviceData).forEach(code=>{
@@ -500,3 +500,4 @@ function adjustTopbarPadding(){
     if (target && target === here) a.classList.add('active');
   });
 })();
+
