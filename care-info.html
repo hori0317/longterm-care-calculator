@@ -3,157 +3,244 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>長照相關資訊</title>
+  <title>長照相關資訊｜補助額度速覽</title>
 
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 
-  <!-- 可選：本頁浮水印（若不需要可刪除整塊 style + watermark DIV） -->
+  <!-- 浮水印（與首頁一致） -->
   <style>
     :root{
-      --wm-text:"@hori版權所有"; --wm-size:32px; --wm-angle:-25deg; --wm-alpha:.04; --wm-shift:120px;
+      --wm-text: "@hori版權所有";
+      --wm-size: 36px;
+      --wm-angle: -25deg;
+      --wm-alpha: 0.05;
+      --wm-shift: 120px;
     }
-    .watermark{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;}
-    .wm-item{position:absolute;font-weight:700;font-size:var(--wm-size);color:rgba(0,0,0,var(--wm-alpha));transform:rotate(var(--wm-angle));white-space:nowrap;user-select:none;animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
-    @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));}100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
-    @media print{.watermark{opacity:.08;}}
-    /* 本頁小樣式 */
-    .section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0;}
-    .section h2{margin:0 0 10px;font-size:18px;font-weight:800;}
-    .muted{color:#7a7557;}
-    .grid{display:grid;gap:14px;}
-    @media(min-width:900px){.grid.cols-2{grid-template-columns:1fr 1fr;}}
-    .list{margin:0 0 0 1.2rem;padding:0;}
-    .list li{margin:.25rem 0;}
-    .chips-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px;}
-    .chiplink{padding:6px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:#333;background:#fff;}
-    .chiplink:hover{background:#faf6e4;}
-    .tablelike{border:1px solid var(--line);border-radius:10px;overflow:hidden}
-    .tablelike table{width:100%;border-collapse:collapse}
-    .tablelike th,.tablelike td{padding:10px 12px;border-top:1px solid var(--line);white-space:nowrap;}
-    .tablelike thead th{background:#f6f1d9;color:#584f2a;border-top:none;text-align:left}
+    .watermark { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+    .topbar { z-index: 10000; position: sticky; top: 0; }
+    .wm-item{
+      position: absolute;
+      font-weight: 700;
+      font-size: var(--wm-size);
+      color: rgba(0,0,0,var(--wm-alpha));
+      transform: rotate(var(--wm-angle));
+      white-space: nowrap;
+      user-select: none;
+      will-change: transform;
+      animation: wm-sway var(--dur, 12s) ease-in-out infinite alternate;
+    }
+    @keyframes wm-sway{
+      0%   { transform: translateX(0) rotate(var(--wm-angle)); }
+      100% { transform: translateX(var(--wm-shift)) rotate(var(--wm-angle)); }
+    }
+    @media print{ .watermark { opacity: 0.08; } }
+
+    /* === 補助額度速覽表格 === */
+    .info-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .info-table th {
+      background: #f6f1d9;
+      color: #5b5534;
+      padding: 10px;
+      font-weight: 800;
+      border-bottom: 1px solid var(--line);
+    }
+    .info-table td {
+      padding: 10px;
+      border-top: 1px solid var(--line);
+      font-weight: 600;
+    }
+    .info-table tbody tr:nth-child(even) { background: #fffef9; }
+    @media (max-width: 600px){
+      .info-table th, .info-table td { padding: 8px; font-size: 14px; }
+    }
   </style>
 </head>
-<body>
 
-  <!-- 浮水印（可移除） -->
+<body>
+  <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
-    <span class="wm-item" style="top:7%; left:6%;  --dur:9s;">@hori版權所有</span>
-    <span class="wm-item" style="top:7%; left:36%; --dur:11s;">@hori版權所有</span>
-    <span class="wm-item" style="top:7%; left:66%; --dur:10s;">@hori版權所有</span>
-    <span class="wm-item" style="top:40%; left:12%; --dur:13s;">@hori版權所有</span>
-    <span class="wm-item" style="top:40%; left:42%; --dur:12s;">@hori版權所有</span>
-    <span class="wm-item" style="top:40%; left:72%; --dur:14s;">@hori版權所有</span>
-    <span class="wm-item" style="top:82%; left:18%; --dur:11s;">@hori版權所有</span>
-    <span class="wm-item" style="top:82%; left:48%; --dur:10s;">@hori版權所有</span>
-    <span class="wm-item" style="top:82%; left:78%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:65%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:10%; --dur:13s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:40%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:70%; --dur:14s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:5%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:35%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:65%; --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:10%; --dur:13s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:40%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:70%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:15%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:45%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 頂部列（與首頁相同；導覽絕對置中） -->
+  <!-- 頂部導覽列 -->
   <header class="topbar">
     <div class="brand">
       <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
         <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       </a>
-      <span class="site-title">hori自製網頁</span>
+      <span class="site-title">長照相關資訊</span>
     </div>
 
     <nav class="nav-links">
-      <a href="index.html">額度計算機</a>
+      <a href="index.html">首頁</a>
       <a href="care-info.html">長照相關資訊</a>
       <a href="news.html">最新公告</a>
       <a href="contact.html">聯繫方式</a>
       <a href="about.html">關於我們</a>
     </nav>
 
-    <div class="actions"></div>
+    <div class="actions">
+      <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="B">B單位</button>
+      <button class="btn pill btn-green" id="btnReset" type="button">重置</button>
+      <button class="btn pill btn-gray" type="button" onclick="window.print()">列印</button>
+    </div>
   </header>
+
   <div class="divider"></div>
 
   <main class="container">
-    <h1 style="margin:0 0 6px;">長照相關資訊</h1>
-    <p class="muted">彙整法規重點、補助額度、常用碼別與下載連結。</p>
 
-    <div class="chips-row">
-      <a class="chiplink" href="#law">法規與作業要點</a>
-      <a class="chiplink" href="#subsidy">補助額度速覽</a>
-      <a class="chiplink" href="#codes">常用碼別備忘</a>
-      <a class="chiplink" href="#downloads">表單與下載</a>
-      <a class="chiplink" href="#faq">常見問題</a>
-    </div>
-
-    <section id="law" class="section">
-      <h2>法規與作業要點</h2>
-      <div class="grid cols-2">
-        <div>
-          <h3 style="margin:.25rem 0 .4rem;">近期重點</h3>
-          <ul class="list">
-            <li>CMS 等級＋留用額度換算口訣</li>
-            <li>初評／複評流程圖</li>
-            <li>GA/SC 與 BA 的分流原則</li>
-          </ul>
-        </div>
-        <div>
-          <h3 style="margin:.25rem 0 .4rem;">參考文件</h3>
-          <ul class="list">
-            <li><a href="#" target="_blank" rel="noopener">長照管理辦法（外部連結）</a></li>
-            <li><a href="#" target="_blank" rel="noopener">居家服務作業指引（外部連結）</a></li>
-          </ul>
-        </div>
-      </div>
+    <!-- ==================== BA 額度 ==================== -->
+    <section class="card">
+      <h2 class="card-title">補助額度速覽（BA 碼）</h2>
+      <p class="hint">依 CMS 等級之每月給付額，政府補助比例：一般戶 84%、中低收 95%、低收 100%。</p>
+      <table class="info-table" id="baQuotaTable">
+        <thead>
+          <tr>
+            <th>CMS 等級</th>
+            <th>一般戶(84%)</th>
+            <th>中低收(95%)</th>
+            <th>低收(100%)</th>
+            <th>基礎額度</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
-    <section id="subsidy" class="section">
-      <h2>補助額度速覽</h2>
-      <div class="tablelike">
-        <table>
-          <thead><tr><th>類別</th><th>CMS 2–6</th><th>CMS 7–8</th><th>備註</th></tr></thead>
-          <tbody>
-            <tr><td>GA（喘息）</td><td>32,340</td><td>48,510</td><td>對照 GA_CAP</td></tr>
-            <tr><td>SC（短照）</td><td>87,780</td><td>71,610</td><td>對照 SC_CAP</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="muted" style="margin:.5rem 0 0;">※ 以上為示例，請依你實際版本更新。</p>
+    <!-- ==================== GA 額度 ==================== -->
+    <section class="card">
+      <h2 class="card-title">補助額度速覽（GA 碼｜喘息服務）</h2>
+      <p class="hint">依 CMS 等級之每月最高補助額度。</p>
+      <table class="info-table" id="gaQuotaTable">
+        <thead>
+          <tr>
+            <th>CMS 等級</th>
+            <th>GA 額度</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
-    <section id="codes" class="section">
-      <h2>常用碼別備忘</h2>
-      <div class="grid cols-2">
-        <div>
-          <h3 style="margin:.25rem 0 .4rem;">BA 常用</h3>
-          <ul class="list">
-            <li>BA01 基本身體清潔</li>
-            <li>BA13 陪同外出</li>
-            <li>BA20 陪伴服務</li>
-          </ul>
-        </div>
-        <div>
-          <h3 style="margin:.25rem 0 .4rem;">GA / SC 注意</h3>
-          <ul class="list">
-            <li>GA09 不是交通接送</li>
-            <li>SC09 短照 2 小時/支</li>
-          </ul>
-        </div>
-      </div>
+    <!-- ==================== SC 額度 ==================== -->
+    <section class="card">
+      <h2 class="card-title">補助額度速覽（SC 碼｜短期替代照顧）</h2>
+      <p class="hint">依 CMS 等級之每月最高補助額度。</p>
+      <table class="info-table" id="scQuotaTable">
+        <thead>
+          <tr>
+            <th>CMS 等級</th>
+            <th>SC 額度</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
-    <section id="downloads" class="section">
-      <h2>表單與下載</h2>
-      <ul class="list">
-        <li><a href="#" download>初評/複評訪視紀錄表.docx</a></li>
-        <li><a href="#" download>服務申請同意書.pdf</a></li>
-      </ul>
-    </section>
-
-    <section id="faq" class="section">
-      <h2>常見問題（FAQ）</h2>
-      <details><summary>GA/SC 要不要跟 BA 一起計？</summary>
-        <p class="muted">G碼 / SC碼獨立顯示與計算，不與 BA 合併。</p></details>
-      <details><summary>工具列會不會跳？</summary>
-        <p class="muted">本版採絕對置中，並加上 html 固定捲軸寬度，跨頁不會再位移。</p></details>
+    <section class="card">
+      <h2 class="card-title">其他長照資訊</h2>
+      <p class="hint">可放常見問答、服務流程、法規摘要等內容。</p>
     </section>
   </main>
+
+  <footer id="bottomDock" class="footerbar">
+    <div class="foot">
+      <span class="ok">本頁為補助速覽，實際金額以試算機為準。</span>
+    </div>
+  </footer>
+
+  <!-- ====== 自動產生 BA / GA / SC 額度表 ====== -->
+  <script>
+    (function(){
+      if (typeof cmsQuota !== 'object' || typeof GA_CAP !== 'object' || typeof SC_CAP !== 'object') return;
+      const fmt = n => Number(n||0).toLocaleString('zh-TW');
+      const levels = [2,3,4,5,6,7,8];
+
+      // BA
+      const baTbody = document.querySelector('#baQuotaTable tbody');
+      levels.forEach(cms=>{
+        const base = cmsQuota[cms] || 0;
+        const normal = Math.round(base * 0.84);
+        const mid = Math.round(base * 0.95);
+        const low = base;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>CMS${cms}</td>
+          <td>${fmt(normal)}</td>
+          <td>${fmt(mid)}</td>
+          <td>${fmt(low)}</td>
+          <td>${fmt(base)}</td>
+        `;
+        baTbody.appendChild(tr);
+      });
+
+      // GA
+      const gaTbody = document.querySelector('#gaQuotaTable tbody');
+      levels.forEach(cms=>{
+        const val = GA_CAP[cms] || 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
+        gaTbody.appendChild(tr);
+      });
+
+      // SC
+      const scTbody = document.querySelector('#scQuotaTable tbody');
+      levels.forEach(cms=>{
+        const val = SC_CAP[cms] || 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
+        scTbody.appendChild(tr);
+      });
+    })();
+  </script>
+
+  <!-- 導覽目前頁高亮 -->
+  <script>
+    (function(){
+      const here = location.pathname.split('/').pop() || 'care-info.html';
+      document.querySelectorAll('.nav-links a[href]').forEach(a=>{
+        const target = a.getAttribute('href').split('/').pop();
+        if (target === here) a.classList.add('active');
+      });
+    })();
+  </script>
+
+  <!-- 禁止右鍵與複製 -->
+  <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
+      if (e.key === 'F12') e.preventDefault();
+    });
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+  </script>
 </body>
 </html>
