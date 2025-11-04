@@ -42,7 +42,7 @@ a:hover{ text-decoration:underline; }
 .topbar{
   position:sticky; top:0; z-index:1000;
   display:grid;
-  grid-template-columns:auto 1fr auto; /* 左：品牌｜中：占位｜右：按鈕 */
+  grid-template-columns:auto 1fr auto;
   align-items:center;
   padding:12px 24px;
   background:rgba(255,253,245,.9);
@@ -64,7 +64,7 @@ a:hover{ text-decoration:underline; }
   white-space:nowrap;
 }
 
-/* 導覽列：中間置中 */
+/* 導覽列 */
 .nav-links{
   flex:1 1 auto;
   display:flex;
@@ -431,13 +431,13 @@ img, a img {
   }
 }
 
-/* ==== 手機導覽列置中（<= 720px）==== */
+/* ==== 手機導覽列置中（舊版保留但會被覆蓋）==== */
 @media (max-width: 720px){
   .nav-links{
     grid-column: 1 / -1;
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;   /* ← 置中 */
+    justify-content: center;
     gap: 14px;
     width: 100%;
     margin: 6px 0 2px;
@@ -445,5 +445,39 @@ img, a img {
   .nav-links a{
     flex: 0 0 auto;
     padding: 6px 0;
+  }
+}
+
+/* ==== 桌面版導覽間距加大 ==== */
+@media (min-width: 1024px){
+  .nav-links{
+    gap: 40px;
+  }
+  .nav-links a{
+    padding: 8px 0;
+  }
+}
+@media (min-width: 721px) and (max-width: 1023px){
+  .nav-links{ gap: 32px; }
+}
+
+/* ==== 手機版導覽可滑動、不換行 ==== */
+@media (max-width: 720px){
+  .nav-links{
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .nav-links::-webkit-scrollbar{ display: none; }
+  .nav-links a{
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 8px 4px;
   }
 }
