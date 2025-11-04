@@ -366,71 +366,56 @@ img, a img {
   user-drag:none;
 }
 
-/* === 修正：手機版服務項目與單價重疊 === */
-
-/* 表格欄位基本排版修正 */
-#tables table {
+/* === 手機板表格：維持單行、允許橫向滑動，不自動換行 === */
+#tables {
   width: 100%;
+  overflow-x: auto;                 /* 表格整體可左右滑動 */
+  -webkit-overflow-scrolling: touch;
+  display: block;                   /* 讓 overflow 生效 */
+}
+
+#tables table {
+  width: max-content;               /* 表格寬度依內容自動展開 */
+  min-width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* 固定表格佈局，防止欄位擠壓重疊 */
+  table-layout: auto;               /* 自然寬度配置，不固定比例 */
 }
 
-/* 服務項目欄允許自動換行 */
-#tables td:first-child,
-#tables th:first-child {
-  white-space: normal !important;
-  word-wrap: break-word;
+/* 所有欄位內容保持單行顯示，不換行 */
+#tables th,
+#tables td {
+  white-space: nowrap !important;
+  text-align: right;
+  padding: 6px 10px;
 }
 
-/* 單價欄靠右顯示，避免貼到服務名稱 */
+/* 第一欄（服務項目）靠左，其餘靠右 */
+#tables th:first-child,
+#tables td:first-child {
+  text-align: left;
+}
+
+/* 單價欄固定寬度，避免太窄貼到名稱 */
 #tables .cell-price {
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* 數字欄（週/月/總次數、金額）全部靠右 */
-#tables td:nth-child(n+3),
-#tables th:nth-child(n+3) {
+  width: 80px;
   text-align: right;
 }
 
-/* 手機版縮排、間距與字級調整 */
+/* 行高與字體縮放，讓手機顯示更平整 */
 @media (max-width: 600px) {
-  #tables th, #tables td {
-    padding: 6px 8px;
+  #tables th,
+  #tables td {
     font-size: 14px;
-  }
-
-  /* 第一欄太長時自動換行 */
-  #tables td:first-child {
-    max-width: 160px;
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  /* 保證單價不會貼到文字 */
-  #tables .cell-price {
-    width: 80px;
-    min-width: 70px;
-    text-align: right;
-  }
-
-  /* 表格橫向滑動避免擠壓 */
-  #tables {
-    overflow-x: auto;
-    display: block;
-    -webkit-overflow-scrolling: touch;
+    line-height: 1.3;
+    padding: 6px 8px;
   }
 }
 
-/* 更小螢幕再壓縮一點 */
 @media (max-width: 420px) {
-  #tables td, #tables th {
+  #tables th,
+  #tables td {
     font-size: 13px;
     padding: 5px 6px;
-  }
-  #tables td:first-child {
-    max-width: 140px;
   }
   #tables .cell-price {
     width: 70px;
