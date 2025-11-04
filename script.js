@@ -471,3 +471,12 @@ function adjustTopbarPadding(){
   const h = topbar.offsetHeight || 0;
   document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
+
+// ---- 導覽目前頁高亮 ----
+(function(){
+  const here = location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('.nav-links a[href]').forEach(a=>{
+    const target = a.getAttribute('href').split('/').pop();
+    if (target === here) a.classList.add('active');
+  });
+})();
