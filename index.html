@@ -7,6 +7,8 @@
 
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
+  <!-- 新增：統一頂部導覽版型（放在 style.css 之後，以便覆寫 .topbar/.nav-links 等） -->
+  <link rel="stylesheet" href="topbar-fixed.css" />
   <script src="script.js" defer></script>
 
   <!-- ✅ 浮水印樣式（保留你原本的設定） -->
@@ -241,18 +243,15 @@
     </div>
   </footer>
 <script>
-// 禁止右鍵與檢視原始碼
+/* 禁止右鍵與檢視原始碼 */
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
   if (e.key === 'F12') e.preventDefault();
 });
-// 禁止選取與複製
+/* 禁止選取與複製 */
 document.addEventListener('selectstart', e => e.preventDefault());
 document.addEventListener('copy', e => e.preventDefault());
 </script>
 </body>
 </html>
-
-
-
