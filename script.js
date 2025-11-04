@@ -482,13 +482,38 @@ function adjustTopbarPadding(){
 })();
 
 /**********************
- * 其他功能...
- **********************/
-// ---- 導覽：依當前網址自動高亮 ----
+// ---- 導覽：自動高亮（同時支援 /page 與 page.html）----
 (function(){
-  const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  // 把路徑或連結正規化成同一種形式來比對
+  function norm(href){
+    try{
+      // 解析相對/絕對網址
+      const u = new URL(href, location.origin);
+      let p = u.pathname.trim();
+
+      // 去掉末尾的斜線
+      if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+
+      // /          → index
+      // /index     → index
+      // /index.html→ index
+      // /care-info 或 /care-info.html → care-info
+      p = p.replace(/\/(index\.html?)?$/i, '/index')
+           .replace(/\.html?$/i, '');
+
+      // 取最後一段（/a/b/c → c）
+      const parts = p.split('/');
+      const last  = parts[parts.length - 1];
+      return last.toLowerCase();
+    }catch(e){
+      return '';
+    }
+  }
+
+  const here = norm(location.href);   // 目前頁面
   document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-    const target = a.getAttribute('href').split('/').pop().toLowerCase();
-    if (target === here) a.classList.add('active');
+    const target = norm(a.getAttribute('href'));  // 連結目標
+    if (target && target === here) a.classList.add('active');
   });
 })();
+
