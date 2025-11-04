@@ -37,20 +37,24 @@ a{ color:var(--green); text-decoration:none; }
 a:hover{ text-decoration:underline; }
 
 /* =====================
-   頂部列（固定）
+   頂部列（固定，三欄格局）
+   左：品牌｜中：導覽｜右：按鈕或空位
 ===================== */
 .topbar{
-  position:sticky; top:0; z-index:1000;
-  display:grid;
-  grid-template-columns:auto 1fr auto;
-  align-items:center;
-  padding:12px 24px;
-  background:rgba(255,253,245,.9);
-  backdrop-filter:blur(6px);
-  border-bottom:1px solid var(--line);
+  position: sticky; top: 0; z-index: 1000;
+  display: grid;
+  grid-template-columns: auto 1fr auto;   /* 永遠三欄 */
+  align-items: center;
+  padding: 16px 28px;                     /* 間距加大 */
+  background: rgba(255,253,245,.9);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
 }
 .brand{
+  grid-column: 1;
   display:flex; align-items:center; gap:16px;
+  min-width: 0;
+  white-space:nowrap;
 }
 .brand img{
   height:60px; width:auto;
@@ -64,19 +68,21 @@ a:hover{ text-decoration:underline; }
   white-space:nowrap;
 }
 
-/* 導覽列 */
+/* 導覽列：置中 + 間距加大 */
 .nav-links{
-  flex:1 1 auto;
+  grid-column: 2;
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:24px;
+  gap:36px;                               /* 桌面版間距 */
+  min-width:0;
   white-space:nowrap;
 }
 .nav-links a{
   text-decoration:none;
   color:#333;
-  font-weight:600;
+  font-weight:700;
+  padding-bottom:4px;                      /* 給底線留空間 */
   transition:color .2s, transform .2s;
   white-space:nowrap;
 }
@@ -84,13 +90,17 @@ a:hover{ text-decoration:underline; }
   color:#ff9800;
   transform:translateY(-1px);
 }
+.nav-links a.active{
+  color:#ff9800;
+  border-bottom: 3px solid #ff9800;
+}
 
-/* 右側按鈕區 */
+/* 右側按鈕區（即使沒有按鈕也保留以防位移） */
 .actions{
+  grid-column: 3;
+  justify-self: end;
   display:flex;
-  align-items:center;
   gap:10px;
-  flex:0 0 auto;
   white-space:nowrap;
 }
 .divider{ height:10px; }
@@ -323,7 +333,23 @@ a:hover{ text-decoration:underline; }
 }
 
 /* =====================
-   手機優化
+   手機優化（版頭與導覽）
+===================== */
+@media (max-width: 860px){
+  .topbar{ padding: 12px 14px; }
+  .brand img{ height:52px; }
+  .nav-links{
+    justify-content: flex-start;           /* 手機靠左起始 */
+    gap: 20px;                             /* 手機間距 */
+    overflow-x: auto;                      /* 可橫向滑動 */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-links::-webkit-scrollbar{ display:none; } /* 隱藏卷軸 */
+}
+
+/* =====================
+   手機優化（內容）
 ===================== */
 @media (max-width:860px){
   .grid-3{ grid-template-columns:1fr; gap:14px; }
@@ -394,90 +420,8 @@ img, a img {
   #tables th, #tables td { font-size: 13px; padding: 5px 6px; }
 }
 
-/* 導覽：目前頁面高亮 */
+/* 導覽：目前頁面高亮（保留） */
 .nav-links a.active{
   color:#ff9800;
-  border-bottom: 2px solid #ff9800;
-  padding-bottom: 2px;
-}
-
-/* ==== 手機頂部不互擋（<= 720px）==== */
-@media (max-width: 720px){
-  .topbar{
-    display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: start;
-    row-gap: 6px;
-  }
-  .brand{
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 10px;
-    white-space: normal;
-    align-items: center;
-  }
-  .brand img{ height: 48px; }
-  .site-title{
-    font-size: 18px;
-    line-height: 1.2;
-    margin-right: 0;
-  }
-  .actions{
-    grid-column: 1 / -1;
-    justify-self: end;
-    margin-top: 2px;
-    gap: 8px;
-  }
-}
-
-/* ==== 手機導覽列置中（舊版保留但會被覆蓋）==== */
-@media (max-width: 720px){
-  .nav-links{
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 14px;
-    width: 100%;
-    margin: 6px 0 2px;
-  }
-  .nav-links a{
-    flex: 0 0 auto;
-    padding: 6px 0;
-  }
-}
-
-/* ==== 桌面版導覽間距加大 ==== */
-@media (min-width: 1024px){
-  .nav-links{
-    gap: 40px;
-  }
-  .nav-links a{
-    padding: 8px 0;
-  }
-}
-@media (min-width: 721px) and (max-width: 1023px){
-  .nav-links{ gap: 32px; }
-}
-
-/* ==== 手機版導覽可滑動、不換行 ==== */
-@media (max-width: 720px){
-  .nav-links{
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    gap: 18px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-  .nav-links::-webkit-scrollbar{ display: none; }
-  .nav-links a{
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 8px 4px;
-  }
+  border-bottom: 3px solid #ff9800;
 }
