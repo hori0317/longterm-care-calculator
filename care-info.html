@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>長照相關資訊</title>
+
+  <link rel="icon" type="image/x-icon" href="YORU.ico" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+
+  <!-- 浮水印（可要可不要；若不需要可整段刪除） -->
+  <style>
+    :root{
+      --wm-text: "@hori版權所有";
+      --wm-size: 32px;
+      --wm-angle: -25deg;
+      --wm-alpha: 0.04;
+      --wm-shift: 120px;
+    }
+    .watermark{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;}
+    .wm-item{position:absolute;font-weight:700;font-size:var(--wm-size);color:rgba(0,0,0,var(--wm-alpha));transform:rotate(var(--wm-angle));white-space:nowrap;user-select:none;will-change:transform;animation:wm-sway var(--dur, 12s) ease-in-out infinite alternate;}
+    @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));}100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
+    @media print{ .watermark{opacity:.08;} }
+    /* 本頁小樣式 */
+    .container{max-width:1220px;margin:0 auto;padding:20px 24px;}
+    .section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px;margin:16px 0;}
+    .section h2{margin:0 0 10px 0;font-size:18px;font-weight:800;}
+    .muted{color:#7a7557;}
+    .grid{display:grid;gap:14px;}
+    @media(min-width:900px){ .grid.cols-2{grid-template-columns:1fr 1fr;} }
+    .list{margin:0 0 0 1.2rem;padding:0;}
+    .list li{margin:.25rem 0;}
+    .chips-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px;}
+    .chiplink{padding:6px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:#333;background:#fff;}
+    .chiplink:hover{background:#faf6e4;}
+    .tablelike{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+    .tablelike table{width:100%;border-collapse:collapse}
+    .tablelike th,.tablelike td{padding:10px 12px;border-top:1px solid var(--line);white-space:nowrap;}
+    .tablelike thead th{background:#f6f1d9;color:#584f2a;border-top:none;text-align:left}
+  </style>
+</head>
+<body>
+
+  <!-- 可選：浮水印 -->
+  <div class="watermark" aria-hidden="true">
+    <span class="wm-item" style="top:7%; left:6%;  --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:7%; left:36%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:7%; left:66%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:40%; left:12%; --dur:13s;">@hori版權所有</span>
+    <span class="wm-item" style="top:40%; left:42%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:40%; left:72%; --dur:14s;">@hori版權所有</span>
+    <span class="wm-item" style="top:82%; left:18%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:82%; left:48%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:82%; left:78%; --dur:12s;">@hori版權所有</span>
+  </div>
+
+  <!-- 頂部列（沿用你現有結構；這頁不需要右側功能鍵就拿掉） -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title">額度試算機</span>
+
+      <nav class="nav-links">
+        <a href="index.html">首頁</a>
+        <a href="care-info.html">長照相關資訊</a>
+        <a href="news.html">最新公告</a>
+        <a href="contact.html">聯繫方式</a>
+        <a href="about.html">關於我們</a>
+      </nav>
+    </div>
+    <!-- 右側 actions 可省略；若想保留也可複製 -->
+  </header>
+  <div class="divider"></div>
+
+  <main class="container">
+    <h1 style="margin:0 0 6px 0;">長照相關資訊</h1>
+    <p class="muted">彙整法規重點、補助額度、常用碼別與下載連結，提供督導員與個管師快速查找。</p>
+
+    <!-- 快速錨點 -->
+    <div class="chips-row">
+      <a class="chiplink" href="#law">法規與作業要點</a>
+      <a class="chiplink" href="#subsidy">補助額度速覽</a>
+      <a class="chiplink" href="#codes">常用碼別備忘</a>
+      <a class="chiplink" href="#downloads">表單與下載</a>
+      <a class="chiplink" href="#faq">常見問題（FAQ）</a>
+    </div>
+
+    <!-- 法規 -->
+    <section id="law" class="section">
+      <h2>法規與作業要點</h2>
+      <div class="grid cols-2">
+        <div>
+          <h3 style="margin:.25rem 0 .4rem">近期重點</h3>
+          <ul class="list">
+            <li>（示例）CMS 等級＋留用額度換算口訣</li>
+            <li>（示例）初評／複評流程圖</li>
+            <li>（示例）GA/SC 與 BA 的分流原則</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="margin:.25rem 0 .4rem">參考文件</h3>
+          <ul class="list">
+            <li><a href="#" target="_blank" rel="noopener">長照管理辦法（外部連結）</a></li>
+            <li><a href="#" target="_blank" rel="noopener">居家服務作業指引（外部連結）</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 補助 -->
+    <section id="subsidy" class="section">
+      <h2>補助額度速覽</h2>
+      <div class="tablelike">
+        <table>
+          <thead>
+            <tr><th>類別</th><th>CMS 2–6</th><th>CMS 7–8</th><th>備註</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>GA（喘息）</td><td>32,340</td><td>48,510</td><td>你計算器的 GA_CAP 對照</td></tr>
+            <tr><td>SC（短照）</td><td>87,780</td><td>71,610</td><td>你計算器的 SC_CAP 對照</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted" style="margin:.5rem 0 0">※ 以上為示例，請依你實際版本更新。</p>
+    </section>
+
+    <!-- 常用碼別 -->
+    <section id="codes" class="section">
+      <h2>常用碼別備忘</h2>
+      <div class="grid cols-2">
+        <div>
+          <h3 style="margin:.25rem 0 .4rem">BA 常用</h3>
+          <ul class="list">
+            <li>BA01 基本身體清潔 …</li>
+            <li>BA13 陪同外出 …</li>
+            <li>BA20 陪伴服務 …</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="margin:.25rem 0 .4rem">GA / SC 注意</h3>
+          <ul class="list">
+            <li>GA09 不是交通接送（依你先前修正）</li>
+            <li>SC09 短照 2 小時/支 …</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 下載 -->
+    <section id="downloads" class="section">
+      <h2>表單與下載</h2>
+      <ul class="list">
+        <li><a href="#" download>（示例）初評/複評訪視紀錄表.docx</a></li>
+        <li><a href="#" download>（示例）服務申請同意書.pdf</a></li>
+      </ul>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section">
+      <h2>常見問題（FAQ）</h2>
+      <details>
+        <summary>Q1：GA/SC 要不要跟 BA 一起計？</summary>
+        <div class="muted">依你規則：G碼 / SC碼獨立顯示與計算，不與 BA 合併。</div>
+      </details>
+      <details>
+        <summary>Q2：可否固定工具列？</summary>
+        <div class="muted">已使用 `position: sticky`；若要「永遠固定」，可改成 `position: fixed` 並在 body 加上對應 padding。</div>
+      </details>
+    </section>
+  </main>
+
+  <!-- 可選：底部資訊條，這頁用不到就不放 -->
+
+  <script>
+    // 本頁不用防拷就不加；若想同 index 一樣，可貼相同阻擋段落
+  </script>
+</body>
+</html>
