@@ -43,16 +43,31 @@ a:hover{ text-decoration:underline; }
    頂部列（絕對置中版）
 ===================== */
 .topbar{
-  position:sticky; top:0; z-index:1000;
-  display:grid; grid-template-columns:auto 1fr auto; /* 左品牌 / 中空間 / 右功能 */
+  position: sticky; top: 0; z-index: 1000;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* 左：品牌｜中：占位｜右：按鈕 */
+  align-items: center;
+  padding: 12px 24px;
+  background: rgba(255,253,245,.9);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+/* 左側品牌區：LOGO + 標題 */
+.brand{
+  grid-column: 1;
+  display:flex;
   align-items:center;
-  padding:12px 24px;
-  background:rgba(255,253,245,.9);
-  backdrop-filter:blur(6px);
-  border-bottom:1px solid var(--line);
-  -webkit-overflow-scrolling:touch;
+  gap:16px;
 }
 
+/* 右側按鈕區：永遠靠右 */
+.actions{
+  grid-column: 3;
+  justify-self: end;      /* ← 永遠靠右 */
+  display:flex;
+  gap:10px;
+  white-space:nowrap;
+}
 /* 左：品牌 */
 .brand{
   display:flex; align-items:center; gap:16px;
@@ -444,3 +459,4 @@ img, a img {
     width: 70px;
   }
 }
+
