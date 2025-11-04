@@ -93,7 +93,7 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 頂部導覽列 -->
+  <!-- 頂部導覽列（右側保留空 actions 佔位，避免版頭位移） -->
   <header class="topbar">
     <div class="brand">
       <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
@@ -110,7 +110,8 @@
       <a href="about.html">關於我們</a>
     </nav>
 
-    <!-- 原本這裡有 .actions（三顆按鈕），已依你的要求移除 -->
+    <!-- 沒有按鈕也請保留，作為右側佔位，避免版頭位移 -->
+    <div class="actions" aria-hidden="true"></div>
   </header>
 
   <div class="divider"></div>
@@ -408,7 +409,7 @@
     });
   </script>
 
-  <!-- 導覽目前頁高亮 -->
+  <!-- 導覽目前頁高亮（容錯：index / care-info / news / contact / about） -->
   <script>
     (function(){
       function normalize(href){
