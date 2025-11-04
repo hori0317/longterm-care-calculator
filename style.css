@@ -19,6 +19,9 @@
   --dock-h:56px;
 }
 
+/* 固定垂直捲軸空間，避免跨頁寬度跳動 */
+html { overflow-y: scroll; }
+
 /* =====================
    全域
 ===================== */
@@ -37,28 +40,23 @@ a{ color:var(--green); text-decoration:none; }
 a:hover{ text-decoration:underline; }
 
 /* =====================
-   頂部列（三欄置中版）
+   頂部列（絕對置中版）
 ===================== */
 .topbar{
   position:sticky; top:0; z-index:1000;
-  /* ⬇ 由 flex 改為 grid 三欄：左品牌 / 中導覽 / 右功能 */
-  display:grid;
-  grid-template-columns: auto 1fr auto;
+  display:grid; grid-template-columns:auto 1fr auto; /* 左品牌 / 中空間 / 右功能 */
   align-items:center;
   padding:12px 24px;
   background:rgba(255,253,245,.9);
   backdrop-filter:blur(6px);
   border-bottom:1px solid var(--line);
-
-  /* 仍保留窄螢幕可橫向滑動的友善性 */
   -webkit-overflow-scrolling:touch;
 }
 
-/* 左：品牌區 */
+/* 左：品牌 */
 .brand{
   display:flex; align-items:center; gap:16px;
   font-weight:700; letter-spacing:1px;
-  /* 取消原本限制，讓中間欄能完美置中 */
   min-width:max-content;
   white-space:nowrap;
 }
@@ -67,18 +65,21 @@ a:hover{ text-decoration:underline; }
   transition:transform .3s ease;
 }
 .brand img:hover{ transform:scale(1.08); }
+
 .site-title{
   font-size:20px; font-weight:700;
-  /* 移除原本 margin-right，讓置中更對齊 */
   white-space:nowrap;
 }
 
-/* 中：導覽列（真正置中＋放大間距） */
+/* 中：導覽列（視窗絕對置中 + 放大間距） */
 .nav-links{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:48px;              /* ← 放大間距（原 24px） */
+  gap:48px;            /* 放大間距（可改 56/64） */
   white-space:nowrap;
 }
 .nav-links a{
@@ -92,7 +93,8 @@ a:hover{ text-decoration:underline; }
   color:#ff9800;
   transform:translateY(-1px);
 }
-/* 目前頁面高亮（與你先前相同，但集中於此） */
+
+/* 導覽：目前頁面高亮 */
 .nav-links a.active{
   color:#ff9800;
   border-bottom: 2px solid #ff9800;
@@ -107,6 +109,19 @@ a:hover{ text-decoration:underline; }
   white-space:nowrap;
 }
 .divider{ height:10px; }
+
+/* 小螢幕：把絕對置中關掉，改為可滑動導覽 */
+@media (max-width:900px){
+  .nav-links{
+    position:static;
+    transform:none;
+    justify-content:center;
+    gap:24px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .site-title{ font-size:18px; }
+}
 
 /* =====================
    底部資訊條（固定）
