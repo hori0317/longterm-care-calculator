@@ -7,7 +7,8 @@
 
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
-  <script src="script.js" defer></script>
+  <!-- 加版本參數，避免舊快取沒更新 -->
+  <script src="script.js?v=20251104-qa1" defer></script>
 
   <!-- 浮水印（與首頁一致） -->
   <style>
@@ -37,7 +38,7 @@
     }
     @media print{ .watermark { opacity: 0.08; } }
 
-    /* === 補助額度速覽表格 === */
+    /* 額度速覽表格（內嵌，確保本頁一定有） */
     .info-table {
       width: 100%;
       border-collapse: separate;
@@ -62,9 +63,14 @@
       font-weight: 600;
     }
     .info-table tbody tr:nth-child(even) { background: #fffef9; }
-    @media (max-width: 600px){
-      .info-table th, .info-table td { padding: 8px; font-size: 14px; }
+
+    /* 頁面自己的快捷按鈕樣式（沿用你全站風格） */
+    .quick-links{ display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 8px; }
+    .quick-links a{
+      display:inline-block; padding:8px 14px; border-radius:999px;
+      background:#fff; border:1px solid var(--line); font-weight:700; color:#333; text-decoration:none;
     }
+    .quick-links a:hover{ filter:brightness(1.02); transform:translateY(-1px); }
   </style>
 </head>
 
@@ -115,11 +121,25 @@
   <div class="divider"></div>
 
   <main class="container">
+    <!-- 頁首區（保留你原本的樣式與文案邏輯） -->
+    <section class="card" style="margin-bottom:16px;">
+      <h1 class="card-title" style="font-size:22px;">長照相關資訊</h1>
+      <p class="hint">彙整法規重點、補助額度、常用碼別與下載連結。</p>
 
-    <!-- ==================== BA 額度 ==================== -->
-    <section class="card">
+      <!-- 快捷導覽（保留你原來的 5 顆） -->
+      <div class="quick-links">
+        <a href="#laws">法規與作業要點</a>
+        <a href="#quota-ba">補助額度速覽</a>
+        <a href="#codes">常用碼別備忘</a>
+        <a href="#forms">表單與下載</a>
+        <a href="#faq">常見問題</a>
+      </div>
+    </section>
+
+    <!-- ======= BA 額度 ======= -->
+    <section id="quota-ba" class="card">
       <h2 class="card-title">補助額度速覽（BA 碼）</h2>
-      <p class="hint">依 CMS 等級之每月給付額，政府補助比例：一般戶 84%、中低收 95%、低收 100%。</p>
+      <p class="hint">依 CMS 等級之每月給付額（政府補助比例：一般戶 84%、中低收 95%、低收 100%）。</p>
       <table class="info-table" id="baQuotaTable">
         <thead>
           <tr>
@@ -134,7 +154,7 @@
       </table>
     </section>
 
-    <!-- ==================== GA 額度 ==================== -->
+    <!-- ======= GA 額度 ======= -->
     <section class="card">
       <h2 class="card-title">補助額度速覽（GA 碼｜喘息服務）</h2>
       <p class="hint">依 CMS 等級之每月最高補助額度。</p>
@@ -149,7 +169,7 @@
       </table>
     </section>
 
-    <!-- ==================== SC 額度 ==================== -->
+    <!-- ======= SC 額度 ======= -->
     <section class="card">
       <h2 class="card-title">補助額度速覽（SC 碼｜短期替代照顧）</h2>
       <p class="hint">依 CMS 等級之每月最高補助額度。</p>
@@ -164,75 +184,115 @@
       </table>
     </section>
 
-    <section class="card">
-      <h2 class="card-title">其他長照資訊</h2>
-      <p class="hint">可放常見問答、服務流程、法規摘要等內容。</p>
+    <!-- 其它區塊（保留你的原有區位，先放占位，之後要我填內容再說） -->
+    <section id="laws" class="card">
+      <h2 class="card-title">法規與作業要點</h2>
+      <p class="hint">（放各部會連結、作業要點重點條列…）</p>
+    </section>
+
+    <section id="codes" class="card">
+      <h2 class="card-title">常用碼別備忘</h2>
+      <p class="hint">（可列 BA/BD/C/GA/SC 常見項目摘要與注意事項）</p>
+    </section>
+
+    <section id="forms" class="card">
+      <h2 class="card-title">表單與下載</h2>
+      <p class="hint">（放申請表、同意書、評估表等檔案下載連結）</p>
+    </section>
+
+    <section id="faq" class="card">
+      <h2 class="card-title">常見問題</h2>
+      <p class="hint">（整理家屬與居服常問 Q&A）</p>
     </section>
   </main>
 
   <footer id="bottomDock" class="footerbar">
     <div class="foot">
-      <span class="ok">本頁為補助速覽，實際金額以試算機為準。</span>
+      <span class="ok">本頁為補助速覽，實際金額以額度試算機計算結果為準。</span>
     </div>
   </footer>
 
-  <!-- ====== 自動產生 BA / GA / SC 額度表 ====== -->
+  <!-- ====== 安全渲染：等待全域變數可用，再產表（最多等 1 秒） ====== -->
   <script>
-    (function(){
-      if (typeof cmsQuota !== 'object' || typeof GA_CAP !== 'object' || typeof SC_CAP !== 'object') return;
-      const fmt = n => Number(n||0).toLocaleString('zh-TW');
+    document.addEventListener('DOMContentLoaded', () => {
+      const fmt = n => Number(n || 0).toLocaleString('zh-TW');
       const levels = [2,3,4,5,6,7,8];
 
-      // BA
-      const baTbody = document.querySelector('#baQuotaTable tbody');
-      levels.forEach(cms=>{
-        const base = cmsQuota[cms] || 0;
-        const normal = Math.round(base * 0.84);
-        const mid = Math.round(base * 0.95);
-        const low = base;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>CMS${cms}</td>
-          <td>${fmt(normal)}</td>
-          <td>${fmt(mid)}</td>
-          <td>${fmt(low)}</td>
-          <td>${fmt(base)}</td>
-        `;
-        baTbody.appendChild(tr);
-      });
+      function ready() {
+        return (typeof cmsQuota === 'object') && (typeof GA_CAP === 'object') && (typeof SC_CAP === 'object');
+      }
 
-      // GA
-      const gaTbody = document.querySelector('#gaQuotaTable tbody');
-      levels.forEach(cms=>{
-        const val = GA_CAP[cms] || 0;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
-        gaTbody.appendChild(tr);
-      });
+      function render() {
+        // BA
+        const baTbody = document.querySelector('#baQuotaTable tbody');
+        baTbody.innerHTML = '';
+        levels.forEach(cms => {
+          const base = cmsQuota[cms] || 0;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>CMS${cms}</td>
+            <td>${fmt(Math.round(base * 0.84))}</td>
+            <td>${fmt(Math.round(base * 0.95))}</td>
+            <td>${fmt(base)}</td>
+            <td>${fmt(base)}</td>
+          `;
+          baTbody.appendChild(tr);
+        });
 
-      // SC
-      const scTbody = document.querySelector('#scQuotaTable tbody');
-      levels.forEach(cms=>{
-        const val = SC_CAP[cms] || 0;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
-        scTbody.appendChild(tr);
-      });
-    })();
+        // GA
+        const gaTbody = document.querySelector('#gaQuotaTable tbody');
+        gaTbody.innerHTML = '';
+        levels.forEach(cms => {
+          const val = GA_CAP[cms] || 0;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
+          gaTbody.appendChild(tr);
+        });
+
+        // SC
+        const scTbody = document.querySelector('#scQuotaTable tbody');
+        scTbody.innerHTML = '';
+        levels.forEach(cms => {
+          const val = SC_CAP[cms] || 0;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>CMS${cms}</td><td>${fmt(val)}</td>`;
+          scTbody.appendChild(tr);
+        });
+      }
+
+      // 最多等 1 秒以防雲端延遲／快取
+      let waited = 0;
+      const t = setInterval(() => {
+        if (ready() || waited >= 1000) {
+          clearInterval(t);
+          render();
+        }
+        waited += 50;
+      }, 50);
+    });
   </script>
 
-  <!-- 導覽目前頁高亮 -->
+  <!-- 導覽目前頁高亮（與全站一致邏輯） -->
   <script>
     (function(){
-      const here = location.pathname.split('/').pop() || 'care-info.html';
+      function normalize(href){
+        try{
+          const u = new URL(href, location.origin);
+          let p = u.pathname.trim();
+          if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+          p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
+          const parts = p.split('/'); return (parts[parts.length-1]||'').toLowerCase();
+        }catch(e){ return ''; }
+      }
+      const here = normalize(location.href);
       document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-        const target = a.getAttribute('href').split('/').pop();
-        if (target === here) a.classList.add('active');
+        const target = normalize(a.getAttribute('href'));
+        if (target && target === here) a.classList.add('active');
       });
     })();
   </script>
 
-  <!-- 禁止右鍵與複製 -->
+  <!-- 防拷（如需關閉可移除） -->
   <script>
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('keydown', e => {
