@@ -9,22 +9,18 @@
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 
-  <!-- 浮水印（可要可不要；若不需要可整段刪除） -->
+  <!-- 可選：本頁浮水印 -->
   <style>
     :root{
-      --wm-text: "@hori版權所有";
-      --wm-size: 32px;
-      --wm-angle: -25deg;
-      --wm-alpha: 0.04;
-      --wm-shift: 120px;
+      --wm-text:"@hori版權所有"; --wm-size:32px; --wm-angle:-25deg; --wm-alpha:.04; --wm-shift:120px;
     }
     .watermark{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;}
-    .wm-item{position:absolute;font-weight:700;font-size:var(--wm-size);color:rgba(0,0,0,var(--wm-alpha));transform:rotate(var(--wm-angle));white-space:nowrap;user-select:none;will-change:transform;animation:wm-sway var(--dur, 12s) ease-in-out infinite alternate;}
+    .wm-item{position:absolute;font-weight:700;font-size:var(--wm-size);color:rgba(0,0,0,var(--wm-alpha));transform:rotate(var(--wm-angle));white-space:nowrap;user-select:none;will-change:transform;animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
     @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));}100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
-    @media print{ .watermark{opacity:.08;} }
+    @media print{.watermark{opacity:.08;}}
     /* 本頁小樣式 */
     .container{max-width:1220px;margin:0 auto;padding:20px 24px;}
-    .section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px;margin:16px 0;}
+    .section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0;}
     .section h2{margin:0 0 10px 0;font-size:18px;font-weight:800;}
     .muted{color:#7a7557;}
     .grid{display:grid;gap:14px;}
@@ -42,7 +38,7 @@
 </head>
 <body>
 
-  <!-- 可選：浮水印 -->
+  <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:7%; left:6%;  --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:7%; left:36%; --dur:11s;">@hori版權所有</span>
@@ -55,23 +51,27 @@
     <span class="wm-item" style="top:82%; left:78%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 頂部列（沿用你現有結構；這頁不需要右側功能鍵就拿掉） -->
+  <!-- 三欄式導覽列（與 index 同版型） -->
   <header class="topbar">
+    <!-- 左：品牌 -->
     <div class="brand">
       <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
         <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       </a>
       <span class="site-title">額度試算機</span>
-
-      <nav class="nav-links">
-        <a href="index.html">首頁</a>
-        <a href="care-info.html">長照相關資訊</a>
-        <a href="news.html">最新公告</a>
-        <a href="contact.html">聯繫方式</a>
-        <a href="about.html">關於我們</a>
-      </nav>
     </div>
-    <!-- 右側 actions 可省略；若想保留也可複製 -->
+
+    <!-- 中：導覽 -->
+    <nav class="nav-links">
+      <a href="index.html">首頁</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+
+    <!-- 右：保留空容器，確保中欄置中 -->
+    <div class="actions"></div>
   </header>
   <div class="divider"></div>
 
@@ -171,11 +171,5 @@
       </details>
     </section>
   </main>
-
-  <!-- 可選：底部資訊條，這頁用不到就不放 -->
-
-  <script>
-    // 本頁不用防拷就不加；若想同 index 一樣，可貼相同阻擋段落
-  </script>
 </body>
 </html>
