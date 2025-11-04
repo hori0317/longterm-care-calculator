@@ -460,3 +460,32 @@ img, a img {
   }
 }
 
+/* ==== 手機頂部不互擋（<= 720px）==== */
+@media (max-width: 720px){
+  .topbar{
+    display: grid;
+    grid-template-columns: auto 1fr; /* 左 logo｜右 標題 */
+    align-items: start;
+    row-gap: 6px;
+  }
+  .brand{
+    grid-column: 1 / -1;             /* 佔滿第一列 */
+    display: grid;
+    grid-template-columns: auto 1fr;  /* logo ＋ 標題 */
+    gap: 10px;
+    white-space: normal;              /* 允許換行 */
+    align-items: center;
+  }
+  .brand img{ height: 48px; }         /* 縮小 logo */
+  .site-title{
+    font-size: 18px;                  /* 縮小字級 */
+    line-height: 1.2;
+    margin-right: 0;                  /* 不需要額外右邊距 */
+  }
+  .actions{
+    grid-column: 1 / -1;              /* 第二列，整行 */
+    justify-self: end;                /* 仍靠右 */
+    margin-top: 2px;
+    gap: 8px;
+  }
+}
