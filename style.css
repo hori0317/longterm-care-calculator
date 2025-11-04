@@ -365,3 +365,53 @@ img, a img {
   -webkit-user-drag:none;
   user-drag:none;
 }
+
+/* ===== 手機版：避免頂部列文字互相重疊（覆寫補強） ===== */
+
+/* 讓 topbar 的三個區塊有正確的壓縮行為，避免彼此擠壓重疊 */
+.topbar > * { min-width: 0; }
+
+/* 中間選單允許水平滑動、不擠壓到左右兩側 */
+.nav-links{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* 手機寬度強化：縮小字級、縮小間距，保持單行＋可滑動 */
+@media (max-width: 480px){
+  .topbar{ padding: 10px 12px; gap: 8px; }
+  .brand img{ height: 40px; }
+  .site-title{ font-size: 16px; margin-right: 12px; }
+
+  .nav-links{ gap: 12px; }
+  .nav-links a{
+    font-size: 14px;
+    line-height: 1.2;     /* 避免行高過大造成擠壓 */
+    white-space: nowrap;   /* 文字不換行，改用橫向滑動 */
+    flex: 0 0 auto;        /* 每個連結視為固定寬，避免被擠壓變形 */
+  }
+
+  .actions{ gap: 6px; }
+  .actions .btn{
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+}
+
+/* 小手機再收一點 */
+@media (max-width: 360px){
+  .site-title{ font-size: 15px; }
+  .nav-links{ gap: 10px; }
+  .nav-links a{ font-size: 13px; }
+}
+
+/* 表格區本來就有橫向滑動；若仍擠可再強化 */
+@media (max-width: 860px){
+  #tables{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  #tables th, #tables td{
+    white-space: nowrap;    /* 數字欄不換行，改橫向滑動 */
+    line-height: 1.3;
+  }
+}
