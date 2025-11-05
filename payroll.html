@@ -4,14 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>薪資計算機</title>
-  <meta name="description" content="居服員薪資計算機：輸入本月 AA/BA 次數與自訂拆薪比例，自動計薪並可對照勞健保扣款。由 hori 製作。">
+  <meta name="description" content="輸入本月 AA / BA / GA / SC 的支數，快速計出總金額，並依自訂比例拆薪。由 hori 製作。">
 
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="topbar-fixed.css" />
+  <!-- 載入共用 script.js（供導覽高亮等），本頁主要邏輯在下方 inline JS，不會與它衝突 -->
+  <script src="script.js" defer></script>
 
   <style>
-    /* 浮水印（沿用你的風格） */
+    /* 浮水印（沿用你的設定） */
     :root{
       --wm-text: "@hori版權所有";
       --wm-size: 36px;
@@ -30,7 +32,7 @@
       100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));} }
     @media print{ .watermark{ opacity:.08; } }
 
-    /* 本頁額外 UI */
+    /* 本頁小元件 */
     .kpi{ display:flex; gap:16px; flex-wrap:wrap; }
     .kpi .box{
       flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
@@ -38,9 +40,6 @@
     }
     .kpi .box .lbl{ color:#7a7557; font-weight:700; }
     .kpi .box .num{ font-size:24px; font-weight:900; color:#2e7d32; }
-
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    @media (max-width: 860px){ .grid-2{ grid-template-columns:1fr; } }
 
     .tbl{ width:100%; border-collapse:separate; border-spacing:0; background:#fff;
           border:1px solid var(--line); border-radius:12px; overflow:hidden; }
@@ -51,6 +50,8 @@
 
     .right{ text-align:right; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media (max-width:860px){ .grid-2{ grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -73,7 +74,7 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 導覽（與各頁一致；右側用占位保持置中對齊） -->
+  <!-- 導覽（含「薪資計算機」連結；右側用占位保持置中） -->
   <header class="topbar">
     <div class="brand">
       <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
@@ -104,173 +105,96 @@
     <!-- KPI -->
     <section class="card" style="margin-bottom:16px;">
       <h1 class="card-title" style="font-size:22px;">本月薪資總覽</h1>
-      <p class="hint">填入 AA/BA 次數與拆薪比例，並輸入（或用比率試算）勞保／就保／健保等扣款，即可得出淨發。</p>
+      <p class="hint">直接輸入各碼別的本月支數，系統依單價即時計算小計與總額；再用下方比例拆薪。</p>
       <div class="kpi" style="margin-top:10px;">
-        <div class="box">
-          <div class="lbl">AA 金額小計</div>
-          <div class="num" id="kpiAA">0</div>
-        </div>
-        <div class="box">
-          <div class="lbl">BA 金額小計</div>
-          <div class="num" id="kpiBA">0</div>
-        </div>
-        <div class="box">
-          <div class="lbl">拆薪比例後（毛額）</div>
-          <div class="num" id="kpiGross">0</div>
-        </div>
-        <div class="box">
-          <div class="lbl">預估扣款（勞/就/健/自提等）</div>
-          <div class="num" id="kpiDeduct">0</div>
-        </div>
-        <div class="box">
-          <div class="lbl">淨發</div>
-          <div class="num" id="kpiNet">0</div>
-        </div>
+        <div class="box"><div class="lbl">AA 小計</div><div class="num" id="kpiAA">0</div></div>
+        <div class="box"><div class="lbl">BA 小計</div><div class="num" id="kpiBA">0</div></div>
+        <div class="box"><div class="lbl">GA 小計</div><div class="num" id="kpiGA">0</div></div>
+        <div class="box"><div class="lbl">SC 小計</div><div class="num" id="kpiSC">0</div></div>
+        <div class="box"><div class="lbl">全月總額（AA+BA+GA+SC）</div><div class="num" id="kpiTotal">0</div></div>
+        <div class="box"><div class="lbl">拆薪後薪資</div><div class="num" id="kpiSalary">0</div></div>
       </div>
     </section>
 
-    <!-- 參數：月份＋比例 -->
+    <!-- 拆薪比例 -->
     <section class="card">
-      <h2 class="card-title">① 基本參數</h2>
+      <h2 class="card-title">① 拆薪比例</h2>
       <div class="grid-2" style="margin-top:8px;">
         <div class="field" style="display:flex;align-items:center;gap:10px;">
-          <label style="min-width:110px;font-weight:700;">月份</label>
-          <input id="plMonth" type="month" style="height:34px;width:180px;">
-        </div>
-        <div class="field" style="display:flex;align-items:center;gap:10px;">
-          <label style="min-width:110px;font-weight:700;">拆薪比例（%）</label>
+          <label style="min-width:120px;font-weight:700;">拆薪比例（%）</label>
           <input id="ratioPct" type="number" min="0" max="100" step="0.1" value="60" style="height:34px;width:120px;text-align:right;">
           <span class="hint">例：6/4 請填 60</span>
         </div>
+        <div class="field" style="display:flex;align-items:center;gap:10px;">
+          <label style="min-width:120px;font-weight:700;">月份</label>
+          <input id="plMonth" type="month" style="height:34px;width:180px;">
+        </div>
       </div>
     </section>
 
-    <!-- AA 表 -->
+    <!-- AA -->
     <section class="card">
-      <h2 class="card-title">② AA 本月次數</h2>
+      <h2 class="card-title">② AA 本月支數</h2>
       <table class="tbl" id="tblAA">
         <thead>
-          <tr>
-            <th style="min-width:220px;">代碼＋名稱</th>
-            <th class="right">單價</th>
-            <th class="right">本月次數</th>
-            <th class="right">小計</th>
-          </tr>
+          <tr><th style="min-width:220px;">代碼</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr>
         </thead>
         <tbody></tbody>
-        <tfoot>
-          <tr>
-            <th colspan="3" class="right">AA 小計</th>
-            <th class="right" id="sumAA">0</th>
-          </tr>
-        </tfoot>
+        <tfoot><tr><th colspan="3" class="right">AA 小計</th><th class="right" id="sumAA">0</th></tr></tfoot>
       </table>
-      <p class="hint" style="margin-top:8px;">AA 單價採用你首頁邏輯：AA05 200，AA06 200，AA08 385，AA09 770，AA11 50。</p>
+      <p class="hint" style="margin-top:8px;">單價：AA05 200、AA06 200、AA08 385、AA09 770、AA11 50（與首頁一致）。</p>
     </section>
 
-    <!-- BA 表（你的服務與單價） -->
+    <!-- BA -->
     <section class="card">
-      <h2 class="card-title">③ BA 本月次數</h2>
+      <h2 class="card-title">③ BA 本月支數</h2>
       <table class="tbl" id="tblBA">
         <thead>
-          <tr>
-            <th style="min-width:260px;">代碼＋名稱</th>
-            <th class="right">單價</th>
-            <th class="right">本月次數</th>
-            <th class="right">小計</th>
-          </tr>
+          <tr><th style="min-width:260px;">代碼＋名稱</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr>
         </thead>
         <tbody></tbody>
-        <tfoot>
-          <tr>
-            <th colspan="3" class="right">BA 小計</th>
-            <th class="right" id="sumBA">0</th>
-          </tr>
-        </tfoot>
+        <tfoot><tr><th colspan="3" class="right">BA 小計</th><th class="right" id="sumBA">0</th></tr></tfoot>
       </table>
-      <p class="hint" style="margin-top:8px;">此處用你提供的 BA 價格表；若之後單價有調整只需改本頁 JS 的 <code>PRICE.BA</code>。</p>
     </section>
 
-    <!-- 勞就健保扣款（可直接輸入金額，或用投保薪資×個人比率試算） -->
+    <!-- GA -->
     <section class="card">
-      <h2 class="card-title">④ 勞／就／健保與其他扣款</h2>
-
-      <div class="grid-2" style="margin-top:8px;">
-        <div class="card" style="padding:14px;">
-          <h3 class="card-title">A. 依「投保薪資 × 個人比率」試算</h3>
-          <div style="display:flex;gap:10px;align-items:center;margin:8px 0;">
-            <label style="min-width:120px;font-weight:700;">投保薪資</label>
-            <input id="insBase" type="number" min="0" step="1" value="0" style="height:34px;width:140px;text-align:right;">
-            <span class="hint">請依當月級距填入</span>
-          </div>
-          <table class="tbl">
-            <thead><tr><th>項目</th><th class="right">個人比率(%)</th><th class="right">試算金額</th></tr></thead>
-            <tbody>
-              <tr>
-                <td>勞保</td>
-                <td class="right"><input id="rateLabor" type="number" min="0" step="0.01" value="0" style="width:100px;"></td>
-                <td class="right mono" id="calcLabor">0</td>
-              </tr>
-              <tr>
-                <td>就保</td>
-                <td class="right"><input id="rateEmp" type="number" min="0" step="0.01" value="0" style="width:100px;"></td>
-                <td class="right mono" id="calcEmp">0</td>
-              </tr>
-              <tr>
-                <td>健保</td>
-                <td class="right"><input id="rateNhi" type="number" min="0" step="0.01" value="0" style="width:100px;"></td>
-                <td class="right mono" id="calcNhi">0</td>
-              </tr>
-              <tr>
-                <td>自提勞退（員工）</td>
-                <td class="right"><input id="ratePension" type="number" min="0" step="0.01" value="0" style="width:100px;"></td>
-                <td class="right mono" id="calcPension">0</td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="hint" style="margin-top:8px;">※ 比率會因年度規定異動，這裡讓你自由填寫。不確定時可把比率留 0，改用右側「直接輸入金額」。</p>
-        </div>
-
-        <div class="card" style="padding:14px;">
-          <h3 class="card-title">B. 直接輸入扣款金額</h3>
-          <table class="tbl">
-            <thead><tr><th>項目</th><th class="right">金額</th></tr></thead>
-            <tbody>
-              <tr><td>勞保（個人負擔）</td><td class="right"><input id="amtLabor" type="number" min="0" step="1" value="0"></td></tr>
-              <tr><td>就保（個人負擔）</td><td class="right"><input id="amtEmp" type="number" min="0" step="1" value="0"></td></tr>
-              <tr><td>健保（個人負擔）</td><td class="right"><input id="amtNhi" type="number" min="0" step="1" value="0"></td></tr>
-              <tr><td>補充保費</td><td class="right"><input id="amtNhiExtra" type="number" min="0" step="1" value="0"></td></tr>
-              <tr><td>自提勞退</td><td class="right"><input id="amtPension" type="number" min="0" step="1" value="0"></td></tr>
-              <tr><td>其他扣款（罰款、代墊等）</td><td class="right"><input id="amtOther" type="number" min="0" step="1" value="0"></td></tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <th class="right">扣款合計</th>
-                <th class="right mono" id="sumDeduct">0</th>
-              </tr>
-            </tfoot>
-          </table>
-          <div class="row" style="justify-content:flex-end;gap:8px;margin-top:8px;">
-            <button class="btn btn-gray" id="btnClearDedu">清空扣款</button>
-          </div>
-        </div>
-      </div>
+      <h2 class="card-title">④ GA 本月支數</h2>
+      <table class="tbl" id="tblGA">
+        <thead>
+          <tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot><tr><th colspan="3" class="right">GA 小計</th><th class="right" id="sumGA">0</th></tr></tfoot>
+      </table>
     </section>
 
-    <!-- 結果與列印 -->
+    <!-- SC -->
     <section class="card">
-      <h2 class="card-title">⑤ 結果</h2>
+      <h2 class="card-title">⑤ SC 本月支數</h2>
+      <table class="tbl" id="tblSC">
+        <thead>
+          <tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot><tr><th colspan="3" class="right">SC 小計</th><th class="right" id="sumSC">0</th></tr></tfoot>
+      </table>
+    </section>
+
+    <!-- 結果 -->
+    <section class="card">
+      <h2 class="card-title">⑥ 結果</h2>
       <div class="grid-2" style="margin-top:8px;">
         <div class="card" style="padding:14px;">
           <table class="tbl">
             <tbody>
               <tr><td>AA 小計</td><td class="right mono" id="resAA">0</td></tr>
               <tr><td>BA 小計</td><td class="right mono" id="resBA">0</td></tr>
-              <tr><td>合計（AA+BA）</td><td class="right mono" id="resSum">0</td></tr>
+              <tr><td>GA 小計</td><td class="right mono" id="resGA">0</td></tr>
+              <tr><td>SC 小計</td><td class="right mono" id="resSC">0</td></tr>
+              <tr><td><b>全月總額（AA+BA+GA+SC）</b></td><td class="right mono" id="resTotal"><b>0</b></td></tr>
               <tr><td>拆薪比例</td><td class="right mono"><span id="resRatio">60</span>%</td></tr>
-              <tr><td>拆薪後毛額</td><td class="right mono" id="resGross">0</td></tr>
-              <tr><td>扣款合計（以右側金額為準）</td><td class="right mono" id="resDeduct">0</td></tr>
-              <tr><td><b>淨發</b></td><td class="right mono" id="resNet"><b>0</b></td></tr>
+              <tr><td><b>拆薪後薪資</b></td><td class="right mono" id="resSalary"><b>0</b></td></tr>
             </tbody>
           </table>
         </div>
@@ -279,7 +203,7 @@
             <button class="btn" onclick="window.print()">列印</button>
             <button class="btn btn-gray" id="btnResetAll">全部清空</button>
           </div>
-          <p class="hint" style="margin-top:8px;">※ 這個頁面不連動你的額度計算；它專注於「AA/BA 次數 → 拆薪 → 勞健保扣款 → 淨發」。</p>
+          <p class="hint" style="margin-top:8px;">若需勞／就／健保扣款對照，可把金額列在旁邊備註或擴充加一個扣款表（我可幫你接上）。</p>
         </div>
       </div>
     </section>
@@ -287,19 +211,19 @@
 
   <footer id="bottomDock" class="footerbar">
     <div class="foot">
-      <span class="ok">※ 勞／就／健保比率與級距請依當期公告自行填入；此頁提供比率試算與金額覆寫兩種方式。</span>
+      <span class="ok">※ 本頁以「支數 × 單價」→ 全月總額 → 依比例拆薪。若需要把扣款一起算進去，也可以再加「扣款合計」欄位。</span>
     </div>
   </footer>
 
-  <!-- 本頁專屬邏輯（不依賴你的 script.js，以免互相干擾） -->
+  <!-- 本頁專屬邏輯：各碼別支數 → 小計/總額 → 拆薪 -->
   <script>
     (function(){
-      const $ = s => document.querySelector(s);
+      const $  = s => document.querySelector(s);
       const $$ = s => Array.from(document.querySelectorAll(s));
       const N  = v => (isFinite(+v) ? +v : 0);
       const F  = v => new Intl.NumberFormat('zh-Hant-TW', { maximumFractionDigits: 0 }).format(v);
 
-      /* === 價格表（依你提供） === */
+      /* === 單價（沿用你現有檔的定義） === */
       const PRICE = {
         AA: { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 },
         BA: [
@@ -329,14 +253,16 @@
           { code:"BA22", name:"巡視服務", price:130 },
           { code:"BA23", name:"協助洗頭", price:200 },
           { code:"BA24", name:"協助排泄", price:220 }
-        ]
+        ],
+        GA: [{ code:"GA09", name:"喘息 2 小時/支", price:770 }],
+        SC: [{ code:"SC09", name:"短照 2 小時/支", price:770 }]
       };
 
-      /* === 建表：AA === */
+      /* === 建表：通用 === */
       function buildAA(){
         const host = $('#tblAA tbody'); host.innerHTML = '';
-        const saved = loadLS('payroll-aa', {});
-        const rows = Object.keys(PRICE.AA).map(code => {
+        const saved = loadLS('pl-aa', {});
+        Object.keys(PRICE.AA).forEach(code=>{
           const price = PRICE.AA[code];
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -345,21 +271,18 @@
             <td class="right"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
             <td class="right mono" data-aa-sum="${code}">0</td>`;
           host.appendChild(tr);
-          return tr;
         });
       }
-
-      /* === 建表：BA === */
-      function buildBA(){
-        const host = $('#tblBA tbody'); host.innerHTML = '';
-        const saved = loadLS('payroll-ba', {});
-        PRICE.BA.forEach(item => {
+      function buildGroup(tableId, key, savedKey){
+        const host = $(`#${tableId} tbody`); host.innerHTML = '';
+        const saved = loadLS(savedKey, {});
+        PRICE[key].forEach(item=>{
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${item.code} ${item.name}</td>
+            <td>${item.code}${item.name ? ' ' + item.name : ''}</td>
             <td class="right mono">${F(item.price)}</td>
-            <td class="right"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-ba="${item.code}"></td>
-            <td class="right mono" data-ba-sum="${item.code}">0</td>`;
+            <td class="right"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${key}="${item.code}"></td>
+            <td class="right mono" data-${key}-sum="${item.code}">0</td>`;
           host.appendChild(tr);
         });
       }
@@ -368,7 +291,7 @@
       function calcAA(){
         let total = 0;
         Object.keys(PRICE.AA).forEach(code=>{
-          const qty = N($(\`input[data-aa="${code}"]\`)?.value);
+          const qty = N($(`input[data-aa="${code}"]`)?.value);
           const sub = qty * PRICE.AA[code];
           $(`td[data-aa-sum="${code}"]`).textContent = F(sub);
           total += sub;
@@ -378,191 +301,107 @@
         $('#resAA').textContent = F(total);
         return total;
       }
-      function calcBA(){
+      function calcGroup(key, sumId, kpiId, resId){
         let total = 0;
-        PRICE.BA.forEach(item=>{
-          const qty = N($(\`input[data-ba="${item.code}"]\`)?.value);
+        PRICE[key].forEach(item=>{
+          const qty = N($(`input[data-${key}="${item.code}"]`)?.value);
           const sub = qty * item.price;
-          $(`td[data-ba-sum="${item.code}"]`).textContent = F(sub);
+          $(`td[data-${key}-sum="${item.code}"]`).textContent = F(sub);
           total += sub;
         });
-        $('#sumBA').textContent = F(total);
-        $('#kpiBA').textContent = F(total);
-        $('#resBA').textContent = F(total);
+        $(sumId).textContent = F(total);
+        $(kpiId).textContent = F(total);
+        $(resId).textContent = F(total);
         return total;
-      }
-
-      function calcDeductionsByRate(){
-        const base = N($('#insBase')?.value);
-        const labor   = Math.round(base * N($('#rateLabor')?.value)   / 100);
-        const emp     = Math.round(base * N($('#rateEmp')?.value)     / 100);
-        const nhi     = Math.round(base * N($('#rateNhi')?.value)     / 100);
-        const pension = Math.round(base * N($('#ratePension')?.value) / 100);
-        $('#calcLabor').textContent   = F(labor);
-        $('#calcEmp').textContent     = F(emp);
-        $('#calcNhi').textContent     = F(nhi);
-        $('#calcPension').textContent = F(pension);
-        return { labor, emp, nhi, pension };
-      }
-
-      function syncDeductInputsFromRate(){
-        const r = calcDeductionsByRate();
-        // 若使用者尚未輸入金額（仍為 0），就用比率結果帶入；否則尊重現有金額
-        if (N($('#amtLabor').value)   === 0) $('#amtLabor').value   = r.labor;
-        if (N($('#amtEmp').value)     === 0) $('#amtEmp').value     = r.emp;
-        if (N($('#amtNhi').value)     === 0) $('#amtNhi').value     = r.nhi;
-        if (N($('#amtPension').value) === 0) $('#amtPension').value = r.pension;
-        updateAll();
-      }
-
-      function sumDeduct(){
-        const v = ['amtLabor','amtEmp','amtNhi','amtNhiExtra','amtPension','amtOther']
-          .map(id => N($('#'+id)?.value))
-          .reduce((a,b)=>a+b,0);
-        $('#sumDeduct').textContent = F(v);
-        $('#kpiDeduct').textContent = F(v);
-        $('#resDeduct').textContent = F(v);
-        return v;
       }
 
       function updateAll(){
         const sumAA = calcAA();
-        const sumBA = calcBA();
-        const ratio = N($('#ratioPct')?.value) / 100;
-        $('#resRatio').textContent = N($('#ratioPct')?.value) || 0;
+        const sumBA = calcGroup('BA', '#sumBA', '#kpiBA', '#resBA');
+        const sumGA = calcGroup('GA', '#sumGA', '#kpiGA', '#resGA');
+        const sumSC = calcGroup('SC', '#sumSC', '#kpiSC', '#resSC');
 
-        const gross = Math.round( (sumAA + sumBA) * ratio );
-        $('#kpiGross').textContent = F(gross);
-        $('#resSum').textContent   = F(sumAA + sumBA);
-        $('#resGross').textContent = F(gross);
+        const total = sumAA + sumBA + sumGA + sumSC;
+        $('#kpiTotal').textContent = F(total);
+        $('#resTotal').textContent = F(total);
 
-        const dedu = sumDeduct();
-        const net  = Math.max(0, gross - dedu);
-        $('#kpiNet').textContent = F(net);
-        $('#resNet').textContent = F(net);
+        const ratio = N($('#ratioPct').value) / 100;
+        $('#resRatio').textContent = N($('#ratioPct').value) || 0;
 
-        // 存檔
-        saveToStorage();
+        const salary = Math.round(total * ratio);
+        $('#kpiSalary').textContent = F(salary);
+        $('#resSalary').textContent = F(salary);
+
+        saveAll();
+      }
+
+      /* === 儲存／還原 === */
+      function saveAll(){
+        // AA
+        const aa = {};
+        Object.keys(PRICE.AA).forEach(code=>{
+          aa[code] = N($(`input[data-aa="${code}"]`).value);
+        });
+        localStorage.setItem('pl-aa', JSON.stringify(aa));
+        // BA/GA/SC
+        ['BA','GA','SC'].forEach(key=>{
+          const obj = {};
+          PRICE[key].forEach(item=>{
+            obj[item.code] = N($(`input[data-${key}="${item.code}"]`).value);
+          });
+          localStorage.setItem(`pl-${key.toLowerCase()}`, JSON.stringify(obj));
+        });
+        // 參數
+        const params = { month: $('#plMonth').value || '', ratio: N($('#ratioPct').value) };
+        localStorage.setItem('pl-params', JSON.stringify(params));
+      }
+      function loadLS(key, fb){ try{ return JSON.parse(localStorage.getItem(key)||'') || fb; }catch(e){ return fb; } }
+      function restore(){
+        const p = loadLS('pl-params', null);
+        if (p){
+          if (p.month) $('#plMonth').value = p.month;
+          if (p.ratio!=null) $('#ratioPct').value = p.ratio;
+        }
       }
 
       /* === 事件 === */
       function wire(){
-        // AA/BA 輸入
-        $$('#tblAA input[type="number"], #tblBA input[type="number"]').forEach(inp=>{
+        // 數量輸入
+        $$('#tblAA input[type="number"], #tblBA input[type="number"], #tblGA input[type="number"], #tblSC input[type="number"]').forEach(inp=>{
           inp.addEventListener('input', updateAll);
         });
         // 比例／月份
         $('#ratioPct').addEventListener('input', updateAll);
-        $('#plMonth').addEventListener('change', saveToStorage);
-        // 比率試算
-        ;['insBase','rateLabor','rateEmp','rateNhi','ratePension'].forEach(id=>{
-          $('#'+id).addEventListener('input', ()=>{ calcDeductionsByRate(); });
-          $('#'+id).addEventListener('change', syncDeductInputsFromRate);
-        });
-        // 直接金額
-        ;['amtLabor','amtEmp','amtNhi','amtNhiExtra','amtPension','amtOther'].forEach(id=>{
-          $('#'+id).addEventListener('input', updateAll);
-        });
-        // 按鈕
+        $('#plMonth').addEventListener('change', saveAll);
+        // 清空
         $('#btnResetAll').addEventListener('click', ()=>{
-          localStorage.removeItem('payroll-aa');
-          localStorage.removeItem('payroll-ba');
-          localStorage.removeItem('payroll-params');
+          ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params'].forEach(k=>localStorage.removeItem(k));
           location.reload();
         });
-        $('#btnClearDedu').addEventListener('click', ()=>{
-          ['amtLabor','amtEmp','amtNhi','amtNhiExtra','amtPension','amtOther'].forEach(id=>$('#'+id).value=0);
-          updateAll();
-        });
-      }
-
-      /* === 儲存／載入 === */
-      function saveToStorage(){
-        const aa = {};
-        Object.keys(PRICE.AA).forEach(code=>{
-          aa[code] = N($(\`input[data-aa="${code}"]\`).value);
-        });
-        localStorage.setItem('payroll-aa', JSON.stringify(aa));
-
-        const ba = {};
-        PRICE.BA.forEach(item=>{
-          ba[item.code] = N($(\`input[data-ba="${item.code}"]\`).value);
-        });
-        localStorage.setItem('payroll-ba', JSON.stringify(ba));
-
-        const params = {
-          month: $('#plMonth')?.value || '',
-          ratio: N($('#ratioPct')?.value),
-          insBase: N($('#insBase')?.value),
-          rates: {
-            labor: N($('#rateLabor')?.value),
-            emp  : N($('#rateEmp')?.value),
-            nhi  : N($('#rateNhi')?.value),
-            pension: N($('#ratePension')?.value)
-          },
-          amts: {
-            labor: N($('#amtLabor')?.value),
-            emp  : N($('#amtEmp')?.value),
-            nhi  : N($('#amtNhi')?.value),
-            nhiExtra: N($('#amtNhiExtra')?.value),
-            pension : N($('#amtPension')?.value),
-            other   : N($('#amtOther')?.value)
-          }
-        };
-        localStorage.setItem('payroll-params', JSON.stringify(params));
-      }
-      function loadLS(key, fallback){ try{ return JSON.parse(localStorage.getItem(key)||'') || fallback; }catch(e){ return fallback; } }
-      function restoreFromStorage(){
-        const p = loadLS('payroll-params', null);
-        if (!p) return;
-        if (p.month)  $('#plMonth').value = p.month;
-        if (p.ratio!=null) $('#ratioPct').value = p.ratio;
-
-        $('#insBase').value = N(p.insBase)||0;
-        if (p.rates){
-          $('#rateLabor').value   = N(p.rates.labor)||0;
-          $('#rateEmp').value     = N(p.rates.emp)||0;
-          $('#rateNhi').value     = N(p.rates.nhi)||0;
-          $('#ratePension').value = N(p.rates.pension)||0;
-        }
-        if (p.amts){
-          $('#amtLabor').value    = N(p.amts.labor)||0;
-          $('#amtEmp').value      = N(p.amts.emp)||0;
-          $('#amtNhi').value      = N(p.amts.nhi)||0;
-          $('#amtNhiExtra').value = N(p.amts.nhiExtra)||0;
-          $('#amtPension').value  = N(p.amts.pension)||0;
-          $('#amtOther').value    = N(p.amts.other)||0;
-        }
       }
 
       /* === 啟動 === */
       buildAA();
-      buildBA();
-      restoreFromStorage();
+      buildGroup('tblBA','BA','pl-ba');
+      buildGroup('tblGA','GA','pl-ga');
+      buildGroup('tblSC','SC','pl-sc');
+      restore();
       wire();
-      // 先跑一次比率試算（不覆寫已有金額），再總計
-      calcDeductionsByRate();
       updateAll();
 
-      // 導覽目前頁高亮（複用你的邏輯）
+      /* ---- 導覽高亮（強化判斷，確保本頁一定亮） ---- */
       (function(){
-        function norm(href){
-          try{
-            const u=new URL(href, location.origin);
-            let p=u.pathname.trim();
-            if(p.length>1 && p.endsWith('/')) p=p.slice(0,-1);
-            p=p.replace(/\/(index\.html?)?$/i,'/index').replace(/\.html?$/i,'');
-            const parts=p.split('/'); return (parts[parts.length-1]||'').toLowerCase();
-          }catch(e){ return ''; }
-        }
-        const here=norm(location.href);
+        const here = location.pathname.toLowerCase();
         document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-          const target=norm(a.getAttribute('href'));
-          if(target && target===here) a.classList.add('active');
+          const href = a.getAttribute('href')?.toLowerCase() || '';
+          // 既支援 /payroll 與 /payroll.html，也避免把別頁亮起來
+          if (/(^|\/)payroll(\.html)?$/.test(href) && /(payroll(\.html)?$)/.test(here)){
+            a.classList.add('active');
+          }
         });
       })();
 
-      // 防拷（與首頁一致）
+      /* 防拷（與首頁一致） */
       document.addEventListener('contextmenu', e => e.preventDefault());
       document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
