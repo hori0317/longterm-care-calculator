@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>薪資計算機</title>
+
+  <!-- 共用資源 -->
+  <link rel="icon" type="image/x-icon" href="YORU.ico" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+
+  <!-- 本頁最小樣式（不與你現有 CSS 衝突，只做需要的補強） -->
+  <style>
+    /* 導覽列目前頁高亮（若你已在 style.css 設計可刪） */
+    .nav-item.is-active { font-weight: 700; text-decoration: underline; }
+
+    /* 容器與區塊排版（盡量輕量，沿用你原本風格） */
+    .container { max-width: 1080px; margin: 0 auto; padding: 16px; }
+    .section { margin-block: 16px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; }
+    .section h2 { margin: 0 0 12px; font-size: 18px; }
+    .grid { display: grid; gap: 12px; }
+    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .field { display: grid; gap: 6px; }
+    .field label { font-weight: 600; font-size: 14px; }
+    .field input[type="number"] { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; width: 100%; }
+    .muted { color: #6b7280; font-size: 12px; }
+
+    /* 結果卡片 */
+    .cards { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; background: #fafafa; }
+    .stat { font-size: 12px; color: #6b7280; }
+    .value { font-size: 22px; font-weight: 800; }
+
+    /* 顯示控制（與 index.html 共用規則一致） */
+    #appRoot[data-mode="payroll"] .only-quota  { display: none !important; }
+    #appRoot[data-mode="quota"]  .only-payroll { display: none !important; }
+
+    /* RWD 微調 */
+    @media (max-width: 768px) {
+      .grid.cols-3 { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .grid.cols-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 頂部導覽列（與其他頁一致，這裡把薪資頁設 is-active） -->
+  <nav class="topbar" role="navigation" aria-label="Main Navigation" style="display:flex; gap:12px; align-items:center; padding:12px 16px;">
+    <a href="index.html"   class="nav-item">額度計算機</a>
+    <a href="info.html"    class="nav-item">長照相關資訊</a>
+    <a href="news.html"    class="nav-item">最新消息</a>
+    <a href="contact.html" class="nav-item">聯繫方式</a>
+    <a href="about.html"   class="nav-item">關於我們</a>
+    <a href="payroll.html" class="nav-item is-active">薪資計算機</a>
+  </nav>
+
+  <main class="container">
+    <h1 id="pageTitle">薪資計算機</h1>
+
+    <!-- 告知共用 JS 目前是薪資頁 -->
+    <div id="appRoot" data-mode="payroll" aria-live="polite">
+
+      <!-- 你原本額度頁用到的內容若要沿用，可貼在這裡；先用 only-quota 隱藏 -->
+      <div class="only-quota">
+        <!-- 預留：額度模式元件（在薪資頁預設不顯示） -->
+      </div>
+
+      <!-- ======================== 薪資輸入區 ======================== -->
+      <section class="section only-payroll" aria-labelledby="sec-basic">
+        <h2 id="sec-basic" data-role="main-header-label">薪資計算</h2>
+        <div class="grid cols-3">
+          <div class="field">
+            <label for="pl-emp-name">員工姓名</label>
+            <input id="pl-emp-name" type="text" placeholder="（選填）" />
+            <div class="muted">僅作為列印或匯出備註。</div>
+          </div>
+          <div class="field">
+            <label for="pl-month">計算月份</label>
+            <input id="pl-month" type="month" />
+            <div class="muted">例如 2025-11</div>
+          </div>
+          <div class="field">
+            <label for="pl-base-hourly">時薪（基本）</label>
+            <input id="pl-base-hourly" class="js-payroll-input" type="number" min="0" step="1" placeholder="例如 200" />
+            <div class="muted">可依你單位規範調整。</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section only-payroll" aria-labelledby="sec-hours">
+        <h2 id="sec-hours">出勤／工時計算</h2>
+        <div class="grid cols-3">
+          <div class="field">
+            <label for="pl-hours-regular">正常時數（h）</label>
+            <input id="pl-hours-regular" class="js-payroll-input" type="number" min="0" step="0.1" value="0" />
+          </div>
+          <div class="field">
+            <label for="pl-hours-night">夜班時數（h）</label>
+            <input id="pl-hours-night" class="js-payroll-input" type="number" min="0" step="0.1" value="0" />
+            <div class="muted">夜班加成比例見下。</div>
+          </div>
+          <div class="field">
+            <label for="pl-night-rate">夜班加成（%）</label>
+            <input id="pl-night-rate" class="js-payroll-input" type="number" min="0" step="1" value="0" />
+            <div class="muted">例如 30 表示 +30%。</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section only-payroll" aria-labelledby="sec-allowance">
+        <h2 id="sec-allowance">津貼／獎金</h2>
+        <div class="grid cols-3">
+          <div class="field">
+            <label for="pl-transport-trips">交通趟次</label>
+            <input id="pl-transport-trips" class="js-payroll-input" type="number" min="0" step="1" value="0" />
+            <div class="muted">每趟金額見右。</div>
+          </div>
+          <div class="field">
+            <label for="pl-transport-rate">每趟交通補貼</label>
+            <input id="pl-transport-rate" class="js-payroll-input" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="pl-bonus">其他獎金／補貼（總額）</label>
+            <input id="pl-bonus" class="js-payroll-input" type="number" min="0" step="1" value="0" />
+          </div>
+        </div>
+      </section>
+
+      <section class="section only-payroll" aria-labelledby="sec-deduct">
+        <h2 id="sec-deduct">請假／扣款</h2>
+        <div class="grid cols-3">
+          <div class="field">
+            <label for="pl-leave-hours">請假時數（h）</label>
+            <input id="pl-leave-hours" class="js-payroll-input" type="number" min="0" step="0.1" value="0" />
+            <div class="muted">預設按基本時薪扣。</div>
+          </div>
+          <div class="field">
+            <label for="pl-insurance-self">健保＋勞保 自付</label>
+            <input id="pl-insurance-self" class="js-payroll-input" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="pl-pension-self">勞退自提</label>
+            <input id="pl-pension-self" class="js-payroll-input" type="number" min="0" step="1" value="0" />
+          </div>
+        </div>
+        <div class="grid cols-2" style="margin-top:12px;">
+          <div class="field">
+            <label for="pl-other-deduct">其他扣款（總額）</label>
+            <input id="pl-other-deduct" class="js-payroll-input" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="pl-note">備註</label>
+            <input id="pl-note" type="text" placeholder="（選填）" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================== 結果區 ======================== -->
+      <section class="section only-payroll" aria-labelledby="sec-result">
+        <h2 id="sec-result">薪資結果</h2>
+        <div class="cards">
+          <div class="card">
+            <div class="stat">基本工資小計</div>
+            <div class="value" id="stat-base">0</div>
+            <div class="muted">＝時薪 × 正常時數</div>
+          </div>
+          <div class="card">
+            <div class="stat">夜班加成</div>
+            <div class="value" id="stat-night">0</div>
+            <div class="muted">＝時薪 × 夜班時數 × 加成%</div>
+          </div>
+          <div class="card">
+            <div class="stat">津貼／獎金</div>
+            <div class="value" id="stat-allowance">0</div>
+            <div class="muted">＝交通補貼＋其他獎金</div>
+          </div>
+          <div class="card">
+            <div class="stat">請假扣款</div>
+            <div class="value" id="stat-leave">0</div>
+            <div class="muted">＝時薪 × 請假時數</div>
+          </div>
+          <div class="card">
+            <div class="stat">保險／勞退／其他扣款</div>
+            <div class="value" id="stat-deduct">0</div>
+            <div class="muted">＝健/勞保＋勞退＋其他</div>
+          </div>
+          <div class="card">
+            <div class="stat">應發／實發金額</div>
+            <div class="value" id="stat-total">0</div>
+            <div class="muted">＝（基本＋夜班＋津貼）−（請假＋各項扣款）</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- 本頁最小 JS：若你的 script.js 已定義 computePayroll()，優先使用你的；否則用這段精簡計算 -->
+  <script>
+    (function(){
+      function n(v){ return isFinite(+v) ? +v : 0; }
+      function fmt(x){ return new Intl.NumberFormat('zh-Hant-TW', { maximumFractionDigits: 0 }).format(x); }
+
+      function localComputePayroll(){
+        const rad = (n(document.getElementById('pl-night-rate')?.value)||0) / 100;
+
+        const baseHourly = n(document.getElementById('pl-base-hourly')?.value);
+        const hoursReg   = n(document.getElementById('pl-hours-regular')?.value);
+        const hoursNight = n(document.getElementById('pl-hours-night')?.value);
+
+        const trips      = n(document.getElementById('pl-transport-trips')?.value);
+        const tripRate   = n(document.getElementById('pl-transport-rate')?.value);
+        const bonus      = n(document.getElementById('pl-bonus')?.value);
+
+        const leaveH     = n(document.getElementById('pl-leave-hours')?.value);
+        const insSelf    = n(document.getElementById('pl-insurance-self')?.value);
+        const pension    = n(document.getElementById('pl-pension-self')?.value);
+        const otherDed   = n(document.getElementById('pl-other-deduct')?.value);
+
+        const base   = baseHourly * hoursReg;
+        const night  = baseHourly * hoursNight * rad;
+        const allow  = (trips * tripRate) + bonus;
+
+        const leave  = baseHourly * leaveH;
+        const deduct = insSelf + pension + otherDed;
+
+        const total  = (base + night + allow) - (leave + deduct);
+
+        document.getElementById('stat-base').textContent      = fmt(base);
+        document.getElementById('stat-night').textContent     = fmt(night);
+        document.getElementById('stat-allowance').textContent = fmt(allow);
+        document.getElementById('stat-leave').textContent     = fmt(leave);
+        document.getElementById('stat-deduct').textContent    = fmt(deduct);
+        document.getElementById('stat-total').textContent     = fmt(total);
+      }
+
+      // 若全域已有 computePayroll（你的 script.js 提供），就用你的；否則用本地版
+      if (typeof window.computePayroll !== 'function') {
+        window.computePayroll = localComputePayroll;
+      }
+
+      function bindInputs(){
+        const inputs = document.querySelectorAll('.js-payroll-input');
+        inputs.forEach(el => el.addEventListener('input', () => window.computePayroll()));
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // 標題保險
+        const titleEl = document.getElementById('pageTitle');
+        if (titleEl) titleEl.textContent = '薪資計算機';
+
+        // 讓外層 data-mode 正確
+        const root = document.getElementById('appRoot');
+        if (root) root.setAttribute('data-mode','payroll');
+
+        // 綁定輸入即時計算
+        bindInputs();
+
+        // 初次計算；若你的 script.js 有 recomputeAll 也允許你接手更完整流程
+        if (typeof window.recomputeAll === 'function') {
+          // 你的全域刷新（若要沿用既有資料流）
+          window.recomputeAll({ mode: 'payroll' });
+        }
+        // 確保有一次基本計算
+        window.computePayroll();
+      });
+    })();
+  </script>
+</body>
+</html>
