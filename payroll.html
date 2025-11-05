@@ -4,270 +4,292 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>薪資計算機</title>
+  <meta name="description" content="將額度計算機的結果（政府補助＋自付）與 AA 加成整合，快速算出居服薪資（6/4）。由 hori 製作。">
 
-  <!-- 共用資源 -->
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="topbar-fixed.css" />
+  <!-- 仍載入你的 script.js 以保留導覽高亮等共用行為；本頁的薪資計算獨立於此檔，不會衝突 -->
   <script src="script.js" defer></script>
 
-  <!-- 本頁最小樣式（不與你現有 CSS 衝突，只做需要的補強） -->
   <style>
-    /* 導覽列目前頁高亮（若你已在 style.css 設計可刪） */
-    .nav-item.is-active { font-weight: 700; text-decoration: underline; }
-
-    /* 容器與區塊排版（盡量輕量，沿用你原本風格） */
-    .container { max-width: 1080px; margin: 0 auto; padding: 16px; }
-    .section { margin-block: 16px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; }
-    .section h2 { margin: 0 0 12px; font-size: 18px; }
-    .grid { display: grid; gap: 12px; }
-    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
-    .field { display: grid; gap: 6px; }
-    .field label { font-weight: 600; font-size: 14px; }
-    .field input[type="number"] { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; width: 100%; }
-    .muted { color: #6b7280; font-size: 12px; }
-
-    /* 結果卡片 */
-    .cards { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0,1fr)); }
-    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; background: #fafafa; }
-    .stat { font-size: 12px; color: #6b7280; }
-    .value { font-size: 22px; font-weight: 800; }
-
-    /* 顯示控制（與 index.html 共用規則一致） */
-    #appRoot[data-mode="payroll"] .only-quota  { display: none !important; }
-    #appRoot[data-mode="quota"]  .only-payroll { display: none !important; }
-
-    /* RWD 微調 */
-    @media (max-width: 768px) {
-      .grid.cols-3 { grid-template-columns: 1fr; }
-      .cards { grid-template-columns: 1fr; }
-      .grid.cols-2 { grid-template-columns: 1fr; }
+    /* 本頁沿用你的浮水印樣式 */
+    :root{
+      --wm-text: "@hori版權所有";
+      --wm-size: 36px;
+      --wm-angle: -25deg;
+      --wm-alpha: 0.05;
+      --wm-shift: 120px;
     }
+    .watermark { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+    .wm-item{
+      position: absolute; font-weight: 700; font-size: var(--wm-size);
+      color: rgba(0,0,0,var(--wm-alpha)); transform: rotate(var(--wm-angle));
+      white-space: nowrap; user-select: none; will-change: transform;
+      animation: wm-sway var(--dur, 12s) ease-in-out infinite alternate;
+    }
+    @keyframes wm-sway{ 0%{transform:translateX(0) rotate(var(--wm-angle));}
+      100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));} }
+    @media print{ .watermark{ opacity:.08; } }
+
+    /* 本頁小元件 */
+    .kpi{ display:flex; gap:16px; flex-wrap:wrap; }
+    .kpi .box{
+      flex:1 1 260px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
+      display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);
+    }
+    .kpi .box .lbl{ color:#7a7557; font-weight:700; }
+    .kpi .box .num{ font-size:24px; font-weight:900; color:#2e7d32; }
+
+    .form-grid{
+      display:grid; gap:12px; grid-template-columns:1fr 1fr; align-items:center;
+    }
+    .form-grid .field{
+      display:flex; gap:10px; align-items:center; justify-content:flex-end;
+      background:#fff; border:1px solid var(--line); border-radius:10px; padding:8px 12px;
+    }
+    .form-grid .field label{ margin-right:auto; font-weight:700; color:#333; }
+    .form-grid input[type="number"]{
+      width:120px; height:34px; text-align:right; font-size:15px; border-radius:8px; padding:2px 8px;
+    }
+    @media (max-width:860px){ .form-grid{ grid-template-columns:1fr; } }
+
+    .addon-note{ color:#7a7557; font-size:13px; margin-top:8px; }
+    .formula{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
   </style>
 </head>
-
 <body>
-  <!-- 頂部導覽列（與其他頁一致，這裡把薪資頁設 is-active） -->
-  <nav class="topbar" role="navigation" aria-label="Main Navigation" style="display:flex; gap:12px; align-items:center; padding:12px 16px;">
-    <a href="index.html"   class="nav-item">額度計算機</a>
-    <a href="info.html"    class="nav-item">長照相關資訊</a>
-    <a href="news.html"    class="nav-item">最新消息</a>
-    <a href="contact.html" class="nav-item">聯繫方式</a>
-    <a href="about.html"   class="nav-item">關於我們</a>
-    <a href="payroll.html" class="nav-item is-active">薪資計算機</a>
-  </nav>
+  <!-- 浮水印 -->
+  <div class="watermark" aria-hidden="true">
+    <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:65%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:10%; --dur:13s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:40%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:25%; left:70%; --dur:14s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:5%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:35%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:65%; --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:10%; --dur:13s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:40%; --dur:12s;">@hori版權所有</span>
+    <span class="wm-item" style="top:75%; left:70%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:15%; --dur:11s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:45%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
+  </div>
+
+  <!-- 頂部導覽（與其他頁一致；右側用 actions-ghost 佔位） -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title">薪資計算機</span>
+    </div>
+
+    <nav class="nav-links">
+      <a href="index.html">額度計算機</a>
+      <a href="payroll.html">薪資計算機</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+
+    <div class="actions actions-ghost">
+      <button class="btn pill btn-orange" type="button">B單位</button>
+      <button class="btn pill btn-green"  type="button">重置</button>
+      <button class="btn pill btn-gray"   type="button">列印</button>
+    </div>
+  </header>
+
+  <div class="divider"></div>
 
   <main class="container">
-    <h1 id="pageTitle">薪資計算機</h1>
+    <!-- KPI 區：一眼看總薪資 -->
+    <section class="card" style="margin-bottom:16px;">
+      <h1 class="card-title" style="font-size:22px;">居服薪資（6/4）</h1>
+      <p class="hint">將「額度計算機」的結果貼過來，再加上 AA 加成，一鍵算出本月薪資。</p>
 
-    <!-- 告知共用 JS 目前是薪資頁 -->
-    <div id="appRoot" data-mode="payroll" aria-live="polite">
+      <div class="kpi" style="margin-top:10px;">
+        <div class="box">
+          <div class="lbl">政府補助（含你在額度計算機內的 BA/GA/SC 補助）</div>
+          <div class="num" id="plStatGov">0</div>
+        </div>
+        <div class="box">
+          <div class="lbl">自付總計（案家自付）</div>
+          <div class="num" id="plStatSelf">0</div>
+        </div>
+        <div class="box">
+          <div class="lbl">AA 加成合計</div>
+          <div class="num" id="plStatAA">0</div>
+        </div>
+        <div class="box">
+          <div class="lbl">本月薪資（6/4）</div>
+          <div class="num" id="plStatTotal">0</div>
+        </div>
+      </div>
+    </section>
 
-      <!-- 你原本額度頁用到的內容若要沿用，可貼在這裡；先用 only-quota 隱藏 -->
-      <div class="only-quota">
-        <!-- 預留：額度模式元件（在薪資頁預設不顯示） -->
+    <!-- 來源金額（從額度計算機帶入的兩個數字） -->
+    <section class="card">
+      <h2 class="card-title">① 來自「額度計算機」的金額</h2>
+      <div class="form-grid" style="margin-top:8px;">
+        <div class="field">
+          <label for="plGov">政府補助：</label>
+          <input id="plGov" type="number" min="0" step="1" value="0" />
+        </div>
+        <div class="field">
+          <label for="plSelf">自付總計：</label>
+          <input id="plSelf" type="number" min="0" step="1" value="0" />
+        </div>
+      </div>
+      <p class="hint" style="margin-top:10px;">對應到首頁右卡「政府補助」「自付總計」兩行，直接輸入金額即可。</p>
+    </section>
+
+    <!-- AA 加成（與首頁共用 localStorage：addons） -->
+    <section class="card">
+      <h2 class="card-title">② AA 加成次數</h2>
+      <div class="row space-between">
+        <span class="hint">與首頁共用加成次數（localStorage: <code>addons</code>）。你可在這裡單獨調整，不影響首頁。</span>
+        <div class="row">
+          <button class="btn" id="btnSaveAA" type="button">儲存加成次數</button>
+          <button class="btn btn-gray" id="btnClearAA" type="button" style="margin-left:8px;">清空</button>
+        </div>
       </div>
 
-      <!-- ======================== 薪資輸入區 ======================== -->
-      <section class="section only-payroll" aria-labelledby="sec-basic">
-        <h2 id="sec-basic" data-role="main-header-label">薪資計算</h2>
-        <div class="grid cols-3">
-          <div class="field">
-            <label for="pl-emp-name">員工姓名</label>
-            <input id="pl-emp-name" type="text" placeholder="（選填）" />
-            <div class="muted">僅作為列印或匯出備註。</div>
-          </div>
-          <div class="field">
-            <label for="pl-month">計算月份</label>
-            <input id="pl-month" type="month" />
-            <div class="muted">例如 2025-11</div>
-          </div>
-          <div class="field">
-            <label for="pl-base-hourly">時薪（基本）</label>
-            <input id="pl-base-hourly" class="js-payroll-input" type="number" min="0" step="1" placeholder="例如 200" />
-            <div class="muted">可依你單位規範調整。</div>
-          </div>
+      <div class="addon" style="margin-top:10px;">
+        <div class="addon-head">
+          <span>項目（AA）</span>
+          <span class="text-right">次數</span>
         </div>
-      </section>
+        <div id="aaRows" class="addon-body"></div>
+      </div>
+      <div class="addon-note">單價：AA05 200、AA06 200、AA08 385、AA09 770、AA11 50（與首頁一致）</div>
+    </section>
 
-      <section class="section only-payroll" aria-labelledby="sec-hours">
-        <h2 id="sec-hours">出勤／工時計算</h2>
-        <div class="grid cols-3">
-          <div class="field">
-            <label for="pl-hours-regular">正常時數（h）</label>
-            <input id="pl-hours-regular" class="js-payroll-input" type="number" min="0" step="0.1" value="0" />
-          </div>
-          <div class="field">
-            <label for="pl-hours-night">夜班時數（h）</label>
-            <input id="pl-hours-night" class="js-payroll-input" type="number" min="0" step="0.1" value="0" />
-            <div class="muted">夜班加成比例見下。</div>
-          </div>
-          <div class="field">
-            <label for="pl-night-rate">夜班加成（%）</label>
-            <input id="pl-night-rate" class="js-payroll-input" type="number" min="0" step="1" value="0" />
-            <div class="muted">例如 30 表示 +30%。</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section only-payroll" aria-labelledby="sec-allowance">
-        <h2 id="sec-allowance">津貼／獎金</h2>
-        <div class="grid cols-3">
-          <div class="field">
-            <label for="pl-transport-trips">交通趟次</label>
-            <input id="pl-transport-trips" class="js-payroll-input" type="number" min="0" step="1" value="0" />
-            <div class="muted">每趟金額見右。</div>
-          </div>
-          <div class="field">
-            <label for="pl-transport-rate">每趟交通補貼</label>
-            <input id="pl-transport-rate" class="js-payroll-input" type="number" min="0" step="1" value="0" />
-          </div>
-          <div class="field">
-            <label for="pl-bonus">其他獎金／補貼（總額）</label>
-            <input id="pl-bonus" class="js-payroll-input" type="number" min="0" step="1" value="0" />
-          </div>
-        </div>
-      </section>
-
-      <section class="section only-payroll" aria-labelledby="sec-deduct">
-        <h2 id="sec-deduct">請假／扣款</h2>
-        <div class="grid cols-3">
-          <div class="field">
-            <label for="pl-leave-hours">請假時數（h）</label>
-            <input id="pl-leave-hours" class="js-payroll-input" type="number" min="0" step="0.1" value="0" />
-            <div class="muted">預設按基本時薪扣。</div>
-          </div>
-          <div class="field">
-            <label for="pl-insurance-self">健保＋勞保 自付</label>
-            <input id="pl-insurance-self" class="js-payroll-input" type="number" min="0" step="1" value="0" />
-          </div>
-          <div class="field">
-            <label for="pl-pension-self">勞退自提</label>
-            <input id="pl-pension-self" class="js-payroll-input" type="number" min="0" step="1" value="0" />
-          </div>
-        </div>
-        <div class="grid cols-2" style="margin-top:12px;">
-          <div class="field">
-            <label for="pl-other-deduct">其他扣款（總額）</label>
-            <input id="pl-other-deduct" class="js-payroll-input" type="number" min="0" step="1" value="0" />
-          </div>
-          <div class="field">
-            <label for="pl-note">備註</label>
-            <input id="pl-note" type="text" placeholder="（選填）" />
-          </div>
-        </div>
-      </section>
-
-      <!-- ======================== 結果區 ======================== -->
-      <section class="section only-payroll" aria-labelledby="sec-result">
-        <h2 id="sec-result">薪資結果</h2>
-        <div class="cards">
-          <div class="card">
-            <div class="stat">基本工資小計</div>
-            <div class="value" id="stat-base">0</div>
-            <div class="muted">＝時薪 × 正常時數</div>
-          </div>
-          <div class="card">
-            <div class="stat">夜班加成</div>
-            <div class="value" id="stat-night">0</div>
-            <div class="muted">＝時薪 × 夜班時數 × 加成%</div>
-          </div>
-          <div class="card">
-            <div class="stat">津貼／獎金</div>
-            <div class="value" id="stat-allowance">0</div>
-            <div class="muted">＝交通補貼＋其他獎金</div>
-          </div>
-          <div class="card">
-            <div class="stat">請假扣款</div>
-            <div class="value" id="stat-leave">0</div>
-            <div class="muted">＝時薪 × 請假時數</div>
-          </div>
-          <div class="card">
-            <div class="stat">保險／勞退／其他扣款</div>
-            <div class="value" id="stat-deduct">0</div>
-            <div class="muted">＝健/勞保＋勞退＋其他</div>
-          </div>
-          <div class="card">
-            <div class="stat">應發／實發金額</div>
-            <div class="value" id="stat-total">0</div>
-            <div class="muted">＝（基本＋夜班＋津貼）−（請假＋各項扣款）</div>
-          </div>
-        </div>
-      </section>
-
-    </div>
+    <!-- 公式與列印 -->
+    <section class="card">
+      <h2 class="card-title">③ 計算公式</h2>
+      <p class="hint">
+        <span class="formula">薪資 = (政府補助 + 自付總計 + AA 加成合計) × 0.6</span>
+      </p>
+      <div class="row" style="justify-content:flex-end; gap:10px; margin-top:8px;">
+        <button class="btn btn-gray" onclick="window.print()">列印</button>
+      </div>
+    </section>
   </main>
 
-  <!-- 本頁最小 JS：若你的 script.js 已定義 computePayroll()，優先使用你的；否則用這段精簡計算 -->
+  <footer id="bottomDock" class="footerbar">
+    <div class="foot">
+      <span class="ok">※ 本頁僅計算 6/4 薪資，若你有其它津貼/罰款/代墊，請另行加減。</span>
+    </div>
+  </footer>
+
+  <!-- 本頁專屬：獨立薪資計算（不改動你的 script.js） -->
   <script>
     (function(){
-      function n(v){ return isFinite(+v) ? +v : 0; }
-      function fmt(x){ return new Intl.NumberFormat('zh-Hant-TW', { maximumFractionDigits: 0 }).format(x); }
+      const $ = s => document.querySelector(s);
+      const N = v => (isFinite(+v) ? +v : 0);
+      const F = v => new Intl.NumberFormat('zh-Hant-TW', { maximumFractionDigits: 0 }).format(v);
 
-      function localComputePayroll(){
-        const rad = (n(document.getElementById('pl-night-rate')?.value)||0) / 100;
+      // 與首頁一致的 AA 單價
+      const AA_PRICE = { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 };
+      const AA_LIST  = Object.keys(AA_PRICE);
 
-        const baseHourly = n(document.getElementById('pl-base-hourly')?.value);
-        const hoursReg   = n(document.getElementById('pl-hours-regular')?.value);
-        const hoursNight = n(document.getElementById('pl-hours-night')?.value);
-
-        const trips      = n(document.getElementById('pl-transport-trips')?.value);
-        const tripRate   = n(document.getElementById('pl-transport-rate')?.value);
-        const bonus      = n(document.getElementById('pl-bonus')?.value);
-
-        const leaveH     = n(document.getElementById('pl-leave-hours')?.value);
-        const insSelf    = n(document.getElementById('pl-insurance-self')?.value);
-        const pension    = n(document.getElementById('pl-pension-self')?.value);
-        const otherDed   = n(document.getElementById('pl-other-deduct')?.value);
-
-        const base   = baseHourly * hoursReg;
-        const night  = baseHourly * hoursNight * rad;
-        const allow  = (trips * tripRate) + bonus;
-
-        const leave  = baseHourly * leaveH;
-        const deduct = insSelf + pension + otherDed;
-
-        const total  = (base + night + allow) - (leave + deduct);
-
-        document.getElementById('stat-base').textContent      = fmt(base);
-        document.getElementById('stat-night').textContent     = fmt(night);
-        document.getElementById('stat-allowance').textContent = fmt(allow);
-        document.getElementById('stat-leave').textContent     = fmt(leave);
-        document.getElementById('stat-deduct').textContent    = fmt(deduct);
-        document.getElementById('stat-total').textContent     = fmt(total);
+      // 產生 AA 列、載入 localStorage
+      function renderAA(){
+        const host = $('#aaRows'); host.innerHTML = '';
+        const saved = JSON.parse(localStorage.getItem('addons') || '{}');
+        AA_LIST.forEach(code=>{
+          const row = document.createElement('div');
+          row.className = 'addon-row';
+          row.innerHTML = \`
+            <div>\${code}</div>
+            <div class="addon-inputs">
+              <input type="number" id="\${code}_count" value="\${toInt(saved[\`\${code}_count\`])}" min="0" step="1" />
+            </div>\`;
+          host.appendChild(row);
+        });
       }
 
-      // 若全域已有 computePayroll（你的 script.js 提供），就用你的；否則用本地版
-      if (typeof window.computePayroll !== 'function') {
-        window.computePayroll = localComputePayroll;
+      function toInt(v){
+        if (typeof v === "number") return Number.isFinite(v) ? Math.trunc(v) : 0;
+        if (v === null || v === undefined) return 0;
+        const fw={'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','，':',','．':'.','＋':'+','－':'-'};
+        let s=String(v).replace(/[０-９，．＋－]/g,ch=>fw[ch]??ch);
+        s=s.replace(/,/g,'').trim();
+        const m=s.match(/^[+-]?\\d+/);
+        return m?parseInt(m[0],10):0;
       }
 
-      function bindInputs(){
-        const inputs = document.querySelectorAll('.js-payroll-input');
-        inputs.forEach(el => el.addEventListener('input', () => window.computePayroll()));
+      function calcAA(){
+        let total = 0;
+        AA_LIST.forEach(code=>{
+          const cnt = toInt($('#'+code+'_count')?.value);
+          total += cnt * (AA_PRICE[code]||0);
+        });
+        return total;
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
-        // 標題保險
-        const titleEl = document.getElementById('pageTitle');
-        if (titleEl) titleEl.textContent = '薪資計算機';
+      function recompute(){
+        const gov  = N($('#plGov')?.value);
+        const self = N($('#plSelf')?.value);
+        const aa   = calcAA();
+        const total = Math.round((gov + self + aa) * 0.6);
 
-        // 讓外層 data-mode 正確
-        const root = document.getElementById('appRoot');
-        if (root) root.setAttribute('data-mode','payroll');
+        $('#plStatGov').textContent  = F(gov);
+        $('#plStatSelf').textContent = F(self);
+        $('#plStatAA').textContent   = F(aa);
+        $('#plStatTotal').textContent= F(total);
+      }
 
-        // 綁定輸入即時計算
-        bindInputs();
+      function wire(){
+        $('#plGov').addEventListener('input', recompute);
+        $('#plSelf').addEventListener('input', recompute);
+        document.querySelectorAll('#aaRows input[type="number"]').forEach(inp=>{
+          inp.addEventListener('input', recompute);
+        });
 
-        // 初次計算；若你的 script.js 有 recomputeAll 也允許你接手更完整流程
-        if (typeof window.recomputeAll === 'function') {
-          // 你的全域刷新（若要沿用既有資料流）
-          window.recomputeAll({ mode: 'payroll' });
-        }
-        // 確保有一次基本計算
-        window.computePayroll();
-      });
+        $('#btnSaveAA').addEventListener('click', ()=>{
+          const data = {};
+          AA_LIST.forEach(code=>{
+            data[\`\${code}_count\`] = toInt($('#'+code+'_count').value);
+          });
+          localStorage.setItem('addons', JSON.stringify(data));
+          alert('AA 加成次數已儲存（與首頁共用）。');
+        });
+
+        $('#btnClearAA').addEventListener('click', ()=>{
+          AA_LIST.forEach(code=>{ const el=$('#'+code+'_count'); if(el) el.value=0; });
+          recompute();
+        });
+      }
+
+      // 自動帶入查詢參數（可選）：?gov=12345&self=6789
+      function applyQuery(){
+        const p = new URLSearchParams(location.search);
+        if (p.has('gov'))  $('#plGov').value  = toInt(p.get('gov'));
+        if (p.has('self')) $('#plSelf').value = toInt(p.get('self'));
+      }
+
+      // 啟動
+      renderAA();
+      applyQuery();
+      wire();
+      recompute();
     })();
+  </script>
+
+  <!-- 防拷（與首頁一致；如不需可移除） -->
+  <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
+      if (e.key === 'F12') e.preventDefault();
+    });
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
   </script>
 </body>
 </html>
