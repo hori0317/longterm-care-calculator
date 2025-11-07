@@ -1,6 +1,10 @@
 /**********************
  * script.js（週→月→總；總可改，但改週即重置同步）
  * 重點修正：服務列改用 DOM 建構，每欄獨立 <td>，避免「沐浴0」黏在一起
+ * 本版新增：
+ * - 產表時每列加入 tr.dataset.code = item.code
+ * - C 組 tr.dataset.cmode = "1"（供統計排 C 用）
+ * - applyUnitEffects()：B 單位隱藏並歸零 BA09/BA09a 與整個 BD 組；A 單位恢復
  **********************/
 
 /* 公用 */
@@ -174,8 +178,11 @@ function renderTables(){
       const tr=document.createElement("tr");
       tr.dataset.manual = "0";  // 0=自動(總次跟月次同步)；1=使用者手動輸入總次
       tr.dataset.use    = "0";  // 最終使用次數（或 C 的組數）
+      tr.dataset.code   = item.code; // ★ 供 BA09/BA09a 精準鎖定
 
       if(code === "C"){
+        tr.dataset.cmode = "1"; // ★ 標記為 C 組，統計時可排除
+
         // --- C 類：每列用「DOM 節點」建構 ---
         const tdItem  = document.createElement("td");
         const tdPrice = document.createElement("td");
@@ -206,6 +213,8 @@ function renderTables(){
         tr.appendChild(tdAmt);
 
       }else{
+        tr.dataset.cmode = "0";
+
         // --- 其他類別：每列用「DOM 節點」建構，確保每欄獨立 ---
         const tdItem  = document.createElement("td");
         const tdPrice = document.createElement("td");
@@ -225,7 +234,7 @@ function renderTables(){
         month.className="inp-month"; month.type="number"; month.value="0"; month.readOnly = true;
         total.className="inp-total"; total.type="number"; total.min="0"; total.step="1"; total.value="0";
 
-        // ✅ 週次一改：月次=ceil(週*4.5)，且「總次數=月次數」（強制回同步），manual=0，use=月次
+        // ✅ 週次一改：月次=ceil(週*4.5)，且「總次數=月次數」（強制回同步）
         const onWeekChange = ()=>{
           const w = toInt(week.value);
           const m = Math.ceil(w * WEEKS_PER_MONTH);
@@ -237,7 +246,7 @@ function renderTables(){
           updateResults();
         };
 
-        // ✅ 總次可自由改：manual=1，之後都用總次計；直到你再次改「週次」才會被重設
+        // ✅ 總次可自由改：manual=1；直到再次改週次才重設
         const onTotalChange = ()=>{
           tr.dataset.manual = "1";
           const t = toInt(total.value);
@@ -274,7 +283,7 @@ function renderTables(){
     container.appendChild(groupBox);
   });
 
-  applyUnitEffects(); // B 單位隱藏 C
+  applyUnitEffects(); // B 單位隱藏 C / BD / BA09/BA09a
 }
 
 /* 單列金額（只讀 data-use） */
@@ -431,7 +440,7 @@ function updateCaregiverSalary(){
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* A/B 切換：B 隱藏 C、薪資不含 C */
+/* A/B 切換：B 隱藏 C、BD、BA09/BA09a；薪資不含 C */
 function bindUnitToggle(){
   const btn=$("#btnUnitToggle"); if(!btn) return;
   btn.addEventListener("click", ()=>{
@@ -441,16 +450,70 @@ function bindUnitToggle(){
     updateResults();
   });
 }
+
+/* ★ 單位效果（本版重寫） */
 function applyUnitEffects(){
-  const btn=$("#btnUnitToggle");
-  if(btn){
+  // 按鈕外觀與文字
+  const btn = $("#btnUnitToggle");
+  if (btn){
     btn.textContent = `${currentUnit}單位`;
     btn.dataset.unit = currentUnit;
     btn.classList.remove("btn-green","btn-orange");
-    btn.classList.add(currentUnit==="A" ? "btn-green" : "btn-orange");
+    btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
   }
+
+  // C 組：B 隱藏、A 顯示（沿用舊邏輯）
   const cBox = document.querySelector('[data-group="C"]');
-  if(cBox){ currentUnit==="B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden"); }
+  if (cBox){
+    currentUnit === "B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden");
+  }
+
+  // ★ BD 組：B 隱藏並歸零；A 顯示並解鎖
+  const bdBox = document.querySelector('[data-group="BD"]');
+  if (bdBox){
+    if (currentUnit === "B"){
+      bdBox.classList.add("hidden");
+      bdBox.querySelectorAll("tbody tr").forEach(tr=>{
+        tr.dataset.use = "0";
+        tr.querySelectorAll("input").forEach(inp=>{
+          inp.value = 0;
+          inp.disabled = true;
+        });
+        const cell = tr.querySelector(".cell-amount");
+        if (cell) cell.textContent = "0";
+      });
+    }else{
+      bdBox.classList.remove("hidden");
+      bdBox.querySelectorAll("tbody tr input").forEach(inp=>{ inp.disabled = false; });
+    }
+  }
+
+  // ★ BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
+  const baTable = document.querySelector('[data-group="BA"] table');
+  if (baTable){
+    const rows = baTable.tBodies[0]?.rows || [];
+    [...rows].forEach(tr=>{
+      const code = tr.dataset.code || "";
+      const isSpecial = (code === "BA09" || code === "BA09a");
+      if (!isSpecial) return;
+
+      if (currentUnit === "B"){
+        tr.classList.add("hidden");
+        tr.dataset.use = "0";
+        const week  = tr.querySelector(".inp-week");
+        const month = tr.querySelector(".inp-month");
+        const total = tr.querySelector(".inp-total");
+        if (week)  { week.value  = 0; week.disabled  = true; }
+        if (month) { month.value = 0; }
+        if (total) { total.value = 0; total.disabled = true; }
+        const cell = tr.querySelector(".cell-amount");
+        if (cell) cell.textContent = "0";
+      }else{
+        tr.classList.remove("hidden");
+        tr.querySelectorAll("input").forEach(inp=>{ inp.disabled = false; });
+      }
+    });
+  }
 }
 
 /* 小工具 */
