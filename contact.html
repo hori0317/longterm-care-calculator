@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PDF 支數自動統計</title>
-  <meta name="description" content="上傳 PDF，統計 BA/AA/GA/SC 支數（本機運算、不上傳）。">
+  <title>PDF 支數自動統計（含 OCR）</title>
+  <meta name="description" content="上傳 PDF，統計 BA/AA/GA/SC 支數；若為掃描影像自動啟用 OCR（chi_tra+eng）。">
 
   <style>
-    /* ====== 限本頁的獨立樣式（不吃全站） ====== */
     :root{--bg:#f6f8fb;--panel:#fff;--text:#0b1220;--muted:#5b6b81;--accent:#2667ff;--br:16px}
     html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
     .wrap{max-width:1120px;margin:0 auto;padding:20px 16px 40px}
@@ -33,9 +32,12 @@
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     details summary{cursor:pointer;color:#102a56}
     #debug{margin-top:12px;padding:10px;border:1px dashed #c7d3ee;background:#f9fbff;border-radius:8px;font-size:12px;white-space:pre-wrap;color:#102a56}
+    .progress{height:10px;background:#eef3ff;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0%;background:#2667ff;transition:width .2s}
+    .hint{display:inline-block;margin-left:8px;color:#845400}
   </style>
 
-  <!-- ① 動態載入 pdf.js（含 worker 失敗回退） -->
+  <!-- 動態載入 PDF.js；若 worker 失敗自動回退 -->
   <script>
     let __pdfReady = null;
     async function ensurePdfjs(){
@@ -49,37 +51,57 @@
             document.head.appendChild(s);
           });
         }
-        // 先嘗試一般 worker
-        try {
+        try{
           pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.worker.min.js";
-          // 快速探針：不是有效 PDF 也會 throw，但可驗 worker 生命週期
           await pdfjsLib.getDocument({ data: new Uint8Array([0x25,0x50,0x44,0x46,0x2D]) }).promise.catch(()=>null);
-          return; // OK
-        } catch(e) { /* fallthrough */ }
-
-        // 回退：停用 worker，改主執行緒解析
-        try {
+        }catch(e){
+          // 回退到同執行緒
           pdfjsLib.GlobalWorkerOptions.workerSrc = "";
           pdfjsLib.GlobalWorkerOptions.workerPort = null;
-        } catch(e){ /* ignore */ }
+        }
       })();
       await __pdfReady;
+    }
+  </script>
+
+  <!-- 動態載入 Tesseract.js（前端 OCR） -->
+  <script>
+    let __ocrReady = null;
+    async function ensureTesseract(){
+      if (__ocrReady) { await __ocrReady; return; }
+      __ocrReady = (async ()=>{
+        if (!window.Tesseract){
+          await new Promise((res, rej)=>{
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+          });
+        }
+        // 使用 chi_tra + eng；tesseract.js 會自動抓取語料
+        Tesseract.setLogging(false);
+      })();
+      await __ocrReady;
     }
   </script>
 </head>
 <body>
   <div class="wrap">
-    <h1>PDF 支數自動統計</h1>
-    <p class="muted">上傳報表，秒統計 <span class="pill">BA</span> / <span class="pill">AA</span> / <span class="pill">GA</span> / <span class="pill">SC</span> 的支數（本機處理）。</p>
+    <h1>PDF 支數自動統計（含 OCR）</h1>
+    <p class="muted">
+      上傳報表，秒統計 <span class="pill">BA</span> / <span class="pill">AA</span> / <span class="pill">GA</span> / <span class="pill">SC</span> 的支數。
+      <span class="hint">若檔案是掃描影像，系統會自動啟用 OCR。</span>
+    </p>
 
     <div class="card row">
       <div>
         <label class="drop" id="drop">
           <input type="file" id="file" accept="application/pdf" />
           <strong>點我選擇 PDF 或拖曳到這裡</strong>
-          <div class="small muted">若為掃描影像 PDF，請先做 OCR。</div>
+          <div class="small muted">建議 1～10 頁；OCR 會較花時間。</div>
         </label>
+
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn" id="demo">載入示範資料</button>
           <button class="btn" id="csv" disabled>匯出 CSV</button>
@@ -89,7 +111,7 @@
         <div class="card small" style="margin-top:12px">
           <details open>
             <summary>AA 單價（僅 AA 在「沒有次數」時用金額換算）</summary>
-            <div class="muted" style="margin:6px 0 8px">規則：先讀「補助/自費 後的整數」當支數；只有 AA 找不到次數才用「金額 ÷ 單價」。</div>
+            <div class="muted" style="margin:6px 0 8px">規則：優先讀「補助/自費 後的整數」作支數；只有 AA 找不到次數才用「金額 ÷ 單價」。</div>
             <div class="grid2">
               <label>AA05（元/支）<br><input class="mono" id="p-AA05" type="number" min="1" value="100" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
               <label>AA06（元/支）<br><input class="mono" id="p-AA06" type="number" min="1" value="200" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
@@ -97,6 +119,12 @@
               <label>AA11（元/支）<br><input class="mono" id="p-AA11" type="number" min="1" value="50"  style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
             </div>
           </details>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div class="small muted">處理進度</div>
+          <div class="progress"><div id="bar" class="bar"></div></div>
+          <div id="status" class="small muted" style="margin-top:6px">待上傳</div>
         </div>
 
         <div id="debug" class="small">偵錯訊息：</div>
@@ -143,8 +171,7 @@
         <summary>解析規則</summary>
         <ul>
           <li>代碼偵測：<code>(BA|AA|GA|SC)\d{2}(?:-\d+)?</code>（例：BA01、BA05-1）。</li>
-          <li>支數＝優先讀「補助 / 自費 後的整數」（如：<code>… BA01 補助 1 $ 260</code> → 支數=1）。</li>
-          <li>僅 AA 無次數時，用「金額 ÷ 單價」換算（四捨五入至小數第 3 位）。</li>
+          <li>支數＝優先讀「補助 / 自費 後的整數」；若 AA 無次數才用「金額 ÷ 單價」（四捨五入至小數第 3 位）。</li>
           <li>GA/SC 不做金額換算；沒有明確次數則記 0。</li>
           <li>所有處理均於本機瀏覽器完成。</li>
         </ul>
@@ -156,7 +183,11 @@
   (function(){
     const $ = s => document.querySelector(s);
     const debug = $('#debug');
+    const bar = $('#bar');
+    const statusEl = $('#status');
+
     function log(s){ debug.textContent += (typeof s==='string'?s:JSON.stringify(s,null,2)) + '\n'; console.log('[pdf-stat]', s); }
+    function setBar(p){ bar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
 
     const fileInput = $('#file');
     const drop = $('#drop');
@@ -171,7 +202,6 @@
       SC: $('#t-SC tbody'),
     };
 
-    // ② AA 單價（僅 AA 用；GA/SC 不換算）
     function getAAUnit(){
       return {
         AA05: Number($('#p-AA05').value || 100),
@@ -181,48 +211,61 @@
       };
     }
 
-    // ③ 讀 PDF 文字（含 worker 失敗回退）
+    // —— 第一階段：用 PDF.js 直接擷取文字
     async function extractPdfText(file){
       await ensurePdfjs();
       const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-      const tryLoad = async (opts)=> {
-        const pdf = await pdfjsLib.getDocument(opts).promise;
-        let total = 0, chunks = [];
-        for (let i=1; i<=pdf.numPages; i++){
+      let texts = [], total = 0;
+      for(let i=1;i<=pdf.numPages;i++){
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent({ normalizeWhitespace:true, disableCombineTextItems:false });
+        const s = content.items.map(it=>it.str||'').join(' ');
+        total += s.length;
+        texts.push(s);
+        setBar(100 * i / pdf.numPages);
+        statusEl.textContent = `PDF 解析中 (${i}/${pdf.numPages})`;
+      }
+      log(`PDF.js 解析：頁數 ${pdf.numPages}，總字元 ${total}`);
+      if (pdf.numPages>0) log(`預覽：${texts[0].slice(0,200).replace(/\s+/g,' ')}`);
+      return { text: texts.join('\n'), charCount: total, pages: pdf.numPages, pdf };
+    }
+
+    // —— 第二階段（回退）：把 PDF 每頁轉 Canvas 圖片 → Tesseract OCR
+    async function ocrPdfToText(pdf){
+      await ensureTesseract();
+      const worker = await Tesseract.createWorker('chi_tra+eng');
+
+      try{
+        let all = [];
+        const total = pdf.numPages;
+        for(let i=1;i<=total;i++){
           const page = await pdf.getPage(i);
-          const content = await page.getTextContent({
-            normalizeWhitespace: true,
-            disableCombineTextItems: false
-          });
-          const s = content.items.map(it=>it.str||"").join(" ");
-          total += s.length;
-          chunks.push(s);
-        }
-        const preview = (chunks[0]||"").slice(0,200).replace(/\s+/g," ");
-        log(`頁數：${pdf.numPages}，總字元：${total}`);
-        log(`預覽：${preview}`);
-        if (total===0) alert("檔內沒有可擷取文字（多半是掃描影像）。請先做 OCR。");
-        return chunks.join("\n");
-      };
+          const viewport = page.getViewport({ scale: 2.0 }); // 拉高解析度以利辨識
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d', { willReadFrequently:true });
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: ctx, viewport }).promise;
 
-      try {
-        // 一般模式（可用 worker）
-        return await tryLoad({ data: arrayBuffer });
-      } catch (e1) {
-        log(`首次載入失敗：${(e1&&e1.message)||e1}\n→ 嘗試停用 worker…`);
-        try {
-          // 回退：強制不使用 worker
-          return await tryLoad({ data: arrayBuffer, workerPort: null });
-        } catch (e2) {
-          log(`回退仍失敗：${(e2&&e2.message)||e2}`);
-          alert("無法讀取 PDF：檔案可能受保護或環境限制。請改用已 OCR 的 PDF，或把檔案內容格式貼給我以便對症調整。");
-          throw e2;
+          // 送 OCR
+          statusEl.textContent = `OCR 執行中（第 ${i}/${total} 頁）…`;
+          setBar(100 * (i-1) / total);
+          const res = await worker.recognize(canvas, { rectangle: null });
+          all.push(res.data.text || '');
+          setBar(100 * i / total);
         }
+        const text = all.join('\n');
+        log(`OCR 完成：總字元 ${text.length}`);
+        log(`預覽：${text.slice(0,200).replace(/\s+/g,' ')}`);
+        return text;
+      } finally {
+        await worker.terminate();
       }
     }
 
-    // ④ 解析四大類（支數）
+    // —— 統計：BA／AA／GA／SC
     function analyze(text){
       const units = getAAUnit();
       const fam = {BA:{}, AA:{}, GA:{}, SC:{}};
@@ -232,46 +275,48 @@
       for(const raw of lines){
         const line = raw.trim();
         if (!line) continue;
-
         const codes = [...line.matchAll(codeRe)];
         if (!codes.length) continue;
 
         for(const m of codes){
-          const fullCode = m[0];              // ex: BA01, BA05-1, AA05
-          const head = fullCode.slice(0,2);   // BA/AA/GA/SC
+          const fullCode = m[0];            // ex: BA01 / BA05-1 / AA05
+          const head = fullCode.slice(0,2); // BA/AA/GA/SC
           const store = fam[head];
-          const seg = line.slice(m.index);    // 從代碼開始到行尾
 
-          // 次數：補助/自費 後的 1~20（允許空白）
+          // 在 OCR 情況下，欄位順序可能位移；取代碼周邊 ±40 字內找次數/金額
+          const start = Math.max(0, m.index - 40);
+          const end   = Math.min(line.length, m.index + fullCode.length + 40);
+          const windowStr = line.slice(start, end);
+
+          // 次數：補助|自費 後 1~20（允許任意空白/標點）
           let count = null;
-          const mCount = seg.match(/(?:補助|自費)\s*([0-9]{1,2})\b/);
-          if (mCount){
-            const v = parseInt(mCount[1],10);
+          const countMatch = windowStr.match(/(?:補\s*助|自\s*費)[^0-9]{0,4}([0-9]{1,2})\b/);
+          if (countMatch){
+            const v = parseInt(countMatch[1],10);
             if (v>=1 && v<=20) count = v;
           }
 
-          // 金額（僅 AA 在無次數時參考：抓 $ 之後或 2~5 位數）
+          // 金額（僅 AA 在無次數時用）：抓 $ 後金額或 2~5 位數
           let amount = null;
           if (count===null && head==='AA'){
-            const mDollar = seg.match(/\$\s*([0-9][0-9,]*)/);
+            const mDollar = windowStr.match(/\$\s*([0-9][0-9,]*)/);
             if (mDollar){
               amount = parseInt(mDollar[1].replace(/,/g,''),10);
             }else{
-              const nums = (seg.match(/\b\d{2,5}\b/g) || []).map(n=>parseInt(n,10));
+              const nums = (windowStr.match(/\b\d{2,5}\b/g) || []).map(n=>parseInt(n,10));
               if (nums.length) amount = nums[nums.length-1];
             }
           }
 
-          // 支數判定
           let zhi = 0;
           if (count!==null){
-            zhi = count;                      // 次數為王
+            zhi = count;
           } else if (head==='AA'){
             const unit = units[fullCode] ?? units[fullCode.slice(0,4)];
             if (unit && amount && amount >= Math.floor(unit*0.5)){
               zhi = Math.round((amount/unit)*1000)/1000;
             }
-          } // BA/GA/SC 無次數就 0，不做金額換算
+          } // BA/GA/SC 無次數就 0
 
           const rec = store[fullCode] || {occ:0,sum:0};
           rec.occ += 1; rec.sum += zhi;
@@ -286,7 +331,6 @@
       return { BA: rows(fam.BA), AA: rows(fam.AA), GA: rows(fam.GA), SC: rows(fam.SC) };
     }
 
-    // ⑤ 渲染 & 匯出
     function renderRows(tbody, rows){
       tbody.innerHTML = '';
       for(const r of rows){
@@ -323,49 +367,82 @@
 
     let last=null;
 
-    async function handleText(text){
-      if(!text || !text.trim()){ alert('沒有擷取到文字（可能是掃描影像）。'); return; }
-      const result = analyze(text);
+    async function handleFile(file){
+      debug.textContent = '偵錯訊息：\n';
+      setBar(0); statusEl.textContent = '準備解析…';
+
+      // 先用 PDF.js 嘗試
+      let pdfResult = null;
+      try{
+        pdfResult = await extractPdfText(file);
+      }catch(e){
+        log('PDF.js 解析失敗，改用 OCR。原因：'+(e?.message||e));
+      }
+
+      let finalText = '';
+      if (pdfResult && pdfResult.charCount > 0){
+        setBar(100); statusEl.textContent = 'PDF 文字擷取完成';
+        finalText = pdfResult.text;
+      } else {
+        // 啟用 OCR（需要 pdf 物件）
+        const pdfObj = pdfResult?.pdf || (await (await pdfjsLib.getDocument({ data: await file.arrayBuffer() })).promise);
+        statusEl.textContent = '未偵測到文字，啟用 OCR…（首次可能較久）';
+        setBar(1);
+        finalText = await ocrPdfToText(pdfObj);
+        setBar(100); statusEl.textContent = 'OCR 完成';
+      }
+
+      if (!finalText.trim()){
+        alert('沒有擷取到內容；請檢查檔案是否為空白或嚴重失真。');
+        return;
+      }
+
+      const result = analyze(finalText);
       renderAll(result);
       last = result;
       btnCSV.disabled = btnJSON.disabled = false;
     }
 
-    // ⑥ 事件：選檔 / 拖放 / 匯出 / 示範
-    fileInput.addEventListener('change', (e)=>{
+    // 選檔
+    fileInput.addEventListener('change', e=>{
       const f = e.target.files && e.target.files[0];
       if(!f) return;
-      const isPdf = (f.type==='application/pdf') || /\.pdf$/i.test(f.name);
-      if(!isPdf){ alert('請選擇 PDF 檔'); return; }
+      const ok = (f.type==='application/pdf') || /\.pdf$/i.test(f.name);
+      if(!ok){ alert('請選擇 PDF 檔'); return; }
       log(`讀取：${f.name} (${f.type||'N/A'}) size=${f.size}`);
-      extractPdfText(f).then(handleText).catch(()=>{ /* 已於函式內提示 */ });
+      handleFile(f);
     });
 
+    // 拖放
     ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.style.background='#eef4ff';}));
     ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.style.background='#f9fbff';}));
-    drop.addEventListener('drop', (e)=>{
+    drop.addEventListener('drop', e=>{
       e.preventDefault();
       const f = e.dataTransfer.files && e.dataTransfer.files[0];
       if(!f) return;
-      const isPdf = (f.type==='application/pdf') || /\.pdf$/i.test(f.name);
-      if(!isPdf){ alert('請拖入 PDF 檔案'); return; }
+      const ok = (f.type==='application/pdf') || /\.pdf$/i.test(f.name);
+      if(!ok){ alert('請拖入 PDF 檔案'); return; }
       log(`拖放：${f.name} (${f.type||'N/A'}) size=${f.size}`);
-      extractPdfText(f).then(handleText).catch(()=>{ /* 已於函式內提示 */ });
+      handleFile(f);
     });
 
+    // 匯出
     btnCSV.addEventListener('click', ()=>{ if(last) exportCSV(last); });
     btnJSON.addEventListener('click', ()=>{ if(last) exportJSON(last); });
 
-    // 示範資料（貼合你截圖的列格式）
+    // 示範資料
     btnDemo.addEventListener('click', ()=>{
       const demo = `嚴雅雯 范秉殷 2025-09-05 5 08:07 ~ 08:42 BA01 補助 1 $ 260
 嚴雅雯 劉德雄 2025-09-01 1 09:43 ~ 10:03 BA01 補助 1 $ 260
 嚴雅雯 賴美女 2025-09-01 1 11:32 ~ 12:04 BA05-1 補助 1 $ 310
-嚴雅雯 賴美女 2025-09-02 2 11:32 ~ 12:04 BA05-1 補助 1 $ 310
 嚴雅雯 江昭輝 2025-09-01 1 14:25 ~ 14:51 BA07 補助 1 $ 325
 嚴雅雯 賴美女 2025/09/06 AA09 補助 770
 嚴雅雯 江昭輝 2025/09/01 AA11 補助 50`;
-      handleText(demo);
+      const result = analyze(demo);
+      renderAll(result);
+      last = result;
+      btnCSV.disabled = btnJSON.disabled = false;
+      setBar(100); statusEl.textContent = '示範資料已載入';
     });
   })();
   </script>
