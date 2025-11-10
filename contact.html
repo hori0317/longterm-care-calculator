@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>聯繫方式｜PDF 支數自動統計</title>
+  <meta name="description" content="把每月 PDF 報表拖進來，快速統計長照 BA/AA 支數（本機運算、不上傳）。">
+
+  <!-- 與首頁一致的樣式（僅載入 CSS；不載入首頁 script.js） -->
+  <link rel="icon" type="image/x-icon" href="YORU.ico" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="topbar-fixed.css" />
+
+  <style>
+    /* 只作用於本頁工具區的命名空間，避免影響其他頁 */
+    .pdfstat{--bg:#0b0f14;--panel:#0f1620;--muted:#9fb0c6;--text:#e6edf5;--accent:#8ab4ff;--ok:#53d769;--warn:#ffcc00;--bad:#ff6b6b;--br:16px}
+    .pdfstat *{box-sizing:border-box}
+    .pdfstat-header{padding:24px 16px;text-align:center}
+    .pdfstat-title{margin:.2rem 0;font-size:1.6rem}
+    .pdfstat-sub{margin:.2rem 0;color:var(--muted)}
+    .pdfstat-wrap{max-width:1120px;margin:0 auto;padding:0 16px 24px}
+    .pdfstat-card{background:var(--panel);border:1px solid rgba(138,180,255,.2);border-radius:var(--br);box-shadow:0 6px 24px rgba(0,0,0,.35);padding:16px;margin:12px 0}
+    .pdfstat-row{display:grid;gap:12px}
+    @media(min-width:920px){.pdfstat-row{grid-template-columns: 1.2fr .8fr}}
+    .pdfstat-uploader{display:grid;gap:12px;align-items:center}
+    .pdfstat-drop{border:2px dashed rgba(138,180,255,.35);border-radius:12px;padding:18px;text-align:center;cursor:pointer}
+    .pdfstat-drop:hover{background:rgba(138,180,255,.06)}
+    .pdfstat input[type=file]{display:none}
+    .pdfstat-btn{appearance:none;border:1px solid rgba(138,180,255,.35);background:#161f2c;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer}
+    .pdfstat-btn:hover{filter:brightness(1.1)}
+    .pdfstat-btn:disabled{opacity:.5;cursor:not-allowed}
+    .pdfstat table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
+    .pdfstat thead th{background:#172130;color:#cfe2ff;text-align:left;padding:10px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .pdfstat tbody td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .pdfstat tbody tr:hover{background:#121a27}
+    .pdfstat-pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#1d2a3c;border:1px solid rgba(255,255,255,.12);font-size:.85rem;color:#cfe2ff}
+    .pdfstat-grid2{display:grid;gap:12px}
+    @media(min-width:720px){.pdfstat-grid2{grid-template-columns:1fr 1fr}}
+    .pdfstat-muted{color:var(--muted)}
+    .pdfstat-mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .pdfstat-right{text-align:right}
+    .pdfstat-small{font-size:.86rem}
+    .pdfstat-tip{border-left:3px solid var(--accent);padding:10px 12px;background:#0f1723;border-radius:8px}
+    .pdfstat details summary{cursor:pointer;color:#cfe2ff}
+    .pdfstat-footer{opacity:.7;font-size:.85rem;text-align:center;margin-top:18px}
+    /* 容器與你網站一致的主體寬度 */
+    main.container{padding:16px}
+  </style>
+</head>
+<body>
+  <!-- 與首頁一致的頂部列（簡化：移除會呼叫 script.js 的按鈕行為） -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" class="logo-link"><img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" /></a>
+      <span class="site-title">hori自製網頁</span>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">額度計算機</a>
+      <a href="payroll.html">薪資計算機</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html" aria-current="page">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+    <div class="actions">
+      <!-- 顯示為靜態按鈕；本頁不綁定首頁 script.js -->
+      <button class="btn pill btn-orange" type="button" disabled title="此頁不提供單位切換">B單位</button>
+      <button class="btn pill btn-green" type="button" disabled>重置</button>
+      <button class="btn pill btn-gray" type="button" onclick="window.print()">列印</button>
+    </div>
+  </header>
+  <div class="divider"></div>
+
+  <main class="container">
+    <!-- 這就是你的 PDF 支數自動統計工具區 -->
+    <section id="pdf-stat" class="pdfstat">
+      <div class="pdfstat-header">
+        <h2 class="pdfstat-title">PDF 支數自動統計</h2>
+        <p class="pdfstat-sub">把每月 PDF 報表拖進來，自動抓 <span class="pdfstat-pill">BA</span> 與 <span class="pdfstat-pill">AA</span> 的支數與小計（本機運算、不上傳）。</p>
+      </div>
+
+      <div class="pdfstat-wrap">
+        <div class="pdfstat-card pdfstat-row">
+          <div>
+            <div class="pdfstat-uploader">
+              <label class="pdfstat-drop" id="ps-drop">
+                <input type="file" id="ps-file" accept="application/pdf" />
+                <strong>點我選擇 PDF 或拖曳到這裡</strong>
+                <div class="pdfstat-muted pdfstat-small">支援多頁 PDF；僅在你的瀏覽器本機運算。</div>
+              </label>
+              <div>
+                <button class="pdfstat-btn" id="ps-demo">載入示範資料</button>
+                <button class="pdfstat-btn" id="ps-export-csv" disabled>匯出 CSV</button>
+                <button class="pdfstat-btn" id="ps-export-json" disabled>匯出 JSON</button>
+              </div>
+            </div>
+
+            <div class="pdfstat-card pdfstat-tip pdfstat-small" style="margin-top:12px">
+              <details open>
+                <summary>AA 單價表（可調整）</summary>
+                <div class="pdfstat-muted" style="margin:6px 0 8px">用金額 ÷ 單價 = 支數（例如 AA05：100 元=1 支、200 元=2 支）。你可依各縣市規範微調。</div>
+                <div class="pdfstat-grid2">
+                  <label>AA05 單價（元）<br><input class="pdfstat-mono" id="ps-price-AA05" type="number" min="1" value="100" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0c1420;color:#e6edf5"></label>
+                  <label>AA06 單價（元）<br><input class="pdfstat-mono" id="ps-price-AA06" type="number" min="1" value="200" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0c1420;color:#e6edf5"></label>
+                  <label>AA09 單價（元）<br><input class="pdfstat-mono" id="ps-price-AA09" type="number" min="1" value="770" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0c1420;color:#e6edf5"></label>
+                  <label>AA11 單價（元）<br><input class="pdfstat-mono" id="ps-price-AA11" type="number" min="1" value="50" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0c1420;color:#e6edf5"></label>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <div>
+            <div class="pdfstat-card">
+              <div class="pdfstat-small pdfstat-muted">分析結果</div>
+              <h3 style="margin:.2rem 0 8px">BA 統計</h3>
+              <table id="ps-ba">
+                <thead><tr><th>碼別</th><th class="pdfstat-right">出現筆數</th><th class="pdfstat-right">Σ 服務次數</th><th class="pdfstat-right">平均每筆</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="pdfstat-card" style="margin-top:12px">
+              <h3 style="margin:.2rem 0 8px">AA 統計</h3>
+              <table id="ps-aa">
+                <thead><tr><th>碼別</th><th>金額分類</th><th class="pdfstat-right">筆數</th><th class="pdfstat-right">換算支數</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="pdfstat-card">
+          <details>
+            <summary>規則說明與正則</summary>
+            <ul class="pdfstat-small">
+              <li>BA：擷取 <code>BA\d{2}(-\d+)?</code>，並讀取「補助/自費」後面的數字為「服務次數」。每一行算一筆出現。</li>
+              <li>AA：擷取 <code>AA\d{2}</code> 與其後方金額（例如 <code>AA05補助100</code>）。依單價表換算為支數，四捨五入至小數第 3 位。</li>
+              <li>所有處理均於本機瀏覽器完成（不會上傳到伺服器）。</li>
+            </ul>
+          </details>
+        </div>
+
+        <div class="pdfstat-footer">© 2025 hori · PDF 支數自動統計</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- PDF.js（本頁需要，首頁若也有引入不影響，因為是不同頁面） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- 元件腳本（命名空間 ps-，避免衝突） -->
+  <script>
+  (function(){
+    const fileInput = document.getElementById('ps-file');
+    const drop = document.getElementById('ps-drop');
+    const demoBtn = document.getElementById('ps-demo');
+    const exportCsvBtn = document.getElementById('ps-export-csv');
+    const exportJsonBtn = document.getElementById('ps-export-json');
+    const baBody = document.querySelector('#ps-ba tbody');
+    const aaBody = document.querySelector('#ps-aa tbody');
+
+    function getPriceMap(){
+      return {
+        AA05: Number(document.getElementById('ps-price-AA05').value||100),
+        AA06: Number(document.getElementById('ps-price-AA06').value||200),
+        AA09: Number(document.getElementById('ps-price-AA09').value||770),
+        AA11: Number(document.getElementById('ps-price-AA11').value||50),
+      };
+    }
+
+    let lastResult = null;
+
+    async function extractPdfText(file){
+      if(!window.pdfjsLib){ alert('PDF.js 尚未載入'); throw new Error('pdfjs missing'); }
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+      let texts = [];
+      for(let i=1;i<=pdf.numPages;i++){
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(it=>it.str).join(' ');
+        texts.push(pageText);
+      }
+      return texts.join('\\n');
+    }
+
+    function parseBA(text){
+      const re = /(BA\\d{2}(?:-\\d+)?)[^\\n\\r]*?(?:補助|自費)\\s*(\\d+)/g;
+      const totals = new Map();
+      const occurs = new Map();
+      let m;
+      while ((m = re.exec(text)) !== null){
+        const code = m[1];
+        const n = parseInt(m[2],10) || 0;
+        totals.set(code, (totals.get(code)||0)+n);
+        occurs.set(code, (occurs.get(code)||0)+1);
+      }
+      return Array.from(totals.entries())
+        .map(([code,sum])=>({code,sum,occ: occurs.get(code)||0, avg: (sum/(occurs.get(code)||1))}))
+        .sort((a,b)=> a.code.localeCompare(b.code));
+    }
+
+    function parseAA(text, priceMap){
+      const re = /(AA\\d{2})[^\\n\\r]*?(?:補助|自費)?\\s*(\\d{2,4})/g;
+      const buckets = new Map();
+      let m;
+      while((m = re.exec(text)) !== null){
+        const code = m[1];
+        const amount = parseFloat(m[2]);
+        if(!priceMap[code]) continue;
+        const key = code+'|'+amount;
+        const rec = buckets.get(key) || {code, amount, count:0};
+        rec.count += 1;
+        buckets.set(key, rec);
+      }
+      return Array.from(buckets.values())
+        .map(r=>({ code:r.code, amount:r.amount, count:r.count,
+          zhi: Math.round((r.amount/priceMap[r.code])*r.count*1000)/1000 }))
+        .sort((a,b)=> a.code===b.code ? a.amount-b.amount : a.code.localeCompare(b.code));
+    }
+
+    function renderBA(rows){
+      baBody.innerHTML = '';
+      for(const r of rows){
+        const tr = document.createElement('tr');
+        tr.innerHTML = \`<td><span class="pdfstat-pill">\${r.code}</span></td>
+                        <td class="pdfstat-right">\${r.occ}</td>
+                        <td class="pdfstat-right">\${r.sum}</td>
+                        <td class="pdfstat-right">\${r.avg.toFixed(3)}</td>\`;
+        baBody.appendChild(tr);
+      }
+    }
+
+    function renderAA(rows){
+      aaBody.innerHTML = '';
+      for(const r of rows){
+        const tr = document.createElement('tr');
+        tr.innerHTML = \`<td><span class="pdfstat-pill">\${r.code}</span></td>
+                        <td>\${r.amount}</td>
+                        <td class="pdfstat-right">\${r.count}</td>
+                        <td class="pdfstat-right">\${r.zhi}</td>\`;
+        aaBody.appendChild(tr);
+      }
+    }
+
+    function exportCSV({ba, aa}){
+      let lines = [];
+      lines.push('【BA統計】');
+      lines.push('碼別,出現筆數,Σ服務次數,平均每筆');
+      for(const r of ba){ lines.push([r.code, r.occ, r.sum, r.avg.toFixed(3)].join(',')); }
+      lines.push('');
+      lines.push('【AA統計】');
+      lines.push('碼別,金額分類,筆數,換算支數');
+      for(const r of aa){ lines.push([r.code, r.amount, r.count, r.zhi].join(',')); }
+      const blob = new Blob([lines.join('\\n')], {type:'text/csv;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'pdf-stat.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJSON(payload){
+      const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'pdf-stat.json'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function handleText(text){
+      const baRows = parseBA(text);
+      const aaRows = parseAA(text, getPriceMap());
+      renderBA(baRows); renderAA(aaRows);
+      lastResult = {ba: baRows, aa: aaRows};
+      exportCsvBtn.disabled = false; exportJsonBtn.disabled = false;
+    }
+
+    fileInput.addEventListener('change', async (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      if(f.type !== 'application/pdf'){ alert('請選擇 PDF 檔'); return; }
+      const text = await extractPdfText(f);
+      handleText(text);
+    });
+
+    ['dragenter','dragover'].forEach(evt=>drop.addEventListener(evt, e=>{
+      e.preventDefault(); drop.style.background='rgba(138,180,255,.06)';
+    }));
+    ['dragleave','drop'].forEach(evt=>drop.addEventListener(evt, e=>{
+      e.preventDefault(); drop.style.background='transparent';
+    }));
+    drop.addEventListener('drop', async (e)=>{
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(file && file.type==='application/pdf'){
+        const text = await extractPdfText(file);
+        handleText(text);
+      }
+    });
+
+    exportCsvBtn.addEventListener('click',()=>{ if(lastResult) exportCSV(lastResult); });
+    exportJsonBtn.addEventListener('click',()=>{ if(lastResult) exportJSON(lastResult); });
+
+    demoBtn.addEventListener('click', ()=>{
+      const demoText = `嚴雅雯范秉殷2025-09-05 5 08:07 ~ 08:42 BA01補助1 260 $
+嚴雅雯江昭輝2025-09-01 1 14:25 ~ 14:51 BA07補助1 325 $
+嚴雅雯張財進2025-09-02 2 08:18 ~ 08:36 BA11補助1 195 $
+嚴雅雯柯水龍2025-09-01 1 15:30 ~ 16:30 BA13補助2 390 $
+嚴雅雯賴美女2025/09/01 AA05補助100
+嚴雅雯賴美女2025/09/02 AA05補助200
+嚴雅雯張財進2025/09/02 AA06補助200
+嚴雅雯賴美女2025/09/06 AA09補助770
+嚴雅雯江昭輝2025/09/01 AA11補助50`;
+      handleText(demoText);
+    });
+  })();
+  </script>
+</body>
+</html>
