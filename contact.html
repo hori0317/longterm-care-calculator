@@ -13,7 +13,7 @@
 
   <style>
     /* 只作用於本頁工具區的命名空間，避免影響其他頁 */
-    .pdfstat{--bg:#0b0f14;--panel:#0f1620;--muted:#9fb0c6;--text:#e6edf5;--accent:#8ab4ff;--ok:#53d769;--warn:#ffcc00;--bad:#ff6b6b;--br:16px}
+    /* 淺色主題（僅限本頁工具區） */ .pdfstat{   --bg:#f6f8fb;   --panel:#ffffff;   --text:#0b1220;   --muted:#5b6b81;   --accent:#2667ff;   --ok:#207a3a;   --warn:#9a7500;   --bad:#c53333;   --br:16px;   background: var(--bg);   border-radius: 16px;   padding: 8px; }  /* 卡片、表格、輸入、按鈕的可讀性與邊界 */ .pdfstat .pdfstat-card{background:var(--panel); border:1px solid #e1e6ef; box-shadow:0 4px 14px rgba(20,40,80,.06)} .pdfstat thead th{background:#eef3ff; color:#102a56; border-bottom:1px solid #d8e2ff} .pdfstat tbody td{border-bottom:1px solid #edf1f7} .pdfstat tbody tr:hover{background:#f5f8ff}  .pdfstat .pdfstat-drop{border-color:#c7d3ee; background:#f9fbff} .pdfstat .pdfstat-drop:hover{background:#eef4ff}  .pdfstat input[type=number]{   background:#ffffff; color:var(--text);   border:1px solid #d7deea; border-radius:8px; padding:8px; } .pdfstat .pdfstat-btn{   background:#f3f6ff; color:#102a56; border:1px solid #c7d3ee; } .pdfstat .pdfstat-btn:hover{filter:none; background:#e7eeff} .pdfstat .pdfstat-pill{background:#eef4ff; color:#102a56; border:1px solid #dbe6ff} .pdfstat .pdfstat-tip{background:#f4f7ff; border-left-color:var(--accent)}
     .pdfstat *{box-sizing:border-box}
     .pdfstat-header{padding:24px 16px;text-align:center}
     .pdfstat-title{margin:.2rem 0;font-size:1.6rem}
@@ -146,7 +146,7 @@
   </main>
 
   <!-- PDF.js（本頁需要，首頁若也有引入不影響，因為是不同頁面） -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- 必要：pdf.js worker（沒有它常會 parse 失敗） --> <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script> <script>   if (window.pdfjsLib) {     pdfjsLib.GlobalWorkerOptions.workerSrc =       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";   } </script>
 
   <!-- 元件腳本（命名空間 ps-，避免衝突） -->
   <script>
@@ -276,7 +276,7 @@
     fileInput.addEventListener('change', async (e)=>{
       const f = e.target.files && e.target.files[0];
       if(!f) return;
-      if(f.type !== 'application/pdf'){ alert('請選擇 PDF 檔'); return; }
+      const isPdf = (f.type === 'application/pdf') || /\.pdf$/i.test(f.name); if(!isPdf){ alert('請選擇 PDF 檔'); return; }
       const text = await extractPdfText(f);
       handleText(text);
     });
@@ -289,7 +289,7 @@
     }));
     drop.addEventListener('drop', async (e)=>{
       const file = e.dataTransfer.files && e.dataTransfer.files[0];
-      if(file && file.type==='application/pdf'){
+      if (file && ((file.type === 'application/pdf') || /\.pdf$/i.test(file.name))) {
         const text = await extractPdfText(file);
         handleText(text);
       }
