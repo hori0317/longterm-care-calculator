@@ -36,6 +36,28 @@
     @media (max-width:860px){ .grid-2{ grid-template-columns:1fr; } }
     .row-mid{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .pill-note{ display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333; }
+
+    /* === PDF 支數小工具（ps- 前綴，避免衝突） === */
+    .ps-muted{color:#5b6b81}.ps-small{font-size:.86rem}
+    .ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    .ps-pill{display:inline-block;padding:0 6px;border:1px solid #dbe6ff;background:#eef4ff;border-radius:999px}
+    .ps-grid{display:grid;gap:12px}@media(min-width:920px){.ps-grid{grid-template-columns:1.1fr .9fr}}
+    .ps-drop{border:2px dashed #c7d3ee;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#f9fbff;display:block}
+    .ps-drop:hover{background:#eef4ff}
+    .ps-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .ps-btn{border:1px solid #c7d3ee;background:#f3f6ff;color:#102a56;padding:8px 12px;border-radius:10px;cursor:pointer}
+    .ps-btn:disabled{opacity:.5;cursor:not-allowed}
+    .ps-box{background:#fff;border:1px solid #e1e6ef;border-radius:12px;padding:12px;margin-top:10px}
+    .ps-progress{height:10px;background:#eef3ff;border-radius:999px;overflow:hidden}
+    .ps-bar{height:100%;width:0;background:#2667ff;transition:width .2s}
+    .ps-h3{margin:.2rem 0 8px}
+    .ps-table{width:100%;border-collapse:collapse}
+    .ps-table thead th{background:#eef3ff;color:#102a56;text-align:left;padding:8px;border-bottom:1px solid #d8e2ff}
+    .ps-table tbody td{padding:8px;border-bottom:1px solid #edf1f7}
+    .ps-table tbody tr:hover{background:#f5f8ff}
+    .ps-right{text-align:right}
+    .ps-rows{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .ps-debug{margin-top:10px;border:1px dashed #c7d3ee;background:#f9fbff;border-radius:8px;padding:8px;white-space:pre-wrap}
   </style>
 </head>
 <body>
@@ -58,7 +80,7 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 導覽（右上角放：列印／全部清空） -->
+  <!-- 導覽 -->
   <header class="topbar">
     <div class="brand">
       <a href="https://github.com/hori07/longterm-care-calculator/tree/main" target="_blank" class="logo-link">
@@ -117,6 +139,78 @@
       </div>
     </section>
 
+    <!-- PDF 支數自動統計（嵌入元件） -->
+    <section class="card ps-card" id="ps-widget">
+      <h2 class="card-title">PDF 支數自動統計（帶入表單）</h2>
+      <p class="ps-muted">上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5）。</p>
+
+      <div class="ps-grid">
+        <div>
+          <label class="ps-drop" id="ps-drop">
+            <input type="file" id="ps-file" accept="application/pdf" />
+            <strong>點我選擇 PDF 或拖曳到這裡</strong>
+            <div class="ps-small ps-muted">無文字層將自動 OCR（繁中＋英文）。</div>
+          </label>
+
+          <div class="ps-btns">
+            <button class="ps-btn" id="ps-demo" type="button">載入示範資料</button>
+            <button class="ps-btn" id="ps-apply" type="button" disabled>帶入上方表單</button>
+            <button class="ps-btn" id="ps-csv" type="button" disabled>匯出 CSV</button>
+            <button class="ps-btn" id="ps-json" type="button" disabled>匯出 JSON</button>
+          </div>
+
+          <details class="ps-box" open>
+            <summary class="ps-small">AA 單價（元/支）</summary>
+            <div class="ps-rows">
+              <label>AA05 <input class="ps-mono" id="ps-AA05" type="number" value="200"></label>
+              <label>AA06 <input class="ps-mono" id="ps-AA06" type="number" value="200"></label>
+              <label>AA09 <input class="ps-mono" id="ps-AA09" type="number" value="770"></label>
+              <label>AA11 <input class="ps-mono" id="ps-AA11" type="number" value="50"></label>
+            </div>
+          </details>
+
+          <div class="ps-box">
+            <div class="ps-small ps-muted">處理進度</div>
+            <div class="ps-progress"><div id="ps-bar" class="ps-bar"></div></div>
+            <div id="ps-status" class="ps-small ps-muted" style="margin-top:6px">待上傳</div>
+          </div>
+
+          <pre id="ps-debug" class="ps-debug">偵錯訊息：</pre>
+        </div>
+
+        <div class="ps-tables">
+          <div class="ps-box">
+            <h3 class="ps-h3">BA 統計</h3>
+            <table id="ps-t-BA" class="ps-table">
+              <thead><tr><th>碼別</th><th class="ps-right">出現筆數</th><th class="ps-right">Σ 支數</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="ps-box">
+            <h3 class="ps-h3">AA 統計</h3>
+            <table id="ps-t-AA" class="ps-table">
+              <thead><tr><th>碼別</th><th class="ps-right">出現筆數</th><th class="ps-right">Σ 支數</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="ps-box">
+            <h3 class="ps-h3">GA 統計</h3>
+            <table id="ps-t-GA" class="ps-table">
+              <thead><tr><th>碼別</th><th class="ps-right">出現筆數</th><th class="ps-right">Σ 支數</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="ps-box">
+            <h3 class="ps-h3">SC 統計</h3>
+            <table id="ps-t-SC" class="ps-table">
+              <thead><tr><th>碼別</th><th class="ps-right">出現筆數</th><th class="ps-right">Σ 支數</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- AA -->
     <section class="card">
       <h2 class="card-title">② AA 本月支數</h2>
@@ -158,11 +252,10 @@
       </table>
     </section>
 
-    <!-- 結果＋勞健保：並排 -->
+    <!-- 結果＋勞健保 -->
     <section class="card">
       <h2 class="card-title">⑥ 薪資結果 & 勞健保扣款</h2>
       <div class="grid-2" style="margin-top:8px;">
-        <!-- 左：薪資彙總 -->
         <div class="card" style="padding:14px;">
           <table class="tbl">
             <tbody>
@@ -178,7 +271,6 @@
           </table>
         </div>
 
-        <!-- 右：勞健保（移入這裡） -->
         <div class="card" style="padding:14px;">
           <div class="row-mid" style="margin-bottom:10px;">
             <span class="pill-note">自動依「拆薪後薪資」抓 ≤ 薪資的最大投保級距</span>
@@ -221,7 +313,7 @@
     </div>
   </footer>
 
-  <!-- 本頁專屬邏輯 -->
+  <!-- 本頁專屬邏輯（原有） -->
   <script>
     (function(){
       const $  = s => document.querySelector(s);
@@ -512,6 +604,222 @@
       document.addEventListener('selectstart', e => e.preventDefault());
       document.addEventListener('copy', e => e.preventDefault());
     })();
+  </script>
+
+  <!-- PDF 解析 + 帶入表單（嵌入元件用） -->
+  <script>
+  (() => {
+    const $ = s => document.querySelector(s);
+    const debug = $('#ps-debug'), bar = $('#ps-bar'), statusEl = $('#ps-status');
+    const log = s => { if(!debug) return; debug.textContent += (typeof s==='string'?s:JSON.stringify(s,null,2))+'\n'; };
+    const why = e => (e&&(e.message||e.reason||e.type||e.name))||String(e);
+    const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
+
+    // 動態載入 pdf.js
+    let pdfReady=null, pdfVer=null;
+    const loadScript = src => new Promise((res,rej)=>{const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s);});
+    async function ensurePdfjs(){
+      if (window.pdfjsLib) return;
+      if (pdfReady){ await pdfReady; return; }
+      pdfReady = (async ()=>{
+        for (const v of ["4.2.67","3.11.174","2.16.105"]){
+          try{
+            await loadScript(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.min.js`);
+            pdfVer=v;
+            try{
+              pdfjsLib.GlobalWorkerOptions.workerSrc=`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.worker.min.js`;
+              await pdfjsLib.getDocument({data:new Uint8Array([0x25,0x50,0x44,0x46])}).promise.catch(()=>null);
+            }catch{ pdfjsLib.GlobalWorkerOptions.workerSrc=""; pdfjsLib.GlobalWorkerOptions.workerPort=null; }
+            return;
+          }catch{}
+        }
+        throw new Error('pdf.js load failed');
+      })();
+      await pdfReady;
+    }
+
+    // Tesseract
+    let ocrReady=null;
+    async function ensureTesseract(){
+      if (window.Tesseract) return;
+      if (ocrReady){ await ocrReady; return; }
+      ocrReady = (async ()=>{ await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js'); Tesseract.setLogging(false); })();
+      await ocrReady;
+    }
+
+    // AA 單價從元件讀
+    function getAAUnit(){ return {
+      AA05:Number($('#ps-AA05')?.value||200),
+      AA06:Number($('#ps-AA06')?.value||200),
+      AA09:Number($('#ps-AA09')?.value||770),
+      AA11:Number($('#ps-AA11')?.value||50),
+    };}
+
+    // 讀 PDF 文字
+    async function extractPdfText(file){
+      await ensurePdfjs();
+      const ab=await file.arrayBuffer();
+      const blob=new Blob([ab],{type:'application/pdf'}), url=URL.createObjectURL(blob);
+      for (const w of [{k:'data',o:{data:ab}}, {k:'url',o:{url}}]){
+        try{
+          const pdf=await pdfjsLib.getDocument(w.o).promise;
+          let texts=[],total=0;
+          for(let i=1;i<=pdf.numPages;i++){
+            const page=await pdf.getPage(i);
+            const c=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false});
+            const s=c.items.map(it=>it.str||'').join(' ');
+            texts.push(s); total+=s.length; setBar(100*i/pdf.numPages);
+            if(statusEl) statusEl.textContent=`PDF 解析中 (${i}/${pdf.numPages}) · ${pdfVer||'pdf.js'}/${w.k}`;
+          }
+          URL.revokeObjectURL(url);
+          log(`PDF.js 成功：頁=${texts.length} 字=${total}`);
+          return {text:texts.join('\n'), pdf, charCount:total};
+        }catch(e){ log(`PDF.js 失敗(${w.k})：`+why(e)); }
+      }
+      throw new Error('pdf.js failed');
+    }
+
+    // OCR 回退
+    async function ocrPdfToText(pdf){
+      await ensureTesseract();
+      const worker=await Tesseract.createWorker('chi_tra+eng');
+      let all=[];
+      for(let i=1;i<=pdf.numPages;i++){
+        const p=await pdf.getPage(i), v=p.getViewport({scale:2});
+        const cvs=document.createElement('canvas'), ctx=cvs.getContext('2d',{willReadFrequently:true});
+        cvs.width=v.width; cvs.height=v.height;
+        await p.render({canvasContext:ctx,viewport:v}).promise;
+        if(statusEl) statusEl.textContent=`OCR 執行中（${i}/${pdf.numPages}）`;
+        const r=await worker.recognize(cvs);
+        all.push(r.data.text||''); setBar(100*i/pdf.numPages);
+      }
+      await worker.terminate(); const t=all.join('\n'); log(`OCR 完成：字=${t.length}`); return t;
+    }
+
+    // 解析
+    function analyze(text){
+      const units=getAAUnit(), fam={BA:{},AA:{},GA:{},SC:{}};
+      const codeRe=/\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g, toHalf=v=>Math.round(v*2)/2;
+      for (const raw of text.split(/\r?\n/)){
+        const line=raw.trim(); if(!line) continue;
+        const codes=[...line.matchAll(codeRe)]; if(!codes.length) continue;
+        for (const m of codes){
+          const full=m[0], head=full.slice(0,2);
+          let zhi=0;
+          if (head==='AA'){
+            const after=line.slice(m.index+full.length, m.index+full.length+32);
+            let amt=null, m1=after.match(/\$\s*([0-9][0-9,]*)/);
+            if (m1) amt=parseInt(m1[1].replace(/,/g,''),10);
+            else { const m2=after.match(/\b([0-9]{2,6})\b/); if(m2) amt=parseInt(m2[1],10); }
+            const unit=units[full]??units[full.slice(0,4)];
+            if(unit && amt) zhi=toHalf(amt/unit);
+            const rec=fam.AA[full]||{occ:0,sum:0}; rec.occ++; rec.sum+=zhi; fam.AA[full]=rec;
+          }else{
+            const ctx=line.slice(Math.max(0,m.index-40), Math.min(line.length,m.index+full.length+40));
+            const c=ctx.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
+            if(c){ const v=parseInt(c[1],10); if(v>=1&&v<=20) zhi=v; }
+            const rec=(fam[head][full]||{occ:0,sum:0}); rec.occ++; rec.sum+=zhi; fam[head][full]=rec;
+          }
+        }
+      }
+      const rows=obj=>Object.entries(obj).map(([code,{occ,sum}])=>({code,occ,sum})).sort((a,b)=>a.code.localeCompare(b.code));
+      return {BA:rows(fam.BA),AA:rows(fam.AA),GA:rows(fam.GA),SC:rows(fam.SC)};
+    }
+
+    // 渲染 & 匯出
+    const tb={BA:$('#ps-t-BA tbody'),AA:$('#ps-t-AA tbody'),GA:$('#ps-t-GA tbody'),SC:$('#ps-t-SC tbody')};
+    function renderRows(tbody, rows){
+      if(!tbody) return;
+      tbody.innerHTML=''; for(const r of rows){
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td><span class="ps-pill">${r.code}</span></td>
+                      <td class="ps-right">${r.occ}</td>
+                      <td class="ps-right">${r.sum.toFixed(3)}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+    function renderAll(res){ renderRows(tb.BA,res.BA); renderRows(tb.AA,res.AA); renderRows(tb.GA,res.GA); renderRows(tb.SC,res.SC); }
+    function exportCSV(res){
+      const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(3)}`).join('\n')+'\n\n';
+      const csv=blk('【BA】',res.BA)+blk('【AA】',res.AA)+blk('【GA】',res.GA)+blk('【SC】',res.SC);
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='pdf-stat.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+    function exportJSON(res){
+      const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:Number(r.sum.toFixed(3))}));
+      const payload={BA:pick(res.BA),AA:pick(res.AA),GA:pick(res.GA),SC:pick(res.SC),meta:{generatedAt:new Date().toISOString()}};
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}), url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='pdf-stat.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // 帶入表單
+    function normalize(code){ return code.replace(/^([A-Z]{2})(\d{2}).*$/,'$1$2'); }
+    function setInput(selector, val, step){
+      const el=document.querySelector(selector);
+      if(!el) return false;
+      if(step) el.setAttribute('step', step);
+      el.value = String(val);
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+      return true;
+    }
+    function applyToPayroll(res){
+      res.AA.forEach(r=> setInput(`input[data-aa="${normalize(r.code)}"]`, r.sum, '0.5'));
+      res.BA.forEach(r=> setInput(`input[data-BA="${normalize(r.code)}"]`, Math.round(r.sum)));
+      res.GA.forEach(r=> setInput(`input[data-GA="${normalize(r.code)}"]`, Math.round(r.sum)));
+      res.SC.forEach(r=> setInput(`input[data-SC="${normalize(r.code)}"]`, Math.round(r.sum)));
+      document.getElementById('tblAA')?.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    // 綁定
+    let last=null;
+    async function handleFile(f){
+      if(!debug) return;
+      debug.textContent='偵錯訊息：\n'; setBar(0); if(statusEl) statusEl.textContent='準備解析…';
+      let pdfRes=null, text='';
+      try{ pdfRes=await extractPdfText(f); }catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
+      if(pdfRes && pdfRes.charCount>0){ text=pdfRes.text; setBar(100); if(statusEl) statusEl.textContent='PDF 文字擷取完成'; }
+      else{
+        try{
+          const pdf= pdfRes?.pdf || await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+          if(statusEl) statusEl.textContent='啟用 OCR…'; setBar(1);
+          text=await ocrPdfToText(pdf); setBar(100); if(statusEl) statusEl.textContent='OCR 完成';
+        }catch(e){ log('OCR 也失敗：'+why(e)); alert('此 PDF 無法解析，可能是加密或損壞。'); return; }
+      }
+      const res=analyze(text); renderAll(res); last=res;
+      $('#ps-apply') && ($('#ps-apply').disabled=false);
+      $('#ps-csv') && ($('#ps-csv').disabled=false);
+      $('#ps-json') && ($('#ps-json').disabled=false);
+    }
+
+    const fileInput=$('#ps-file'), drop=$('#ps-drop');
+    if(fileInput){
+      fileInput.addEventListener('change',e=>{const f=e.target.files?.[0]; if(f) handleFile(f);});
+    }
+    if(drop){
+      ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#eef4ff';}));
+      ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#f9fbff';}));
+      drop.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files?.[0]; if(f) handleFile(f);});
+    }
+    $('#ps-csv')?.addEventListener('click',()=>last&&exportCSV(last));
+    $('#ps-json')?.addEventListener('click',()=>last&&exportJSON(last));
+    $('#ps-apply')?.addEventListener('click',()=> last && applyToPayroll(last));
+    $('#ps-demo')?.addEventListener('click',()=>{
+      const d=`嚴雅雯 賴美女 2025/09/01 AA05 補助 $100
+嚴雅雯 賴美女 2025/09/02 AA05 補助 $200
+嚴雅雯 張財進 2025/09/02 AA06 自費 $200
+嚴雅雯 賴美女 2025/09/06 AA09 補助 $770
+嚴雅雯 江昭輝 2025/09/01 AA11 補助 $50
+嚴雅雯 范秉殷 2025-09-05 BA01 補助 1 $260
+嚴雅雯 江昭輝 2025-09-01 BA07 補助 1 $325
+嚴雅雯 張財進 2025-09-02 BA11 自費 2 $195
+嚴雅雯 李OO   2025-09-03 GA09 補助 3
+嚴雅雯 王OO   2025-09-04 SC09 自費 1`;
+      const r=analyze(d); renderAll(r); last=r; setBar(100); if(statusEl) statusEl.textContent='示範資料已載入';
+      $('#ps-apply') && ($('#ps-apply').disabled=false);
+      $('#ps-csv') && ($('#ps-csv').disabled=false);
+      $('#ps-json') && ($('#ps-json').disabled=false);
+    });
+  })();
   </script>
 </body>
 </html>
