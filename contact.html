@@ -79,7 +79,6 @@
             document.head.appendChild(s);
           });
         }
-        // 使用 chi_tra + eng；tesseract.js 會自動抓取語料
         Tesseract.setLogging(false);
       })();
       await __ocrReady;
@@ -242,14 +241,13 @@
         const total = pdf.numPages;
         for(let i=1;i<=total;i++){
           const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 2.0 }); // 拉高解析度以利辨識
+          const viewport = page.getViewport({ scale: 2.0 });
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d', { willReadFrequently:true });
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           await page.render({ canvasContext: ctx, viewport }).promise;
 
-          // 送 OCR
           statusEl.textContent = `OCR 執行中（第 ${i}/${total} 頁）…`;
           setBar(100 * (i-1) / total);
           const res = await worker.recognize(canvas, { rectangle: null });
@@ -260,6 +258,10 @@
         log(`OCR 完成：總字元 ${text.length}`);
         log(`預覽：${text.slice(0,200).replace(/\s+/g,' ')}`);
         return text;
+      } catch(e){
+        const why = (e && (e.message || e.reason || e.type || e.name)) || String(e);
+        log('OCR 錯誤：' + why);
+        throw e;
       } finally {
         await worker.terminate();
       }
@@ -376,7 +378,8 @@
       try{
         pdfResult = await extractPdfText(file);
       }catch(e){
-        log('PDF.js 解析失敗，改用 OCR。原因：'+(e?.message||e));
+        const why = (e && (e.message || e.reason || e.type || e.name)) || String(e);
+        log('PDF.js 解析失敗，改用 OCR。原因：' + why);
       }
 
       let finalText = '';
@@ -384,8 +387,14 @@
         setBar(100); statusEl.textContent = 'PDF 文字擷取完成';
         finalText = pdfResult.text;
       } else {
-        // 啟用 OCR（需要 pdf 物件）
-        const pdfObj = pdfResult?.pdf || (await (await pdfjsLib.getDocument({ data: await file.arrayBuffer() })).promise);
+        // 正確取得 pdf 物件後再 OCR
+        let pdfObj = pdfResult?.pdf;
+        if (!pdfObj) {
+          await ensurePdfjs();
+          const ab = await file.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: ab });
+          pdfObj = await loadingTask.promise;
+        }
         statusEl.textContent = '未偵測到文字，啟用 OCR…（首次可能較久）';
         setBar(1);
         finalText = await ocrPdfToText(pdfObj);
