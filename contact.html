@@ -1,268 +1,337 @@
-<script>
-(function(){
-  // ＝＝＝＝＝＝＝＝＝＝ 工具：顯示錯誤 / 偵錯資訊 ＝＝＝＝＝＝＝＝＝＝
-  function ensureDebugArea(){
-    let box = document.getElementById('ps-debug');
-    if (box) return box;
-    box = document.createElement('div');
-    box.id = 'ps-debug';
-    box.style.cssText = 'margin-top:12px;padding:10px;border:1px dashed #c7d3ee;background:#f9fbff;border-radius:8px;font-size:12px;white-space:pre-wrap;color:#102a56';
-    box.innerHTML = '偵錯訊息將顯示於此（僅你看得到）：\n';
-    const wrap = document.querySelector('#pdf-stat .pdfstat-wrap');
-    wrap && wrap.appendChild(box);
-    return box;
-  }
-  function logDebug(msg){
-    console.log('[pdf-stat]', msg);
-    const box = ensureDebugArea();
-    box.textContent += (typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2)) + '\n';
-  }
-  function showAlert(msg){
-    alert(msg);
-    logDebug('⚠ ' + msg);
-  }
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PDF 支數自動統計</title>
+  <meta name="description" content="上傳 PDF，統計 BA/AA/GA/SC 支數（本機運算、不上傳）。">
 
-  // ＝＝＝＝＝＝＝＝＝＝ DOM 參照 ＝＝＝＝＝＝＝＝＝＝
-  const fileInput = document.getElementById('ps-file');
-  const drop = document.getElementById('ps-drop');
-  const demoBtn = document.getElementById('ps-demo');
+  <style>
+    /* ====== 限本頁的獨立樣式（不吃全站） ====== */
+    :root{--bg:#f6f8fb;--panel:#fff;--text:#0b1220;--muted:#5b6b81;--accent:#2667ff;--br:16px}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:1120px;margin:0 auto;padding:20px 16px 40px}
+    .card{background:var(--panel);border:1px solid #e1e6ef;border-radius:var(--br);box-shadow:0 4px 14px rgba(20,40,80,.06);padding:16px;margin:12px 0}
+    h1{font-size:1.5rem;margin:.4rem 0}
+    .muted{color:var(--muted)}
+    .row{display:grid;gap:12px}
+    @media(min-width:920px){.row{grid-template-columns:1.15fr .85fr}}
+    .drop{border:2px dashed #c7d3ee;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#f9fbff}
+    .drop:hover{background:#eef4ff}
+    input[type=file]{display:none}
+    .btn{appearance:none;border:1px solid #c7d3ee;background:#f3f6ff;color:#102a56;padding:10px 14px;border-radius:12px;cursor:pointer}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
+    thead th{background:#eef3ff;color:#102a56;text-align:left;padding:10px;border-bottom:1px solid #d8e2ff}
+    tbody td{padding:10px;border-bottom:1px solid #edf1f7}
+    tbody tr:hover{background:#f5f8ff}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;border:1px solid #dbe6ff;font-size:.85rem;color:#102a56}
+    .right{text-align:right}
+    .small{font-size:.86rem}
+    .grid2{display:grid;gap:12px}
+    @media(min-width:720px){.grid2{grid-template-columns:1fr 1fr}}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    details summary{cursor:pointer;color:#102a56}
+    #debug{margin-top:12px;padding:10px;border:1px dashed #c7d3ee;background:#f9fbff;border-radius:8px;font-size:12px;white-space:pre-wrap;color:#102a56}
+  </style>
 
-  const tbl = {
-    BA: document.querySelector('#ps-ba tbody'),
-    AA: document.querySelector('#ps-aa tbody'),
-    GA: document.querySelector('#ps-ga tbody'),
-    SC: document.querySelector('#ps-sc tbody'),
-  };
+  <!-- 動態載入 pdf.js（穩定） -->
+  <script>
+    async function ensurePdfjs(){
+      if (window.pdfjsLib) return;
+      await new Promise((res, rej)=>{
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.min.js";
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.worker.min.js";
+    }
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>PDF 支數自動統計</h1>
+    <p class="muted">上傳報表，秒統計 <span class="pill">BA</span> / <span class="pill">AA</span> / <span class="pill">GA</span> / <span class="pill">SC</span> 的支數（本機處理）。</p>
 
-  // ＝＝＝＝＝＝＝＝＝＝ AA 單價（僅 AA 用；GA/SC 不換算） ＝＝＝＝＝＝＝＝＝＝
-  function getPriceMap(){
-    return {
-      AA05: Number(document.getElementById('ps-price-AA05')?.value||100),
-      AA06: Number(document.getElementById('ps-price-AA06')?.value||200),
-      AA09: Number(document.getElementById('ps-price-AA09')?.value||770),
-      AA11: Number(document.getElementById('ps-price-AA11')?.value||50),
+    <div class="card row">
+      <div>
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept="application/pdf" />
+          <strong>點我選擇 PDF 或拖曳到這裡</strong>
+          <div class="small muted">若為掃描影像 PDF，請先做 OCR。</div>
+        </label>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="demo">載入示範資料</button>
+          <button class="btn" id="csv" disabled>匯出 CSV</button>
+          <button class="btn" id="json" disabled>匯出 JSON</button>
+        </div>
+
+        <div class="card small" style="margin-top:12px">
+          <details open>
+            <summary>AA 單價（僅 AA 無「次數」時用金額換算）</summary>
+            <div class="muted" style="margin:6px 0 8px">規則：先讀「補助/自費 後的整數」當支數；若 AA 找不到次數，才用「金額 ÷ 單價」。</div>
+            <div class="grid2">
+              <label>AA05（元/支）<br><input class="mono" id="p-AA05" type="number" min="1" value="100" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
+              <label>AA06（元/支）<br><input class="mono" id="p-AA06" type="number" min="1" value="200" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
+              <label>AA09（元/支）<br><input class="mono" id="p-AA09" type="number" min="1" value="770" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
+              <label>AA11（元/支）<br><input class="mono" id="p-AA11" type="number" min="1" value="50"  style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
+            </div>
+          </details>
+        </div>
+
+        <div id="debug" class="small">偵錯訊息：</div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="small muted">分析結果</div>
+          <h3 style="margin:.2rem 0 8px">BA 統計</h3>
+          <table id="t-BA">
+            <thead><tr><th>碼別</th><th class="right">出現筆數</th><th class="right">Σ 支數</th><th class="right">平均每筆</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin:.2rem 0 8px">AA 統計</h3>
+          <table id="t-AA">
+            <thead><tr><th>碼別</th><th class="right">出現筆數</th><th class="right">Σ 支數</th><th class="right">平均每筆</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin:.2rem 0 8px">GA 統計</h3>
+          <table id="t-GA">
+            <thead><tr><th>碼別</th><th class="right">出現筆數</th><th class="right">Σ 支數</th><th class="right">平均每筆</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin:.2rem 0 8px">SC 統計</h3>
+          <table id="t-SC">
+            <thead><tr><th>碼別</th><th class="right">出現筆數</th><th class="right">Σ 支數</th><th class="right">平均每筆</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card small">
+      <details>
+        <summary>解析規則</summary>
+        <ul>
+          <li>代碼偵測：<code>(BA|AA|GA|SC)\d{2}(?:-\d+)?</code>，例如 BA01、BA05-1。</li>
+          <li>支數優先用「補助/自費 後的整數」；例如：<code>… BA01 補助 1 $ 260</code> → 支數=1。</li>
+          <li>只有 AA 找不到次數時，才用「金額 ÷ 單價」換算（四捨五入到小數第 3 位）。</li>
+          <li>GA/SC 不做金額換算；若沒有明確次數就記 0。</li>
+          <li>本工具僅在瀏覽器本機運算，不上傳檔案。</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const $ = s => document.querySelector(s);
+    const debug = $('#debug');
+    function log(s){ debug.textContent += (typeof s==='string'?s:JSON.stringify(s,null,2)) + '\n'; console.log('[pdf-stat]', s); }
+
+    const fileInput = $('#file');
+    const drop = $('#drop');
+    const btnDemo = $('#demo');
+    const btnCSV = $('#csv');
+    const btnJSON = $('#json');
+
+    const tBodies = {
+      BA: $('#t-BA tbody'),
+      AA: $('#t-AA tbody'),
+      GA: $('#t-GA tbody'),
+      SC: $('#t-SC tbody'),
     };
-  }
 
-  // ＝＝＝＝＝＝＝＝＝＝ 核心：讀取 PDF 文字（強化版） ＝＝＝＝＝＝＝＝＝＝
-  async function extractPdfText(file){
-    await ensurePdfjs(); // ← 一定要等載入完成
-    try{
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({
-        data: arrayBuffer,
-        // 某些 PDF 有奇怪字型，以下選項可提升擷取穩定度
-        standardFontDataUrl: undefined
-      }).promise;
+    function getAAUnit(){
+      return {
+        AA05: Number($('#p-AA05').value || 100),
+        AA06: Number($('#p-AA06').value || 200),
+        AA09: Number($('#p-AA09').value || 770),
+        AA11: Number($('#p-AA11').value || 50),
+      };
+    }
 
-      let texts = [];
-      let totalChars = 0;
+    async function extractPdfText(file){
+      await ensurePdfjs();
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
 
+      let texts = [], totalChars = 0;
       for(let i=1;i<=pdf.numPages;i++){
         const page = await pdf.getPage(i);
-        const content = await page.getTextContent({
-          normalizeWhitespace: true,        // 正規化空白
-          disableCombineTextItems: false    // 讓 pdf.js 自動合併片段
-        });
-        const pageText = content.items.map(it=>it.str || '').join(' ');
+        const content = await page.getTextContent({ normalizeWhitespace:true, disableCombineTextItems:false });
+        const pageText = content.items.map(it=>it.str||'').join(' ');
         totalChars += pageText.length;
         texts.push(pageText);
       }
-
-      logDebug(`已讀取頁數：${pdf.numPages}；總字元數：${totalChars}`);
-      if (pdf.numPages > 0){
-        const preview = texts[0].slice(0, 200).replace(/\s+/g,' ');
-        logDebug(`第 1 頁前 200 字預覽：\n${preview}`);
-      }
-
-      if (totalChars === 0){
-        showAlert('檔內沒有可擷取的文字（很可能是掃描影像 PDF）。請先做 OCR 後再上傳。');
-      }
+      log(`頁數：${pdf.numPages}，總字元：${totalChars}`);
+      if (pdf.numPages>0) log(`預覽：${texts[0].slice(0,200).replace(/\s+/g,' ')}`);
+      if (totalChars===0) alert('檔內沒有可擷取文字（多半是掃描影像）。請先做 OCR。');
       return texts.join('\n');
-    }catch(err){
-      console.error(err);
-      showAlert('無法讀取 PDF：可能是受保護或檔案損毀。');
-      throw err;
     }
-  }
 
-  // ＝＝＝＝＝＝＝＝＝＝ 解析四大類（支數） ＝＝＝＝＝＝＝＝＝＝
-  function analyze(text){
-    const priceMap = getPriceMap();
-    const families = {BA:{}, AA:{}, GA:{}, SC:{}};
-    const lines = text.split(/\r?\n/);
-    const codeRe = /\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g;
+    function analyze(text){
+      const units = getAAUnit();
+      const fam = {BA:{}, AA:{}, GA:{}, SC:{}};
+      const lines = text.split(/\r?\n/);
+      const codeRe = /\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g;
 
-    for(const raw of lines){
-      const line = raw.trim();
-      if(!line) continue;
+      for(const raw of lines){
+        const line = raw.trim();
+        if (!line) continue;
 
-      const matches = [...line.matchAll(codeRe)];
-      if (!matches.length) continue;
+        const codes = [...line.matchAll(codeRe)];
+        if (!codes.length) continue;
 
-      for(const m of matches){
-        const fullCode = m[0];            // 例如 BA01 / AA05 / GAxx / SCxx
-        const fam = fullCode.slice(0,2);  // BA / AA / GA / SC
-        const map = families[fam];
-        const seg = line.slice(m.index);  // 該碼起算到行尾的片段
+        for(const m of codes){
+          const fullCode = m[0];       // ex: BA01, BA05-1, AA05
+          const head = fullCode.slice(0,2); // BA/AA/GA/SC
+          const store = fam[head];
+          const seg = line.slice(m.index); // 從代碼開始到行尾的片段
 
-        // 1) 次數（補助/自費 後 1~20）
-        let count = null;
-        const countMatch = seg.match(/(?:補助|自費)\s*([0-9]{1,2})/);
-        if (countMatch){
-          const v = parseInt(countMatch[1],10);
-          if (v >= 1 && v <= 20) count = v;
-        }
-
-        // 2) 金額（僅供 AA 無次數時換算）
-        let amount = null;
-        if (count === null && fam === 'AA'){
-          const ints = (seg.match(/\d+/g) || []).map(n=>parseInt(n,10));
-          const candidates = ints.filter(n => n >= 30); // 金額常 >= 30
-          if (candidates.length){
-            amount = candidates[candidates.length - 1]; // 取較靠後的
+          // 次數：補助/自費 後的 1~20（容許空白）
+          let count = null;
+          const mCount = seg.match(/(?:補助|自費)\s*([0-9]{1,2})\b/);
+          if (mCount){
+            const v = parseInt(mCount[1],10);
+            if (v>=1 && v<=20) count = v;
           }
-        }
 
-        // 3) 支數判定
-        let zhi = 0;
-        if (count !== null){
-          zhi = count; // 次數優先
-        } else if (fam === 'AA') {
-          const unit = priceMap[fullCode] ?? priceMap[fullCode.slice(0,4)];
-          if (unit && amount && amount >= Math.floor(unit*0.5)){
-            zhi = Math.round((amount / unit) * 1000) / 1000;
+          // 金額（僅 AA 在無次數時參考；抓 $ 之後的金額或 2~5 位數）
+          let amount = null;
+          if (count===null && head==='AA'){
+            const mDollar = seg.match(/\$\s*([0-9][0-9,]*)/);
+            if (mDollar){
+              amount = parseInt(mDollar[1].replace(/,/g,''),10);
+            }else{
+              const nums = (seg.match(/\b\d{2,5}\b/g) || []).map(n=>parseInt(n,10));
+              if (nums.length) amount = nums[nums.length-1];
+            }
           }
-        } // BA/GA/SC 沒有次數就 0，不做金額換算
 
-        const rec = map[fullCode] || {occ:0, sum:0};
-        rec.occ += 1;
-        rec.sum += zhi;
-        map[fullCode] = rec;
+          let zhi = 0;
+          if (count!==null){
+            zhi = count;
+          } else if (head==='AA'){
+            const unit = units[fullCode] ?? units[fullCode.slice(0,4)];
+            if (unit && amount && amount >= Math.floor(unit*0.5)){
+              zhi = Math.round((amount/unit)*1000)/1000;
+            }
+          } // 其餘（BA/GA/SC）無次數就 0
+
+          const rec = store[fullCode] || {occ:0,sum:0};
+          rec.occ += 1; rec.sum += zhi;
+          store[fullCode] = rec;
+        }
+      }
+
+      function rows(obj){
+        return Object.entries(obj)
+          .map(([code,{occ,sum}])=>({code,occ,sum,avg:occ?sum/occ:0}))
+          .sort((a,b)=>a.code.localeCompare(b.code));
+      }
+      return { BA: rows(fam.BA), AA: rows(fam.AA), GA: rows(fam.GA), SC: rows(fam.SC) };
+    }
+
+    function renderRows(tbody, rows){
+      tbody.innerHTML = '';
+      for(const r of rows){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><span class="pill">${r.code}</span></td>
+                        <td class="right">${r.occ}</td>
+                        <td class="right">${r.sum.toFixed(3)}</td>
+                        <td class="right">${r.avg.toFixed(3)}</td>`;
+        tbody.appendChild(tr);
       }
     }
 
-    function toRows(obj){
-      return Object.entries(obj)
-        .map(([code, {occ, sum}])=>({code, occ, sum, avg: occ ? (sum/occ) : 0}))
-        .sort((a,b)=> a.code.localeCompare(b.code));
+    function renderAll(result){
+      renderRows(tBodies.BA, result.BA);
+      renderRows(tBodies.AA, result.AA);
+      renderRows(tBodies.GA, result.GA);
+      renderRows(tBodies.SC, result.SC);
     }
 
-    return {
-      BA: toRows(families.BA),
-      AA: toRows(families.AA),
-      GA: toRows(families.GA),
-      SC: toRows(families.SC),
-    };
-  }
-
-  // ＝＝＝＝＝＝＝＝＝＝ 渲染 & 匯出 ＝＝＝＝＝＝＝＝＝＝
-  function renderRows(tbody, rows){
-    tbody.innerHTML = '';
-    for(const r of rows){
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        `<td><span class="pdfstat-pill">${r.code}</span></td>
-         <td class="pdfstat-right">${r.occ}</td>
-         <td class="pdfstat-right">${r.sum.toFixed(3)}</td>
-         <td class="pdfstat-right">${r.avg.toFixed(3)}</td>`;
-      tbody.appendChild(tr);
+    function exportCSV(res){
+      const blk = (title, rows)=>{
+        let s = `${title}\n碼別,出現筆數,Σ支數,平均每筆\n`;
+        rows.forEach(r=>{ s += `${r.code},${r.occ},${r.sum.toFixed(3)},${r.avg.toFixed(3)}\n`; });
+        s += '\n'; return s;
+      };
+      const csv = blk('【BA 統計】',res.BA)+blk('【AA 統計】',res.AA)+blk('【GA 統計】',res.GA)+blk('【SC 統計】',res.SC);
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+      const url = URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download='pdf-stat-all.csv'; a.click(); URL.revokeObjectURL(url);
     }
-  }
-  function renderAll(result){
-    renderRows(tbl.BA, result.BA);
-    renderRows(tbl.AA, result.AA);
-    renderRows(tbl.GA, result.GA);
-    renderRows(tbl.SC, result.SC);
-  }
-  function exportCSVAll(result){
-    function block(title, rows){
-      let s = `${title}\n碼別,出現筆數,Σ支數,平均每筆\n`;
-      rows.forEach(r=>{ s += `${r.code},${r.occ},${r.sum.toFixed(3)},${r.avg.toFixed(3)}\n`; });
-      s += '\n';
-      return s;
+    function exportJSON(res){
+      const blob = new Blob([JSON.stringify(res,null,2)],{type:'application/json'});
+      const url = URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download='pdf-stat-all.json'; a.click(); URL.revokeObjectURL(url);
     }
-    const csv =
-      block('【BA 統計】', result.BA) +
-      block('【AA 統計】', result.AA) +
-      block('【GA 統計】', result.GA) +
-      block('【SC 統計】', result.SC);
 
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'pdf-stat-all.csv'; a.click();
-    URL.revokeObjectURL(url);
-  }
-  function exportJSONAll(result){
-    const blob = new Blob([JSON.stringify(result,null,2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'pdf-stat-all.json'; a.click();
-    URL.revokeObjectURL(url);
-  }
+    let last=null;
 
-  let last = null;
-
-  async function handleText(text){
-    if (!text || !text.trim()){
-      showAlert('沒有擷取到文字內容：多半是掃描影像 PDF，請先做 OCR。');
-      return;
+    async function handleText(text){
+      if(!text || !text.trim()){ alert('沒有擷取到文字（可能是掃描影像）。'); return; }
+      const result = analyze(text);
+      renderAll(result);
+      last = result;
+      btnCSV.disabled = btnJSON.disabled = false;
     }
-    const result = analyze(text);
-    renderAll(result);
-    last = result;
-    // 啟用匯出
-    ['ps-export-csv','ps-export-json'].forEach(id=>{
-      const el = document.getElementById(id);
-      if (el) el.disabled = false;
-    });
-  }
 
-  // ＝＝＝＝＝＝＝＝＝＝ 事件：選檔 / 拖放 / 匯出 / 示範 ＝＝＝＝＝＝＝＝＝＝
-  fileInput.addEventListener('change', async (e)=>{
-    const f = e.target.files && e.target.files[0];
-    if(!f) return;
-    const isPdf = (f.type === 'application/pdf') || /\.pdf$/i.test(f.name);
-    if(!isPdf){ showAlert('請選擇 PDF 檔'); return; }
-    logDebug(`開始讀取：${f.name}（type=${f.type||'N/A'} size=${f.size}）`);
-    const text = await extractPdfText(f);
-    handleText(text);
-  });
-
-  ['dragenter','dragover'].forEach(evt=>drop.addEventListener(evt, e=>{
-    e.preventDefault(); drop.style.background='#eef4ff';
-  }));
-  ['dragleave','drop'].forEach(evt=>drop.addEventListener(evt, e=>{
-    e.preventDefault(); drop.style.background='#f9fbff';
-  }));
-  drop.addEventListener('drop', async (e)=>{
-    e.preventDefault();
-    const file = e.dataTransfer.files && e.dataTransfer.files[0];
-    if(file && ((file.type === 'application/pdf') || /\.pdf$/i.test(file.name))){
-      logDebug(`拖放：${file.name}（type=${file.type||'N/A'} size=${file.size}）`);
-      const text = await extractPdfText(file);
+    // 選檔
+    fileInput.addEventListener('change', async (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      const isPdf = (f.type==='application/pdf') || /\.pdf$/i.test(f.name);
+      if(!isPdf){ alert('請選擇 PDF 檔'); return; }
+      log(`讀取：${f.name} (${f.type||'N/A'}) size=${f.size}`);
+      const text = await extractPdfText(f);
       handleText(text);
-    }else{
-      showAlert('請拖入 PDF 檔案');
-    }
-  });
+    });
 
-  document.getElementById('ps-export-csv').addEventListener('click', ()=>{ if(last) exportCSVAll(last); });
-  document.getElementById('ps-export-json').addEventListener('click', ()=>{ if(last) exportJSONAll(last); });
+    // 拖放
+    ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.style.background='#eef4ff';}));
+    ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.style.background='#f9fbff';}));
+    drop.addEventListener('drop', async (e)=>{
+      e.preventDefault();
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(file && ((file.type==='application/pdf') || /\.pdf$/i.test(file.name))){
+        log(`拖放：${file.name} (${file.type||'N/A'}) size=${file.size}`);
+        const text = await extractPdfText(file);
+        handleText(text);
+      }else{
+        alert('請拖入 PDF 檔案');
+      }
+    });
 
-  demoBtn.addEventListener('click', ()=>{
-    const demo = `嚴雅雯范秉殷2025-09-05 5 08:07 ~ 08:42 BA01補助1 260 $
-嚴雅雯江昭輝2025-09-01 1 14:25 ~ 14:51 BA07補助1 325 $
-嚴雅雯張財進2025-09-02 2 08:18 ~ 08:36 BA11補助1 195 $
-嚴雅雯柯水龍2025-09-01 1 15:30 ~ 16:30 BA13補助2 390 $
-嚴雅雯賴美女2025/09/01 AA05補助100
-嚴雅雯賴美女2025/09/02 AA05補助200
-嚴雅雯張財進2025/09/02 AA06補助200
-嚴雅雯賴美女2025/09/06 AA09補助770
-嚴雅雯江昭輝2025/09/01 AA11補助50`;
-    handleText(demo);
-  });
+    // 匯出
+    btnCSV.addEventListener('click', ()=>{ if(last) exportCSV(last); });
+    btnJSON.addEventListener('click', ()=>{ if(last) exportJSON(last); });
 
-  // 頁面載入即建立偵錯面板
-  ensureDebugArea();
-})();
-</script>
+    // 示範資料（等同你截圖結構）
+    btnDemo.addEventListener('click', ()=>{
+      const demo = `嚴雅雯 范秉殷 2025-09-05 5 08:07 ~ 08:42 BA01 補助 1 $ 260
+嚴雅雯 劉德雄 2025-09-01 1 09:43 ~ 10:03 BA01 補助 1 $ 260
+嚴雅雯 賴美女 2025-09-01 1 11:32 ~ 12:04 BA05-1 補助 1 $ 310
+嚴雅雯 賴美女 2025-09-02 2 11:32 ~ 12:04 BA05-1 補助 1 $ 310
+嚴雅雯 江昭輝 2025-09-01 1 14:25 ~ 14:51 BA07 補助 1 $ 325
+嚴雅雯 賴美女 2025/09/06 AA09 補助 770
+嚴雅雯 江昭輝 2025/09/01 AA11 補助 50`;
+      handleText(demo);
+    });
+  })();
+  </script>
+</body>
+</html>
