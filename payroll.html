@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>薪資計算機</title>
-  <meta name="description" content="輸入本月 AA / BA / GA / SC 的支數，計總額並依比例拆薪；右上角提供列印與清空。右側即時比對勞健保扣款，得出實領。">
+  <meta name="description" content="輸入本月 AA / BA / GA / SC 的支數，計總額並依比例拆薪；可從 PDF 自動統計並選擇是否同步，右側即時比對勞健保扣款，得出實領。">
 
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
@@ -58,7 +58,7 @@
     .ps-right{text-align:right}
     .ps-rows{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
     .ps-debug{margin-top:10px;border:1px dashed #c7d3ee;background:#f9fbff;border-radius:8px;padding:8px;white-space:pre-wrap}
-    .ps-syncbar{border-color:#c7e7c7;background:#f6fff6} /* 同步確認條 */
+    .ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
   </style>
 </head>
 <body>
@@ -160,12 +160,12 @@
             <button class="ps-btn" id="ps-json" type="button" disabled>匯出 JSON</button>
           </div>
 
-          <!-- 自動同步選擇 -->
+          <!-- 自動同步開關 -->
           <label class="ps-small ps-muted" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;">
             <input id="ps-auto-sync" type="checkbox"> 匯入後自動同步到下方支數
           </label>
 
-          <!-- 同步確認條 -->
+          <!-- 同步確認條（預設隱藏；匯入成功時顯示） -->
           <div id="ps-syncbar" class="ps-syncbar ps-box" style="display:none;align-items:center;justify-content:space-between;gap:8px;">
             <div class="ps-small">
               已解析出支數，要同步到下方表格（AA/BA/GA/SC）並立即計算薪資嗎？
@@ -226,7 +226,7 @@
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">AA 小計</th><th class="right" id="sumAA">0</th></tr></tfoot>
       </table>
-      <p class="hint" style="margin-top:8px;">單價：AA05 200、AA06 200、AA08 385、AA09 770、AA11 50。</p>
+      <p class="hint" style="margin-top:8px;">單價：AA05 200、AA06 200、AA07 760、AA08 385、AA09 770、AA11 50。</p>
     </section>
 
     <!-- BA -->
@@ -330,7 +330,7 @@
 
       /* === 單價（固定） === */
       const PRICE = {
-        AA: { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 },
+        AA: { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 },
         BA: [
           { code:"BA01", name:"基本身體清潔", price:260 },
           { code:"BA02", name:"基本日常照顧", price:195 },
@@ -604,7 +604,7 @@
     })();
   </script>
 
-  <!-- PDF 解析 + 帶入表單（嵌入元件用；AA單價固定：05/06/08/09/11） -->
+  <!-- PDF 解析 + 帶入表單（含 AA07 與「同步前清空」） -->
   <script>
   (() => {
     const $ = s => document.querySelector(s);
@@ -613,18 +613,7 @@
     const why = e => (e&&(e.message||e.reason||e.type||e.name))||String(e);
     const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
 
-    // ====== 自動同步開關與確認條 ======
-    const autoSyncEl = document.getElementById('ps-auto-sync');
-    const syncBar     = document.getElementById('ps-syncbar');
-    const syncYesBtn  = document.getElementById('ps-sync-yes');
-    const syncNoBtn   = document.getElementById('ps-sync-no');
-    const AUTO_KEY = 'ps-auto-sync';
-    function loadAutoSync(){ try{ return localStorage.getItem(AUTO_KEY)==='1'; }catch(e){ return false; } }
-    function saveAutoSync(v){ try{ localStorage.setItem(AUTO_KEY, v?'1':'0'); }catch(e){} }
-    if (autoSyncEl){ autoSyncEl.checked = loadAutoSync(); autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked)); }
-    function showSyncBar(on){ if (syncBar) syncBar.style.display = on ? 'flex' : 'none'; }
-
-    // ====== 動態載入 pdf.js（多版本後援） ======
+    // 動態載入 pdf.js（多版本後援）
     let pdfReady=null, pdfVer=null;
     const loadScript = src => new Promise((res,rej)=>{const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s);});
     async function ensurePdfjs(){
@@ -647,7 +636,7 @@
       await pdfReady;
     }
 
-    // ====== Tesseract（OCR 後援） ======
+    // Tesseract（OCR 後援）
     let ocrReady=null;
     async function ensureTesseract(){
       if (window.Tesseract) return;
@@ -656,8 +645,10 @@
       await ocrReady;
     }
 
-    // 固定 AA 單價
-    function getAAUnit(){ return { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 }; }
+    // 固定 AA 單價（含 AA07）
+    function getAAUnit(){
+      return { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 };
+    }
 
     // 讀 PDF → 文字
     async function extractPdfText(file){
@@ -756,7 +747,14 @@
       const a=document.createElement('a'); a.href=url; a.download='pdf-stat.json'; a.click(); URL.revokeObjectURL(url);
     }
 
-    // 帶入表單
+    // —— 同步到表單（先清空 → 再寫入） —— //
+    function resetPayrollInputs(){
+      document.querySelectorAll('#tblAA input[type="number"][data-aa], #tblBA input[type="number"][data-BA], #tblGA input[type="number"][data-GA], #tblSC input[type="number"][data-SC]')
+        .forEach(inp=>{
+          inp.value = '0';
+          inp.dispatchEvent(new Event('input',{bubbles:true}));
+        });
+    }
     function normalize(code){ return code.replace(/^([A-Z]{2})(\d{2}).*$/,'$1$2'); }
     function setInput(selector, val, step){
       const el=document.querySelector(selector);
@@ -767,11 +765,41 @@
       return true;
     }
     function applyToPayroll(res){
+      resetPayrollInputs(); // ← 同步前自動清空
+
+      // AA：維持 0.5 進位
       res.AA.forEach(r=> setInput(`input[data-aa="${normalize(r.code)}"]`, r.sum, '0.5'));
+      // BA/GA/SC：整數
       res.BA.forEach(r=> setInput(`input[data-BA="${normalize(r.code)}"]`, Math.round(r.sum)));
       res.GA.forEach(r=> setInput(`input[data-GA="${normalize(r.code)}"]`, Math.round(r.sum)));
       res.SC.forEach(r=> setInput(`input[data-SC="${normalize(r.code)}"]`, Math.round(r.sum)));
+
       document.getElementById('tblAA')?.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    // —— 自動/確認同步 —— //
+    const autoSyncEl = document.getElementById('ps-auto-sync');
+    const syncBar     = document.getElementById('ps-syncbar');
+    const syncYesBtn  = document.getElementById('ps-sync-yes');
+    const syncNoBtn   = document.getElementById('ps-sync-no');
+
+    const AUTO_KEY = 'ps-auto-sync';
+    function loadAutoSync(){ try{ return localStorage.getItem(AUTO_KEY)==='1'; }catch(e){ return false; } }
+    function saveAutoSync(v){ try{ localStorage.setItem(AUTO_KEY, v?'1':'0'); }catch(e){} }
+    function showSyncBar(on){ if(syncBar) syncBar.style.display = on ? 'flex' : 'none'; }
+
+    if (autoSyncEl){
+      autoSyncEl.checked = loadAutoSync();
+      autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked));
+    }
+    if (syncYesBtn){
+      syncYesBtn.addEventListener('click', ()=>{
+        if (last){ applyToPayroll(last); }
+        showSyncBar(false);
+      });
+    }
+    if (syncNoBtn){
+      syncNoBtn.addEventListener('click', ()=> showSyncBar(false));
     }
 
     // 綁定
@@ -794,11 +822,11 @@
       $('#ps-csv') && ($('#ps-csv').disabled=false);
       $('#ps-json') && ($('#ps-json').disabled=false);
 
-      // 同步控制：自動或顯示確認條
+      // 匯入完成 → 決定是否同步
       if (autoSyncEl && autoSyncEl.checked){
         applyToPayroll(last);
         showSyncBar(false);
-      }else{
+      } else {
         showSyncBar(true);
       }
     }
@@ -819,9 +847,10 @@
       const d=`嚴雅雯 賴美女 2025/09/01 AA05 補助 $100
 嚴雅雯 賴美女 2025/09/02 AA05 補助 $200
 嚴雅雯 張財進 2025/09/02 AA06 自費 $200
+嚴雅雯 王小明 2025/09/03 AA07 補助 $760
+嚴雅雯 OO先生 2025/09/03 AA08 自費 $385
 嚴雅雯 賴美女 2025/09/06 AA09 補助 $770
 嚴雅雯 江昭輝 2025/09/01 AA11 補助 $50
-嚴雅雯 OO先生 2025/09/03 AA08 自費 $385
 嚴雅雯 范秉殷 2025-09-05 BA01 補助 1 $260
 嚴雅雯 江昭輝 2025-09-01 BA07 補助 1 $325
 嚴雅雯 張財進 2025-09-02 BA11 自費 2 $195
@@ -831,13 +860,26 @@
       $('#ps-apply') && ($('#ps-apply').disabled=false);
       $('#ps-csv') && ($('#ps-csv').disabled=false);
       $('#ps-json') && ($('#ps-json').disabled=false);
-      if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
-    });
 
-    // 同步確認條按鈕
-    if (syncYesBtn){ syncYesBtn.addEventListener('click', ()=>{ if(last) applyToPayroll(last); showSyncBar(false); }); }
-    if (syncNoBtn){  syncNoBtn .addEventListener('click', ()=> showSyncBar(false)); }
+      if (autoSyncEl && autoSyncEl.checked){
+        applyToPayroll(last);
+        showSyncBar(false);
+      } else {
+        showSyncBar(true);
+      }
+    });
   })();
+  </script>
+
+  <!-- 防拷設定（與首頁一致，可留可改） -->
+  <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
+      if (e.key === 'F12') e.preventDefault();
+    });
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
   </script>
 </body>
 </html>
