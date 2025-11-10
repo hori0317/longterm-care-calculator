@@ -623,14 +623,14 @@
     const why = e => (e&&(e.message||e.reason||e.type||e.name))||String(e);
     const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
 
-    // —— 代碼別名（同碼合併）——
-    const CODE_ALIAS = {
-      'BA05-1': 'BA05'   // BA05-1 等同 BA05
-      // 若還有：'BA05-2': 'BA05'
-        'BA16-1': 'BA16',
-  'BA16-2': 'BA16'
-    };
-    const toCanon = c => CODE_ALIAS[c] || c;
+   // —— 代碼別名（同碼合併）——
+const CODE_ALIAS = {
+  'BA05-1': 'BA05',
+  'BA05-2': 'BA05',
+  'BA16-1': 'BA16',   // ← 新增
+  'BA16-2': 'BA16'    // ← 新增
+};
+const toCanon = c => CODE_ALIAS[c] || c;
 
     // 動態載入 pdf.js（多版本後援）
     let pdfReady=null, pdfVer=null;
