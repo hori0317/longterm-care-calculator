@@ -344,8 +344,9 @@
           { code:"BA12", name:"協助上下樓梯", price:130 },
           { code:"BA13", name:"陪同外出", price:195 },
           { code:"BA14", name:"陪同就醫", price:685 },
-          { code:"BA15-1", name:"家務協助", price:195 },
-          { code:"BA15-2", name:"家務協助", price:195 }
+          /* —— 這裡把 BA15 拆兩筆 —— */
+          { code:"BA15-1", name:"家務協助-1", price:195 },
+          { code:"BA15-2", name:"家務協助-2", price:195 },
           { code:"BA16", name:"代購", price:130 },
           { code:"BA17a", name:"人工氣道管抽吸", price:75 },
           { code:"BA17b", name:"口腔內抽吸", price:65 },
@@ -605,7 +606,7 @@
     })();
   </script>
 
-  <!-- PDF 解析 + 帶入表單（含 AA07 與「同步前清空」） -->
+  <!-- PDF 解析 + 帶入表單（含 AA07、BA15-1/BA15-2、同步前清空） -->
   <script>
   (() => {
     const $ = s => document.querySelector(s);
@@ -692,7 +693,7 @@
       await worker.terminate(); const t=all.join('\n'); log(`OCR 完成：字=${t.length}`); return t;
     }
 
-    // 解析規則
+    // 解析規則（支援 -1/-2 尾碼）
     function analyze(text){
       const units=getAAUnit(), fam={BA:{},AA:{},GA:{},SC:{}};
       const codeRe=/\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g, toHalf=v=>Math.round(v*2)/2;
@@ -756,7 +757,8 @@
           inp.dispatchEvent(new Event('input',{bubbles:true}));
         });
     }
-    function normalize(code){ return code.replace(/^([A-Z]{2})(\d{2}).*$/,'$1$2'); }
+    // 重要：保留尾碼（像 BA15-1/BA15-2），不要截斷成 BA15
+    function normalize(code){ return String(code).trim(); }
     function setInput(selector, val, step){
       const el=document.querySelector(selector);
       if(!el) return false;
@@ -855,6 +857,8 @@
 嚴雅雯 范秉殷 2025-09-05 BA01 補助 1 $260
 嚴雅雯 江昭輝 2025-09-01 BA07 補助 1 $325
 嚴雅雯 張財進 2025-09-02 BA11 自費 2 $195
+嚴雅雯 王小美 2025-09-10 BA15-1 補助 1 $195
+嚴雅雯 王小美 2025-09-12 BA15-2 補助 1 $195
 嚴雅雯 李OO   2025-09-03 GA09 補助 3
 嚴雅雯 王OO   2025-09-04 SC09 自費 1`;
       const r=analyze(d); renderAll(r); last=r; setBar(100); if(statusEl) statusEl.textContent='示範資料已載入';
