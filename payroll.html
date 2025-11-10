@@ -159,16 +159,6 @@
             <button class="ps-btn" id="ps-json" type="button" disabled>匯出 JSON</button>
           </div>
 
-          <details class="ps-box" open>
-            <summary class="ps-small">AA 單價（元/支）</summary>
-            <div class="ps-rows">
-              <label>AA05 <input class="ps-mono" id="ps-AA05" type="number" value="200"></label>
-              <label>AA06 <input class="ps-mono" id="ps-AA06" type="number" value="200"></label>
-              <label>AA09 <input class="ps-mono" id="ps-AA09" type="number" value="770"></label>
-              <label>AA11 <input class="ps-mono" id="ps-AA11" type="number" value="50"></label>
-            </div>
-          </details>
-
           <div class="ps-box">
             <div class="ps-small ps-muted">處理進度</div>
             <div class="ps-progress"><div id="ps-bar" class="ps-bar"></div></div>
@@ -219,7 +209,7 @@
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">AA 小計</th><th class="right" id="sumAA">0</th></tr></tfoot>
       </table>
-      <p class="hint" style="margin-top:8px;">單價：AA05 200、AA06 200、AA08 385、AA09 770、AA11 50（與首頁一致）。</p>
+      <p class="hint" style="margin-top:8px;">單價：AA05 200、AA06 200、AA08 385、AA09 770、AA11 50。</p>
     </section>
 
     <!-- BA -->
@@ -321,7 +311,7 @@
       const N  = v => (isFinite(+v) ? +v : 0);
       const F  = v => new Intl.NumberFormat('zh-Hant-TW', { maximumFractionDigits: 0 }).format(v);
 
-      /* === 單價（沿用你的定義） === */
+      /* === 單價（固定） === */
       const PRICE = {
         AA: { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 },
         BA: [
@@ -354,7 +344,7 @@
         SC: [{ code:"SC09", name:"短照 2 小時/支", price:770 }]
       };
 
-      /* === 勞健保級距表（員工自付，依你圖片建表） === */
+      /* === 勞健保級距表（員工自付） === */
       const INS_TABLE = [
         { grade:11100, labor:277, health:443 }, { grade:12540, labor:313, health:443 },
         { grade:13500, labor:338, health:443 }, { grade:15840, labor:396, health:443 },
@@ -486,13 +476,13 @@
         const auto = $('#insAuto').checked;
         const sel  = $('#insGrade');
         const autoGrade = findGradeBySalary(salary);
-        if (auto && N(sel.value)!==autoGrade) sel.value = String(autoGrade);
-        const row = getRow(N(sel.value) || autoGrade);
+        if (auto && +sel.value!==autoGrade) sel.value = String(autoGrade);
+        const row = getRow(+sel.value || autoGrade);
         if (auto){
           $('#insLabor').value  = row.labor;
           $('#insHealth').value = row.health;
         }
-        const insSum = N($('#insLabor').value) + N($('#insHealth').value);
+        const insSum = (+$('#insLabor').value||0) + (+$('#insHealth').value||0);
         $('#insSum').textContent = F(insSum);
         $('#kpiIns').textContent = F(insSum);
 
@@ -504,18 +494,18 @@
 
       /* === 儲存／還原 === */
       function saveAll(){
-        const aa = {}; Object.keys(PRICE.AA).forEach(code=> aa[code]=N($(`input[data-aa="${code}"]`).value));
+        const aa = {}; Object.keys(PRICE.AA).forEach(code=> aa[code]=+($(`input[data-aa="${code}"]`).value||0));
         localStorage.setItem('pl-aa', JSON.stringify(aa));
         ['BA','GA','SC'].forEach(key=>{
-          const obj={}; PRICE[key].forEach(item=> obj[item.code]=N($(`input[data-${key}="${item.code}"]`).value));
+          const obj={}; PRICE[key].forEach(item=> obj[item.code]=+($(`input[data-${key}="${item.code}"]`).value||0));
           localStorage.setItem(`pl-${key.toLowerCase()}`, JSON.stringify(obj));
         });
         const params = {
           month: $('#plMonth').value || '',
-          ratio: N($('#ratioPct').value),
-          insGrade: N($('#insGrade').value)||0,
-          insLabor: N($('#insLabor').value)||0,
-          insHealth: N($('#insHealth').value)||0,
+          ratio: +$('#ratioPct').value || 0,
+          insGrade: +$('#insGrade').value || 0,
+          insLabor: +$('#insLabor').value || 0,
+          insHealth: +$('#insHealth').value || 0,
           insAuto: $('#insAuto').checked ? 1 : 0
         };
         localStorage.setItem('pl-params', JSON.stringify(params));
@@ -544,25 +534,25 @@
         // 勞健保事件
         $('#insGrade').addEventListener('change', ()=>{
           if ($('#insAuto').checked){
-            const row = getRow(N($('#insGrade').value));
+            const row = getRow(+$('#insGrade').value);
             $('#insLabor').value = row.labor;
             $('#insHealth').value = row.health;
           }
-          syncInsuranceBySalary(N($('#resSalary').textContent.replace(/,/g,'')));
+          syncInsuranceBySalary(+($('#resSalary').textContent.replace(/,/g,''))||0);
           saveAll();
         });
         $('#insLabor').addEventListener('input', ()=>{
           $('#insAuto').checked = false;
-          syncInsuranceBySalary(N($('#resSalary').textContent.replace(/,/g,'')));
+          syncInsuranceBySalary(+($('#resSalary').textContent.replace(/,/g,''))||0);
           saveAll();
         });
         $('#insHealth').addEventListener('input', ()=>{
           $('#insAuto').checked = false;
-          syncInsuranceBySalary(N($('#resSalary').textContent.replace(/,/g,'')));
+          syncInsuranceBySalary(+($('#resSalary').textContent.replace(/,/g,''))||0);
           saveAll();
         });
         $('#insAuto').addEventListener('change', ()=>{
-          syncInsuranceBySalary(N($('#resSalary').textContent.replace(/,/g,'')));
+          syncInsuranceBySalary(+($('#resSalary').textContent.replace(/,/g,''))||0);
           saveAll();
         });
 
@@ -584,7 +574,7 @@
       wire();
       updateAll();
 
-      /* 導覽高亮（確保本頁一定亮） */
+      // 導覽高亮
       (function(){
         const here = location.pathname.toLowerCase();
         document.querySelectorAll('.nav-links a[href]').forEach(a=>{
@@ -594,19 +584,10 @@
           }
         });
       })();
-
-      /* 防拷（與首頁一致） */
-      document.addEventListener('contextmenu', e => e.preventDefault());
-      document.addEventListener('keydown', e => {
-        if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
-        if (e.key === 'F12') e.preventDefault();
-      });
-      document.addEventListener('selectstart', e => e.preventDefault());
-      document.addEventListener('copy', e => e.preventDefault());
     })();
   </script>
 
-  <!-- PDF 解析 + 帶入表單（嵌入元件用） -->
+  <!-- PDF 解析 + 帶入表單（嵌入元件用；AA單價固定：05/06/08/09/11） -->
   <script>
   (() => {
     const $ = s => document.querySelector(s);
@@ -615,7 +596,7 @@
     const why = e => (e&&(e.message||e.reason||e.type||e.name))||String(e);
     const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
 
-    // 動態載入 pdf.js
+    // 動態載入 pdf.js（多版本後援）
     let pdfReady=null, pdfVer=null;
     const loadScript = src => new Promise((res,rej)=>{const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s);});
     async function ensurePdfjs(){
@@ -638,7 +619,7 @@
       await pdfReady;
     }
 
-    // Tesseract
+    // Tesseract（OCR 後援）
     let ocrReady=null;
     async function ensureTesseract(){
       if (window.Tesseract) return;
@@ -647,15 +628,12 @@
       await ocrReady;
     }
 
-    // AA 單價從元件讀
-    function getAAUnit(){ return {
-      AA05:Number($('#ps-AA05')?.value||200),
-      AA06:Number($('#ps-AA06')?.value||200),
-      AA09:Number($('#ps-AA09')?.value||770),
-      AA11:Number($('#ps-AA11')?.value||50),
-    };}
+    // 固定 AA 單價
+    function getAAUnit(){
+      return { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 };
+    }
 
-    // 讀 PDF 文字
+    // 讀 PDF → 文字
     async function extractPdfText(file){
       await ensurePdfjs();
       const ab=await file.arrayBuffer();
@@ -696,7 +674,7 @@
       await worker.terminate(); const t=all.join('\n'); log(`OCR 完成：字=${t.length}`); return t;
     }
 
-    // 解析
+    // 解析規則
     function analyze(text){
       const units=getAAUnit(), fam={BA:{},AA:{},GA:{},SC:{}};
       const codeRe=/\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g, toHalf=v=>Math.round(v*2)/2;
@@ -734,19 +712,19 @@
         const tr=document.createElement('tr');
         tr.innerHTML=`<td><span class="ps-pill">${r.code}</span></td>
                       <td class="ps-right">${r.occ}</td>
-                      <td class="ps-right">${r.sum.toFixed(3)}</td>`;
+                      <td class="ps-right">${r.sum.toFixed(1)}</td>`;
         tbody.appendChild(tr);
       }
     }
     function renderAll(res){ renderRows(tb.BA,res.BA); renderRows(tb.AA,res.AA); renderRows(tb.GA,res.GA); renderRows(tb.SC,res.SC); }
     function exportCSV(res){
-      const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(3)}`).join('\n')+'\n\n';
+      const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(1)}`).join('\n')+'\n\n';
       const csv=blk('【BA】',res.BA)+blk('【AA】',res.AA)+blk('【GA】',res.GA)+blk('【SC】',res.SC);
       const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob);
       const a=document.createElement('a'); a.href=url; a.download='pdf-stat.csv'; a.click(); URL.revokeObjectURL(url);
     }
     function exportJSON(res){
-      const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:Number(r.sum.toFixed(3))}));
+      const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:Number(r.sum.toFixed(1))}));
       const payload={BA:pick(res.BA),AA:pick(res.AA),GA:pick(res.GA),SC:pick(res.SC),meta:{generatedAt:new Date().toISOString()}};
       const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}), url=URL.createObjectURL(blob);
       const a=document.createElement('a'); a.href=url; a.download='pdf-stat.json'; a.click(); URL.revokeObjectURL(url);
@@ -809,6 +787,7 @@
 嚴雅雯 張財進 2025/09/02 AA06 自費 $200
 嚴雅雯 賴美女 2025/09/06 AA09 補助 $770
 嚴雅雯 江昭輝 2025/09/01 AA11 補助 $50
+嚴雅雯 OO先生 2025/09/03 AA08 自費 $385
 嚴雅雯 范秉殷 2025-09-05 BA01 補助 1 $260
 嚴雅雯 江昭輝 2025-09-01 BA07 補助 1 $325
 嚴雅雯 張財進 2025-09-02 BA11 自費 2 $195
