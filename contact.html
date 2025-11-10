@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PDF 支數自動統計（含 OCR）</title>
+  <title>PDF 支數自動統計（含 OCR，多版本 pdf.js 回退）</title>
   <meta name="description" content="上傳 PDF，統計 BA/AA/GA/SC 支數；若為掃描影像自動啟用 OCR（chi_tra+eng）。">
 
   <style>
@@ -37,29 +37,45 @@
     .hint{display:inline-block;margin-left:8px;color:#845400}
   </style>
 
-  <!-- 動態載入 PDF.js；若 worker 失敗自動回退 -->
+  <!-- 動態載入 PDF.js（4.x → 3.x → 2.x 逐版回退；worker 失敗則同執行緒） -->
   <script>
     let __pdfReady = null;
+    let __pdfVersionUsed = null;
+
+    async function loadScript(src){
+      await new Promise((res, rej)=>{
+        const s=document.createElement('script');
+        s.src=src; s.onload=res; s.onerror=()=>rej(new Error('load fail '+src));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function tryLoadPdfjs(ver){
+      // 清掉舊的全域（避免不同版殘留）
+      if (window.pdfjsLib) delete window.pdfjsLib;
+      await loadScript(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${ver}/build/pdf.min.js`);
+      __pdfVersionUsed = ver;
+      try{
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          `https://cdn.jsdelivr.net/npm/pdfjs-dist@${ver}/build/pdf.worker.min.js`;
+        // 探針：不是有效 PDF 會 throw，沒關係；主要是測 worker 能否初始化
+        await pdfjsLib.getDocument({ data: new Uint8Array([0x25,0x50,0x44,0x46,0x2D]) }).promise.catch(()=>null);
+      }catch(e){
+        // worker 失敗 → 主執行緒
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "";
+        pdfjsLib.GlobalWorkerOptions.workerPort = null;
+      }
+    }
+
     async function ensurePdfjs(){
-      if (__pdfReady) { await __pdfReady; return; }
+      if (__pdfReady){ await __pdfReady; return; }
       __pdfReady = (async ()=>{
-        if (!window.pdfjsLib) {
-          await new Promise((res, rej)=>{
-            const s = document.createElement("script");
-            s.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.min.js";
-            s.onload = res; s.onerror = rej;
-            document.head.appendChild(s);
-          });
+        const cand = ["4.2.67","3.11.174","2.16.105"];
+        let ok=false, lastErr=null;
+        for (const v of cand){
+          try{ await tryLoadPdfjs(v); ok=true; break; }catch(e){ lastErr=e; }
         }
-        try{
-          pdfjsLib.GlobalWorkerOptions.workerSrc =
-            "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.worker.min.js";
-          await pdfjsLib.getDocument({ data: new Uint8Array([0x25,0x50,0x44,0x46,0x2D]) }).promise.catch(()=>null);
-        }catch(e){
-          // 回退到同執行緒
-          pdfjsLib.GlobalWorkerOptions.workerSrc = "";
-          pdfjsLib.GlobalWorkerOptions.workerPort = null;
-        }
+        if(!ok) throw lastErr || new Error("pdf.js load failed");
       })();
       await __pdfReady;
     }
@@ -186,6 +202,7 @@
     const statusEl = $('#status');
 
     function log(s){ debug.textContent += (typeof s==='string'?s:JSON.stringify(s,null,2)) + '\n'; console.log('[pdf-stat]', s); }
+    function whyStr(e){ return (e && (e.message || e.reason || e.type || e.name)) || String(e); }
     function setBar(p){ bar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
 
     const fileInput = $('#file');
@@ -210,28 +227,45 @@
       };
     }
 
-    // —— 第一階段：用 PDF.js 直接擷取文字
+    // —— 使用 pdf.js 擷取文字；失敗則改用 Blob URL 再試
     async function extractPdfText(file){
       await ensurePdfjs();
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const ab = await file.arrayBuffer();
+      const blob = new Blob([ab], {type:'application/pdf'});
+      const url = URL.createObjectURL(blob);
 
-      let texts = [], total = 0;
-      for(let i=1;i<=pdf.numPages;i++){
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent({ normalizeWhitespace:true, disableCombineTextItems:false });
-        const s = content.items.map(it=>it.str||'').join(' ');
-        total += s.length;
-        texts.push(s);
-        setBar(100 * i / pdf.numPages);
-        statusEl.textContent = `PDF 解析中 (${i}/${pdf.numPages})`;
+      const tryWays = [
+        {kind:'data', opts:{data: ab}},
+        {kind:'url',  opts:{url}}
+      ];
+
+      let lastErr=null;
+      for (const way of tryWays){
+        try{
+          const pdf = await pdfjsLib.getDocument(way.opts).promise;
+          let texts = [], total = 0;
+          for(let i=1;i<=pdf.numPages;i++){
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent({ normalizeWhitespace:true, disableCombineTextItems:false });
+            const s = content.items.map(it=>it.str||'').join(' ');
+            total += s.length;
+            texts.push(s);
+            setBar(100 * i / pdf.numPages);
+            statusEl.textContent = `PDF 解析中 (${i}/${pdf.numPages}) · pdf.js ${__pdfVersionUsed} · ${way.kind}`;
+          }
+          URL.revokeObjectURL(url);
+          log(`PDF.js 解析（${way.kind}）：頁數 ${pdf.numPages}，總字元 ${total} · 版本 ${__pdfVersionUsed}`);
+          if (pdf.numPages>0) log(`預覽：${texts[0].slice(0,200).replace(/\s+/g,' ')}`);
+          return { text: texts.join('\n'), charCount: total, pages: pdf.numPages, pdf };
+        }catch(e){
+          lastErr=e;
+          log(`PDF.js 方式「${way.kind}」失敗：`+whyStr(e));
+        }
       }
-      log(`PDF.js 解析：頁數 ${pdf.numPages}，總字元 ${total}`);
-      if (pdf.numPages>0) log(`預覽：${texts[0].slice(0,200).replace(/\s+/g,' ')}`);
-      return { text: texts.join('\n'), charCount: total, pages: pdf.numPages, pdf };
+      throw lastErr || new Error('pdf.js all ways failed');
     }
 
-    // —— 第二階段（回退）：把 PDF 每頁轉 Canvas 圖片 → Tesseract OCR
+    // —— 回退：pdf 物件轉 Canvas → Tesseract OCR
     async function ocrPdfToText(pdf){
       await ensureTesseract();
       const worker = await Tesseract.createWorker('chi_tra+eng');
@@ -259,15 +293,14 @@
         log(`預覽：${text.slice(0,200).replace(/\s+/g,' ')}`);
         return text;
       } catch(e){
-        const why = (e && (e.message || e.reason || e.type || e.name)) || String(e);
-        log('OCR 錯誤：' + why);
+        log('OCR 錯誤：' + whyStr(e));
         throw e;
       } finally {
         await worker.terminate();
       }
     }
 
-    // —— 統計：BA／AA／GA／SC
+    // —— BA／AA／GA／SC 統計
     function analyze(text){
       const units = getAAUnit();
       const fam = {BA:{}, AA:{}, GA:{}, SC:{}};
@@ -281,24 +314,21 @@
         if (!codes.length) continue;
 
         for(const m of codes){
-          const fullCode = m[0];            // ex: BA01 / BA05-1 / AA05
-          const head = fullCode.slice(0,2); // BA/AA/GA/SC
+          const fullCode = m[0];
+          const head = fullCode.slice(0,2);
           const store = fam[head];
 
-          // 在 OCR 情況下，欄位順序可能位移；取代碼周邊 ±40 字內找次數/金額
           const start = Math.max(0, m.index - 40);
           const end   = Math.min(line.length, m.index + fullCode.length + 40);
           const windowStr = line.slice(start, end);
 
-          // 次數：補助|自費 後 1~20（允許任意空白/標點）
           let count = null;
-          const countMatch = windowStr.match(/(?:補\s*助|自\s*費)[^0-9]{0,4}([0-9]{1,2})\b/);
+          const countMatch = windowStr.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
           if (countMatch){
             const v = parseInt(countMatch[1],10);
             if (v>=1 && v<=20) count = v;
           }
 
-          // 金額（僅 AA 在無次數時用）：抓 $ 後金額或 2~5 位數
           let amount = null;
           if (count===null && head==='AA'){
             const mDollar = windowStr.match(/\$\s*([0-9][0-9,]*)/);
@@ -318,7 +348,7 @@
             if (unit && amount && amount >= Math.floor(unit*0.5)){
               zhi = Math.round((amount/unit)*1000)/1000;
             }
-          } // BA/GA/SC 無次數就 0
+          }
 
           const rec = store[fullCode] || {occ:0,sum:0};
           rec.occ += 1; rec.sum += zhi;
@@ -378,8 +408,7 @@
       try{
         pdfResult = await extractPdfText(file);
       }catch(e){
-        const why = (e && (e.message || e.reason || e.type || e.name)) || String(e);
-        log('PDF.js 解析失敗，改用 OCR。原因：' + why);
+        log('PDF.js 解析失敗，改用 OCR。原因：' + whyStr(e));
       }
 
       let finalText = '';
@@ -387,13 +416,32 @@
         setBar(100); statusEl.textContent = 'PDF 文字擷取完成';
         finalText = pdfResult.text;
       } else {
-        // 正確取得 pdf 物件後再 OCR
+        // 需要 pdf 物件才能渲染成圖做 OCR
         let pdfObj = pdfResult?.pdf;
         if (!pdfObj) {
-          await ensurePdfjs();
-          const ab = await file.arrayBuffer();
-          const loadingTask = pdfjsLib.getDocument({ data: ab });
-          pdfObj = await loadingTask.promise;
+          try{
+            await ensurePdfjs();
+            const ab = await file.arrayBuffer();
+            const blob = new Blob([ab], {type:'application/pdf'});
+            // 再嘗試 data 與 url 兩種
+            try{
+              pdfObj = await pdfjsLib.getDocument({ data: ab }).promise;
+            }catch(e1){
+              log('建立 pdf 物件（data）失敗：'+whyStr(e1));
+              const url = URL.createObjectURL(blob);
+              try{
+                pdfObj = await pdfjsLib.getDocument({ url }).promise;
+              }catch(e2){
+                URL.revokeObjectURL(url);
+                throw e2;
+              }
+              URL.revokeObjectURL(url);
+            }
+          }catch(e){
+            log('pdf 物件建立失敗，無法啟用 OCR：'+whyStr(e));
+            alert('此 PDF 無法解析（可能損壞或受保護）。可先用 Google 雲端硬碟「以 Google 文件開啟」做一次 OCR 另存再上傳。');
+            return;
+          }
         }
         statusEl.textContent = '未偵測到文字，啟用 OCR…（首次可能較久）';
         setBar(1);
