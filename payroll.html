@@ -140,7 +140,7 @@
     <!-- PDF 支數自動統計（嵌入元件） -->
     <section class="card ps-card" id="ps-widget">
       <h2 class="card-title">PDF 支數自動統計（帶入表單）</h2>
-      <p class="ps-muted">上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5）。</p>
+      <p class="ps-muted">上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5），AA 單價固定。</p>
 
       <div>
         <label class="ps-drop" id="ps-drop">
@@ -614,7 +614,7 @@
     })();
   </script>
 
-  <!-- PDF 解析 + 帶入表單（含 OCR 後援；同步前清空；AA 0.5 進位；小寫 data-*）-->
+  <!-- PDF 解析 + 帶入表單（含 OCR 後援；同步前清空；AA 0.5 進位；小寫 data-*；BA05-1=BA05）-->
   <script>
   (() => {
     const $ = s => document.querySelector(s);
@@ -622,6 +622,13 @@
     const log = s => { if(!debug) return; debug.textContent += (typeof s==='string'?s:JSON.stringify(s,null,2))+'\n'; };
     const why = e => (e&&(e.message||e.reason||e.type||e.name))||String(e);
     const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
+
+    // —— 代碼別名（同碼合併）——
+    const CODE_ALIAS = {
+      'BA05-1': 'BA05'   // BA05-1 等同 BA05
+      // 若還有：'BA05-2': 'BA05'
+    };
+    const toCanon = c => CODE_ALIAS[c] || c;
 
     // 動態載入 pdf.js（多版本後援）
     let pdfReady=null, pdfVer=null;
@@ -701,29 +708,33 @@
       await worker.terminate(); const t=all.join('\n'); log(`OCR 完成：字=${t.length}`); return t;
     }
 
-    // 解析規則（支援 -1/-2 尾碼；AA 以金額/單價 → 0.5 進位）
+    // 解析規則（支援 -1/-2 尾碼；AA 以金額/單價 → 0.5 進位；含別名合併）
     function analyze(text){
       const units=getAAUnit(), fam={BA:{},AA:{},GA:{},SC:{}};
       const codeRe=/\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g, toHalf=v=>Math.round(v*2)/2;
+
       for (const raw of text.split(/\r?\n/)){
         const line=raw.trim(); if(!line) continue;
         const codes=[...line.matchAll(codeRe)]; if(!codes.length) continue;
+
         for (const m of codes){
-          const full=m[0], head=full.slice(0,2);
-          let zhi=0;
+          const fullRaw=m[0];
+          const canon = toCanon(fullRaw);      // 先轉正規碼（例：BA05-1 → BA05）
+          const head  = canon.slice(0,2);
+
           if (head==='AA'){
-            const after=line.slice(m.index+full.length, m.index+full.length+40);
+            const after=line.slice(m.index+fullRaw.length, m.index+fullRaw.length+40);
             let amt=null, m1=after.match(/\$\s*([0-9][0-9,]*)/);
             if (m1) amt=parseInt(m1[1].replace(/,/g,''),10);
             else { const m2=after.match(/\b([0-9]{2,6})\b/); if(m2) amt=parseInt(m2[1],10); }
-            const unit=units[full]??units[full.slice(0,4)];
-            if(unit && amt) zhi=toHalf(amt/unit);
-            const rec=fam.AA[full]||{occ:0,sum:0}; rec.occ++; rec.sum+=zhi; fam.AA[full]=rec;
+            const unit=units[canon]??units[canon.slice(0,4)];
+            const zhi = (unit && amt) ? toHalf(amt/unit) : 0;
+            const rec=fam.AA[canon]||{occ:0,sum:0}; rec.occ++; rec.sum+=zhi; fam.AA[canon]=rec;
           }else{
-            const ctx=line.slice(Math.max(0,m.index-40), Math.min(line.length,m.index+full.length+40));
+            const ctx=line.slice(Math.max(0,m.index-40), Math.min(line.length,m.index+fullRaw.length+40));
             const c=ctx.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
-            if(c){ const v=parseInt(c[1],10); if(v>=1&&v<=20) zhi=v; }
-            const rec=(fam[head][full]||{occ:0,sum:0}); rec.occ++; rec.sum+=zhi; fam[head][full]=rec;
+            const zhi = c ? Math.max(0, Math.min(20, parseInt(c[1],10))) : 0;
+            const rec=(fam[head][canon]||{occ:0,sum:0}); rec.occ++; rec.sum+=zhi; fam[head][canon]=rec;
           }
         }
       }
@@ -772,10 +783,11 @@
     }
     // kind: 'aa' | 'ba' | 'ga' | 'sc'（小寫）
     function setInputByCode(kind, code, val, step){
-      const c = normalize(code);
-      const sel = document.querySelector(`input[data-${kind}="${c}"]`);
+      const norm = normalize(code);
+      const canon = toCanon(norm);                   // 使用正規碼（BA05-1 → BA05）
+      const sel = document.querySelector(`input[data-${kind}="${canon}"]`);
       if (!sel) return false;
-      if (step) sel.setAttribute('step', step); // 先設 step 再設值
+      if (step) sel.setAttribute('step', step);      // 先設 step 再設值
       sel.value = String(val);
       sel.dispatchEvent(new Event('input',{bubbles:true}));
       return true;
@@ -897,6 +909,7 @@
 嚴雅雯 江昭輝 2025-09-01 BA07 補助 1 $325
 嚴雅雯 張財進 2025-09-02 BA11 自費 2 $195
 嚴雅雯 王小美 2025-09-10 BA15-1 補助 1 $195
+嚴雅雯 王小美 2025-09-11 BA05-1 補助 2 $310
 嚴雅雯 王小美 2025-09-12 BA15-2 補助 1 $195
 嚴雅雯 李OO   2025-09-03 GA09 補助 3
 嚴雅雯 王OO   2025-09-04 SC09 自費 1`;
