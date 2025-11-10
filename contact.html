@@ -51,6 +51,24 @@
     .pdfstat h3{margin:.2rem 0 8px}
     .pdfstat .warn-text{color:var(--warn)}
   </style>
+
+  <!-- ✅ 新版：動態載入 pdf.js（取代舊的三行外掛） -->
+  <script>
+    // 全域僅載入一次 pdf.js 與 worker
+    async function ensurePdfjs(){
+      if (window.pdfjsLib) return; // 已載過
+      // 1. 載入主程式
+      await new Promise((res, rej)=>{
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.min.js";
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      // 2. 設定 worker 路徑
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.worker.min.js";
+    }
+  </script>
 </head>
 <body>
   <!-- 簡化的頂部列（不綁首頁 script.js） -->
@@ -98,24 +116,16 @@
 
             <div class="pdfstat-card pdfstat-tip pdfstat-small" style="margin-top:12px">
               <details open>
-                <summary>單價表（AA/GA/SC 以金額換算支數時使用）</summary>
+                <summary>單價表（僅 AA 用於金額換算）</summary>
                 <div class="pdfstat-muted" style="margin:6px 0 8px">
-                  規則：若該行有明確「補助/自費後面的次數」→ 直接採用次數；否則以「金額 ÷ 單價」換算為支數。單價可依縣市規範調整。
+                  規則：優先採用「補助/自費 後的整數」為支數；僅當 AA 找不到次數時，才用「金額 ÷ 單價」換算。
                 </div>
                 <div class="pdfstat-grid2">
-                  <!-- AA 常見 -->
+                  <!-- 只保留 AA 單價（可依縣市調整） -->
                   <label>AA05（元/支）<br><input class="pdfstat-mono" id="ps-price-AA05" type="number" min="1" value="100" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
                   <label>AA06（元/支）<br><input class="pdfstat-mono" id="ps-price-AA06" type="number" min="1" value="200" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
                   <label>AA09（元/支）<br><input class="pdfstat-mono" id="ps-price-AA09" type="number" min="1" value="770" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
                   <label>AA11（元/支）<br><input class="pdfstat-mono" id="ps-price-AA11" type="number" min="1" value="50" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
-                  <!-- GA/SC 依需要填入；留空或0表示只計次數不換算 -->
-                  <label>GA01（元/支）<br><input class="pdfstat-mono" id="ps-price-GA01" type="number" min="0" value="0" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
-                  <label>GA02（元/支）<br><input class="pdfstat-mono" id="ps-price-GA02" type="number" min="0" value="0" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
-                  <label>SC01（元/支）<br><input class="pdfstat-mono" id="ps-price-SC01" type="number" min="0" value="0" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
-                  <label>SC02（元/支）<br><input class="pdfstat-mono" id="ps-price-SC02" type="number" min="0" value="0" style="width:100%;padding:8px;border-radius:8px;border:1px solid #d7deea;"></label>
-                </div>
-                <div class="pdfstat-small pdfstat-muted" style="margin-top:8px">
-                  其他未列入的 GA/SC 代碼也會計數；若要以金額換算，請在上方欄位填入單價並把代碼改成對應的（如 GA03/SC03）。
                 </div>
               </details>
             </div>
@@ -154,7 +164,7 @@
                 <tbody></tbody>
               </table>
               <div class="pdfstat-small pdfstat-muted" style="margin-top:6px">
-                備註：若某行同時有「次數」與「金額」，會優先採用次數；否則以金額÷單價換算支數（四捨五入到小數第 3 位）。
+                備註：GA/SC 僅採用行內明確的「次數」；不做金額換算。
               </div>
             </div>
           </div>
@@ -164,34 +174,25 @@
           <details>
             <summary>解析規則</summary>
             <ul class="pdfstat-small">
-              <li><b>代碼偵測：</b>擷取 <code>(BA|AA|GA|SC)\d{2}(-\d+)?</code> 直到該行結尾作為片段。</li>
-              <li><b>次數優先：</b>片段內若在「補助/自費」後出現 <code>1~20</code> 的整數，視為支數（次數）。</li>
-              <li><b>金額換算：</b>若無次數、但找到 2~5 位數整數（如 100/770/1200），則以「金額 ÷ 單價」換算支數。</li>
+              <li><b>代碼偵測：</b>擷取 <code>(BA|AA|GA|SC)\d{2}(?:-\d+)?</code>。</li>
+              <li><b>次數優先：</b>「補助/自費」後方的 1~20 之整數視為支數。</li>
+              <li><b>AA 金額換算：</b>當找不到次數且行內含 2~5 位數金額時，僅對 AA 以「金額 ÷ 單價」換算（四捨五入到小數第 3 位）。</li>
+              <li><b>GA/SC：</b>不以金額換算；沒找到次數時記 0。</li>
               <li>所有處理均於本機瀏覽器完成。</li>
             </ul>
           </details>
         </div>
 
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="pdfstat-btn" id="ps-export-csv2" disabled>匯出 CSV（四表）</button>
-          <button class="pdfstat-btn" id="ps-export-json2" disabled>匯出 JSON（四表）</button>
-          <span class="pdfstat-small pdfstat-muted">若讀不到內容，多半是掃描影像 PDF，請先做 OCR。</span>
+          <button class="pdfstat-btn" id="ps-export-csv" disabled>匯出 CSV（四表）</button>
+          <button class="pdfstat-btn" id="ps-export-json" disabled>匯出 JSON（四表）</button>
+          <span class="pdfstat-small pdfstat-muted">讀不到內容多半是掃描影像 PDF，請先做 OCR。</span>
         </div>
 
         <div class="pdfstat-footer">© 2025 hori · PDF 支數自動統計</div>
       </div>
     </section>
   </main>
-
-  <!-- pdf.js 主程式與 worker（兩者都要） -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script>
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
-    }
-  </script>
 
   <!-- 元件腳本（ps- 命名空間） -->
   <script>
@@ -207,23 +208,19 @@
       SC: document.querySelector('#ps-sc tbody'),
     };
 
-    // 取得單價表（AA/GA/SC 用；0 或空值 = 不換算、僅計次數）
+    // 取得 AA 單價（僅 AA 用；GA/SC 不換算）
     function getPriceMap(){
-      const ids = ['AA05','AA06','AA09','AA11','GA01','GA02','SC01','SC02'];
-      const map = {};
-      ids.forEach(id=>{
-        const el = document.getElementById('ps-price-' + id);
-        if (el) {
-          const v = Number(el.value||0);
-          if (v > 0) map[id] = v;
-        }
-      });
-      return map;
+      return {
+        AA05: Number(document.getElementById('ps-price-AA05').value||100),
+        AA06: Number(document.getElementById('ps-price-AA06').value||200),
+        AA09: Number(document.getElementById('ps-price-AA09').value||770),
+        AA11: Number(document.getElementById('ps-price-AA11').value||50),
+      };
     }
 
     // 讀取 PDF 文字
     async function extractPdfText(file){
-      if(!window.pdfjsLib){ alert('PDF.js 尚未載入'); throw new Error('pdfjs missing'); }
+      await ensurePdfjs(); // 確保 pdf.js 已載入
       try{
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
@@ -236,69 +233,62 @@
         return texts.join('\n');
       }catch(err){
         console.error(err);
-        alert('無法讀取 PDF 文字：檔案可能為掃描影像，或檔案受保護。請先做 OCR 後再上傳。');
+        alert('無法讀取 PDF 文字：檔案可能為掃描影像或受保護。請先做 OCR 後再上傳。');
         throw err;
       }
     }
 
-    // 解析四大類：以「行」為單位做判斷
+    // 解析四大類
     function analyze(text){
       const priceMap = getPriceMap();
       const families = {BA:{}, AA:{}, GA:{}, SC:{}};
-
-      // 以換行切片；同一行可能有多個代碼，逐個處理
       const lines = text.split(/\r?\n/);
-
       const codeRe = /\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g;
 
-      for(const lineRaw of lines){
-        const line = lineRaw.trim();
+      for(const raw of lines){
+        const line = raw.trim();
         if(!line) continue;
 
-        const codes = [...line.matchAll(codeRe)];
-        if (!codes.length) continue;
+        const matches = [...line.matchAll(codeRe)];
+        if (!matches.length) continue;
 
-        for(const m of codes){
-          const fullCode = m[0];               // e.g., BA01 / AA05 / GA01 / SC01
-          const fam = fullCode.slice(0,2);     // BA / AA / GA / SC
+        for(const m of matches){
+          const fullCode = m[0];            // 例如 BA01 / AA05 / GAxx / SCxx
+          const fam = fullCode.slice(0,2);  // BA / AA / GA / SC
           const map = families[fam];
+          const seg = line.slice(m.index);  // 該碼起算到行尾的片段
 
-          // 抓出該代碼到行尾的片段（粗略做法，已足夠解析）
-          const seg = line.slice(m.index);
-
-          // 先嘗試「補助/自費 後的次數」：取 1~20 的整數
+          // 1) 次數（補助/自費 後的 1~20 整數）
           let count = null;
-          const countMatch = seg.match(/(?:補助|自費)\s*(\d{1,2})/);
-          if (countMatch) {
+          const countMatch = seg.match(/(?:補助|自費)\s*([0-9]{1,2})/);
+          if (countMatch){
             const v = parseInt(countMatch[1],10);
             if (v >= 1 && v <= 20) count = v;
           }
 
-          // 抓片段內所有整數，判斷是否含金額（2~5 位、通常 >= 50）
-          const ints = (seg.match(/\d+/g) || []).map(n=>parseInt(n,10));
+          // 2) 金額（僅供 AA 無次數時換算）
           let amount = null;
-          if (ints.length){
-            // 盡量避開把 count 誤當金額：金額通常較大
-            const candidates = ints.filter(n => n >= 30); // 30 以上較可能是金額
+          if (count === null){ // 只有沒抓到次數才考慮金額
+            const ints = (seg.match(/\d+/g) || []).map(n=>parseInt(n,10));
+            const candidates = ints.filter(n => n >= 30); // 金額常 >= 30
             if (candidates.length){
               amount = candidates[candidates.length - 1]; // 取較靠後的
             }
           }
 
-          // 支數判定：次數優先；否則用金額/單價（僅 AA/GA/SC 且有單價時）
+          // 3) 支數判定
           let zhi = 0;
           if (count !== null){
-            zhi = count;
-          } else if (fam !== 'BA') {
-            // AA/GA/SC 可用單價換算
-            const unit = priceMap[fullCode] ?? priceMap[fullCode.slice(0,4)]; // 先找完整碼，找不到用前4碼（如 GA01）
-            if (unit && unit > 0 && amount && amount >= Math.floor(unit*0.5)){
+            zhi = count; // 次數為王
+          } else if (fam === 'AA') {
+            const unit = priceMap[fullCode] ?? priceMap[fullCode.slice(0,4)];
+            if (unit && amount && amount >= Math.floor(unit*0.5)){
               zhi = Math.round((amount / unit) * 1000) / 1000;
             } else {
-              zhi = 0; // 沒有次數也無法換算就記 0（仍計出現筆數）
+              zhi = 0;
             }
           } else {
-            // BA 沒抓到次數就不做金額換算
+            // BA / GA / SC：不做金額換算，沒有次數就 0
             zhi = 0;
           }
 
@@ -376,8 +366,7 @@
       const result = analyze(text);
       renderAll(result);
       last = result;
-      // 啟用匯出按鈕
-      ['ps-export-csv','ps-export-json','ps-export-csv2','ps-export-json2'].forEach(id=>{
+      ['ps-export-csv','ps-export-json'].forEach(id=>{
         const el = document.getElementById(id);
         if (el) el.disabled = false;
       });
@@ -401,6 +390,7 @@
       e.preventDefault(); drop.style.background='#f9fbff';
     }));
     drop.addEventListener('drop', async (e)=>{
+      e.preventDefault();
       const file = e.dataTransfer.files && e.dataTransfer.files[0];
       if(file && ((file.type === 'application/pdf') || /\.pdf$/i.test(file.name))){
         const text = await extractPdfText(file);
@@ -411,10 +401,8 @@
     // 匯出
     document.getElementById('ps-export-csv').addEventListener('click', ()=>{ if(last) exportCSVAll(last); });
     document.getElementById('ps-export-json').addEventListener('click', ()=>{ if(last) exportJSONAll(last); });
-    document.getElementById('ps-export-csv2').addEventListener('click', ()=>{ if(last) exportCSVAll(last); });
-    document.getElementById('ps-export-json2').addEventListener('click', ()=>{ if(last) exportJSONAll(last); });
 
-    // 示範資料
+    // 示範資料（僅 BA/AA，不虛構 GA/SC 代碼）
     demoBtn.addEventListener('click', ()=>{
       const demo = `嚴雅雯范秉殷2025-09-05 5 08:07 ~ 08:42 BA01補助1 260 $
 嚴雅雯江昭輝2025-09-01 1 14:25 ~ 14:51 BA07補助1 325 $
@@ -424,11 +412,7 @@
 嚴雅雯賴美女2025/09/02 AA05補助200
 嚴雅雯張財進2025/09/02 AA06補助200
 嚴雅雯賴美女2025/09/06 AA09補助770
-嚴雅雯江昭輝2025/09/01 AA11補助50
-王小明 2025/09/03 GA01補助1 200 $
-王小明 2025/09/04 GA01補助200
-李小美 2025/09/07 SC01補助2 400 $
-李小美 2025/09/08 SC01補助400`;
+嚴雅雯江昭輝2025/09/01 AA11補助50`;
       handleText(demo);
     });
   })();
