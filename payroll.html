@@ -900,21 +900,21 @@ const toCanon = c => CODE_ALIAS[c] || c;
     document.getElementById('ps-json').addEventListener('click',()=>last&&exportJSON(last));
     document.getElementById('ps-apply').addEventListener('click',()=> last && applyToPayroll(last));
     document.getElementById('ps-demo').addEventListener('click',()=>{
-      const d=`嚴雅雯 賴美女 2025/09/01 AA05 補助 $100
-嚴雅雯 賴美女 2025/09/02 AA05 補助 $200
-嚴雅雯 張財進 2025/09/02 AA06 自費 $200
-嚴雅雯 王小明 2025/09/03 AA07 補助 $760
-嚴雅雯 OO先生 2025/09/03 AA08 自費 $385
-嚴雅雯 賴美女 2025/09/06 AA09 補助 $770
-嚴雅雯 江昭輝 2025/09/01 AA11 補助 $50
-嚴雅雯 范秉殷 2025-09-05 BA01 補助 1 $260
-嚴雅雯 江昭輝 2025-09-01 BA07 補助 1 $325
-嚴雅雯 張財進 2025-09-02 BA11 自費 2 $195
-嚴雅雯 王小美 2025-09-10 BA15-1 補助 1 $195
-嚴雅雯 王小美 2025-09-11 BA05-1 補助 2 $310
-嚴雅雯 王小美 2025-09-12 BA15-2 補助 1 $195
-嚴雅雯 李OO   2025-09-03 GA09 補助 3
-嚴雅雯 王OO   2025-09-04 SC09 自費 1`;
+      const d=`嚴X雯 賴X女 2025/09/01 AA05 補助 $100
+嚴X雯 賴X女 2025/09/02 AA05 補助 $200
+嚴X雯 張X進 2025/09/02 AA06 自費 $200
+嚴X雯 王X明 2025/09/03 AA07 補助 $760
+嚴X雯 OO先生 2025/09/03 AA08 自費 $385
+嚴X雯 賴X女 2025/09/06 AA09 補助 $770
+嚴X雯 江X輝 2025/09/01 AA11 補助 $50
+嚴X雯 范X殷 2025-09-05 BA01 補助 1 $260
+嚴X雯 江X輝 2025-09-01 BA07 補助 1 $325
+嚴X雯 張X進 2025-09-02 BA11 自費 2 $195
+嚴X雯 王X美 2025-09-10 BA15-1 補助 1 $195
+嚴X雯 王X美 2025-09-11 BA05-1 補助 2 $310
+嚴X雯 王X美 2025-09-12 BA15-2 補助 1 $195
+嚴X雯 李OO   2025-09-03 GA09 補助 3
+嚴X雯 王OO   2025-09-04 SC09 自費 1`;
       const r=analyze(d); renderAll(r); last=r; setBar(100); if(statusEl) statusEl.textContent='示範資料已載入';
       document.getElementById('ps-apply').disabled=false;
       document.getElementById('ps-csv').disabled=false;
