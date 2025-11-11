@@ -1269,5 +1269,64 @@ img, a img{ -webkit-user-drag:none; user-drag:none; }
     });
   })();
   </script>
+  <!-- ① 依實際高度更新 --topbar-h，讓 sticky 表頭與錨點不被擋到 -->
+<script>
+(function setTopbarH(){
+  const tb = document.getElementById('appTopbar') || document.querySelector('.topbar');
+  if(!tb) return;
+  const apply = () => {
+    const h = Math.round(tb.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--topbar-h', h + 'px');
+  };
+  window.addEventListener('load', apply);
+  window.addEventListener('resize', apply);
+  // 圖檔載入或字型換行後再補一次
+  let raf; new ResizeObserver(()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(apply); }).observe(tb);
+  setTimeout(apply, 0);
+})();
+</script>
+
+<!-- ② 導覽超出寬度時啟用「軌道可橫向滑動」並確保能滑回最左邊 -->
+<script>
+(function navOverflowFix(){
+  const nav = document.getElementById('topNav');
+  if(!nav) return;
+  const track = nav.querySelector('.nav-track') || nav.firstElementChild || nav;
+
+  function update(){
+    const overflow = track.scrollWidth > nav.clientWidth + 1;
+    // 讓 .nav-links 本身就可以橫滑（你已在 CSS 設了 overflow-x:auto；這裡只做狀態判斷）
+    nav.classList.toggle('is-overflow', overflow);
+    if (overflow && track.scrollLeft < 0) track.scrollLeft = 0;
+  }
+
+  // 滑鼠滾輪自動轉成水平滾動（保證能滑回最左邊）
+  track.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      track.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  }, { passive:false });
+
+  // 拖曳滾動（滑鼠按住拖移）
+  let isDown=false, startX=0, startLeft=0;
+  track.addEventListener('mousedown', e=>{ isDown=true; startX=e.pageX; startLeft=track.scrollLeft; track.style.cursor='grabbing'; });
+  track.addEventListener('mouseleave', ()=>{ isDown=false; track.style.cursor=''; });
+  track.addEventListener('mouseup', ()=>{ isDown=false; track.style.cursor=''; });
+  track.addEventListener('mousemove', e=>{
+    if(!isDown) return;
+    const dx = e.pageX - startX;
+    track.scrollLeft = startLeft - dx;
+  });
+
+  // 初始與後續檢查（視窗改變、字型/圖片造成寬度改變）
+  const check = () => requestAnimationFrame(update);
+  window.addEventListener('load', check);
+  window.addEventListener('resize', check);
+  new MutationObserver(check).observe(track, { childList:true, subtree:true, characterData:true });
+  new ResizeObserver(check).observe(track);
+  check();
+})();
+</script>
 </body>
 </html>
