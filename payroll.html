@@ -481,7 +481,7 @@
       function findGradeBySalary(sal){
         const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
         let g = list[0];
-        for (const v of list){ if (v <= sal) g = v; else break; }
+        for (const v of list){ if (v >= sal) g = v; else break; }
         return g;
       }
       function getRow(grade){
