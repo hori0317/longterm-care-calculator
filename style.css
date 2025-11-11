@@ -43,6 +43,9 @@ a:hover{ text-decoration:underline; }
 /* 捲動到錨點時，預留 topbar 高度不被遮住 */
 html{ scroll-padding-top:var(--topbar-h); }
 
+/* 小分隔 */
+.divider{ height:10px; }
+
 /* =====================
    頂部導覽列（三欄固定）
 ===================== */
@@ -105,9 +108,6 @@ html{ scroll-padding-top:var(--topbar-h); }
   .topbar{ padding:14px 16px; }
   .nav-links{ gap:20px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
 }
-
-/* 小分隔 */
-.divider{ height:10px; }
 
 /* =====================
    底部資訊條（固定）
@@ -230,6 +230,56 @@ html{ scroll-padding-top:var(--topbar-h); }
 .card .qrbox{ margin-top:20px; border-top:1px dashed var(--line); padding-top:14px; }
 
 /* =====================
+   KPI 卡片（薪資總覽）
+===================== */
+.kpi{ display:flex; gap:16px; flex-wrap:wrap; }
+.kpi .box{
+  flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
+  display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);
+}
+.kpi .box .lbl{ color:#7a7557; font-weight:700; }
+.kpi .box .num{ font-size:24px; font-weight:900; color:#2e7d32; }
+
+/* =====================
+   通用小表格 .tbl
+===================== */
+.tbl{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.tbl th{ background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line); }
+.tbl td{ padding:10px; border-top:1px solid var(--line); }
+.tbl tbody tr:nth-child(even){ background:#fffef9; }
+.tbl input[type="number"]{ width:90px; height:34px; text-align:right; }
+.right{ text-align:right; }
+.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; }
+.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:860px){ .grid-2{ grid-template-columns:1fr; } }
+.row-mid{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.pill-note{ display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333; }
+
+/* =====================
+   PDF 支數小工具（ps-*）
+===================== */
+.ps-muted{color:#5b6b81}.ps-small{font-size:.86rem}
+.ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.ps-pill{display:inline-block;padding:0 6px;border:1px solid #dbe6ff;background:#eef4ff;border-radius:999px}
+.ps-grid{display:grid;gap:12px}
+@media(min-width:920px){.ps-grid{grid-template-columns:1.1fr .9fr}}
+.ps-drop{border:2px dashed #c7d3ee;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#f9fbff;display:block}
+.ps-drop:hover{background:#eef4ff}
+.ps-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ps-btn{border:1px solid #c7d3ee;background:#f3f6ff;color:#102a56;padding:8px 12px;border-radius:10px;cursor:pointer}
+.ps-btn:disabled{opacity:.5;cursor:not-allowed}
+.ps-box{background:#fff;border:1px solid #e1e6ef;border-radius:12px;padding:12px;margin-top:10px}
+.ps-progress{height:10px;background:#eef3ff;border-radius:999px;overflow:hidden}
+.ps-bar{height:100%;width:0;background:#2667ff;transition:width .2s}
+.ps-h3{margin:.2rem 0 8px}
+.ps-table{width:100%;border-collapse:collapse}
+.ps-table thead th{background:#eef3ff;color:#102a56;text-align:left;padding:8px;border-bottom:1px solid #d8e2ff}
+.ps-table tbody td{padding:8px;border-bottom:1px solid #edf1f7}
+.ps-table tbody tr:hover{background:#f5f8ff}
+.ps-right{text-align:right}
+.ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
+
+/* =====================
    服務表格（統一版）
 ===================== */
 .service-card h3{
@@ -292,16 +342,25 @@ html{ scroll-padding-top:var(--topbar-h); }
 }
 
 /* =====================
-   浮水印層級（避免蓋住導覽與表頭）
+   浮水印（層級＋動畫）
 ===================== */
 .watermark{
   position:fixed; inset:0;
   z-index:500;
   pointer-events:none;
 }
+.wm-item{
+  position:absolute; font-weight:700; font-size:36px; color:rgba(0,0,0,.05);
+  transform:rotate(-25deg); white-space:nowrap; user-select:none;
+  animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;
+}
+@keyframes wm-sway{
+  0%{ transform:translateX(0) rotate(-25deg); }
+  100%{ transform:translateX(120px) rotate(-25deg); }
+}
 
 /* =====================
-   禁止選取文字與拖曳圖片（你要防拷）
+   禁止選取文字與拖曳圖片（防拷）
 ===================== */
 *{
   -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
