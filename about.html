@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- 交給 common.js 動態設定 <title> -->
-  <title>長照資訊系統</title>
+  <title>關於我們｜</title>
   <meta name="description" content="機構簡介、服務理念與團隊成員。" />
 
+  <!-- 網站共用樣式 -->
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
-  <!-- 載入順序：common → style → topbar -->
   <link rel="stylesheet" href="common.css?v=20251111-b1" />
-  <link rel="stylesheet" href="style.css?v=20251112-a1" />
-  <link rel="stylesheet" href="topbar-fixed.css?v=20251112-a1" />
 </head>
 
 <body>
@@ -28,20 +25,19 @@
   <!-- 頁尾 -->
   <div id="__footer"></div>
 
-  <!-- 共用腳本（順序很重要：先載入 header/footer，再執行主邏輯） -->
-  <script src="include.js?v=20251111-b1" defer></script>
-  <script src="common.js?v=20251111-b1" defer></script>
-  <script src="script.js?v=20251112-a1" defer></script>
+  <!-- 共用腳本 -->
+  <script src="include.js?v=20251111-b1"></script>
+  <script src="common.js?v=20251111-b1"></script>
 
-  <!-- 讓導覽高亮在 header 注入後再補跑一次（避免非同步載入時機差） -->
+  <!-- 自動導覽高亮 -->
   <script>
-    // 如果 include.js 是非同步載入 header，等 window.load 再跑一次高亮
-    window.addEventListener('load', function () {
-      if (typeof window.dispatchEvent === 'function') {
-        // 觸發一次 hashchange，讓 script.js 內的 setActiveNav() 重跑
-        window.dispatchEvent(new Event('hashchange'));
-      }
+  document.addEventListener("DOMContentLoaded", () => {
+    const here = location.pathname.split("/").pop().replace(/\.html?$/i, "") || "index";
+    document.querySelectorAll("nav a[href]").forEach(a => {
+      const target = a.getAttribute("href").replace(/\.html?$/i, "");
+      if (target === here) a.classList.add("active");
     });
+  });
   </script>
 </body>
 </html>
