@@ -1,6 +1,6 @@
 /* include.js
- * 共用頁首／頁尾注入、導覽高亮、行為初始化
- * 2025-11-12 hori 版
+ * 共用頁首／頁尾注入、導覽高亮、行為初始化（完整版，與額度頁 script.js 相容）
+ * 2025-11-12 hori 整合版
  */
 (function(){
   "use strict";
@@ -92,7 +92,16 @@
    * C. 導覽列可視化優化（active 自動置中／滾輪左右捲動）
    * ========================= */
   function enhanceScrollableNav(){
-    const wrap = $(".nav-wrap");
+    // 允許 header-lite 或 header 完整版皆可有 .nav-wrap；若沒有，動態包一層
+    let wrap = $(".nav-wrap");
+    const links = $(".nav-links");
+    if (!wrap && links && links.parentElement){
+      const w = document.createElement("div");
+      w.className = "nav-wrap";
+      links.parentElement.insertBefore(w, links);
+      w.appendChild(links);
+      wrap = w;
+    }
     const active = $(".nav-links a.active") || $(".nav-links a");
     if (!wrap) return;
 
@@ -110,6 +119,8 @@
         e.preventDefault();
       }
     }, { passive:false });
+
+    // 觸控裝置自然可滑，不需額外處理
   }
 
   /* =========================
@@ -120,18 +131,40 @@
     const btnReset = $("#btnReset");
     const btnPrint = $(".actions .btn.btn-gray[onclick], #btnPrint");
 
-    // B/A 單位切換：更新 data-unit 與按鈕文字，並廣播事件
+    // 取用單位：localStorage 為主，退而求其次 data-unit
+    function getUnit(){
+      const s = (localStorage.getItem("unit") || btnUnit?.getAttribute("data-unit") || "B").toUpperCase();
+      return (s === "A" || s === "B") ? s : "B";
+    }
+    function setUnit(u){
+      const unit = (u || "B").toUpperCase();
+      localStorage.setItem("unit", unit);
+      if (btnUnit){
+        btnUnit.setAttribute("data-unit", unit);
+        btnUnit.textContent = `${unit}單位`;
+        btnUnit.classList.remove("btn-green","btn-orange");
+        btnUnit.classList.add(unit === "A" ? "btn-green" : "btn-orange");
+      }
+    }
+
+    // 初始化按鈕顯示（若存在）
+    if (btnUnit){
+      setUnit(getUnit());
+    }
+
+    // B/A 單位切換：更新 localStorage 與按鈕，並廣播事件
+    // 注意：額度頁自己的 script.js 也會綁定 #btnUnitToggle；
+    // 這裡只「廣播事件」，實際隱藏/計算由各頁 script 處理，不雙重操作 DOM。
     if (btnUnit){
       btnUnit.addEventListener("click", ()=>{
-        const cur = (btnUnit.getAttribute("data-unit") || "B").toUpperCase();
+        const cur = getUnit();
         const next = cur === "B" ? "A" : "B";
-        btnUnit.setAttribute("data-unit", next);
-        btnUnit.textContent = `${next}單位`;
+        setUnit(next);
         fire("unit:toggle", { unit: next });
       });
     }
 
-    // 重置：若頁面提供 window.resetAll()，就呼叫；否則清 localStorage + 重新整理
+    // 重置：若頁面提供 window.resetAll()，就呼叫；否則清部分快取 + 重新整理
     if (btnReset){
       btnReset.addEventListener("click", ()=>{
         fire("app:reset", {});
@@ -139,9 +172,8 @@
           if (typeof window.resetAll === "function"){
             window.resetAll();
           }else{
-            // 清掉與你常用 key 相近的快取（不會清瀏覽器所有資料）
             Object.keys(localStorage).forEach(k=>{
-              if (/^(pl-|aa-|ba-|ga-|sc-|ps-|ins-|params|cfg)/i.test(k)) localStorage.removeItem(k);
+              if (/^(pl-|aa-|ba-|ga-|sc-|ps-|ins-|params|cfg|unit|addons)/i.test(k)) localStorage.removeItem(k);
             });
             location.reload();
           }
@@ -152,8 +184,8 @@
       });
     }
 
+    // 列印（保險，很多頁已經內建 onclick）
     if (btnPrint){
-      // 有些頁面已經在 HTML 綁 onclick="window.print()"，這裡再補一次保險
       btnPrint.addEventListener("click", ()=> window.print());
     }
   }
@@ -162,11 +194,13 @@
    * E. 主程序：注入 header/footer → 初始化
    * ========================= */
   (async function main(){
-    // 讀取 body 的 data-header：lite / none / (預設為完整版)
-    const headerMode = (document.body.dataset.header || "").toLowerCase().trim();
-    const headerUrl = headerMode === "lite"
-      ? "header-lite.html"
-      : (headerMode === "none" ? null : "header.html");
+    // 1) 讀取 body 的 data-header：'lite' / 'none' / (預設)auto
+    const mode = (document.body.dataset.header || "").toLowerCase().trim();
+    // 2) 預設：首頁用 header.html（有按鈕）；其它頁用 header-lite.html（無按鈕）
+    const slug = getSlug();
+    let headerUrl = (slug === "index") ? "header.html" : "header-lite.html";
+    if (mode === "lite") headerUrl = "header-lite.html";
+    if (mode === "none") headerUrl = null;
 
     // 注入 Header
     let headerInjected = null;
@@ -176,6 +210,12 @@
 
     // 注入 Footer（若頁面沒有 __footer 容器也無妨）
     await injectHtml("#__footer", "footer.html");
+
+    // 若不小心在非首頁載入了 header.html（有按鈕），保險移除按鈕
+    if (slug !== "index"){
+      $("#btnUnitToggle")?.remove();
+      $("#btnReset")?.remove();
+    }
 
     // Header 注入完成後再跑導覽高亮與標題設定
     initNavHighlight();
