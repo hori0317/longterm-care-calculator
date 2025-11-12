@@ -537,4 +537,3 @@ function adjustTopbarPadding(){
   const h = topbar.offsetHeight || 0;
   document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
-
