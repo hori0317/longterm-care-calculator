@@ -17,32 +17,31 @@
       --wm-shift:120px;
     }
     .watermark{position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden;}
-    .wm-item{position:absolute; font-weight:700; font-size:var(--wm-size); color:rgba(0,0,0,var(--wm-alpha)); transform:rotate(var(--wm-angle)); white-space:nowrap; user-select:none; animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
+    .wm-item{position:absolute; font-weight:700; font-size:var(--wm-size); color:rgba(0,0,0,var(--wm-alpha));
+      transform:rotate(var(--wm-angle)); white-space:nowrap; user-select:none; animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
     @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));} 100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
     @media print{.watermark{opacity:.08}}
 
-    /* 本頁小元件 */
+    /* 本頁小元件（原封保留） */
     .kpi{display:flex; gap:16px; flex-wrap:wrap;}
-    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
+    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
+      display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
     .kpi .box .lbl{color:#7a7557; font-weight:700;}
     .kpi .box .num{font-size:24px; font-weight:900; color:#2e7d32;}
-
-    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
+      border-radius:12px; overflow:hidden;}
     .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
-
     .right{text-align:right;}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
-
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
-
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
 
-    /* PDF 支數小工具（ps- 前綴） */
+    /* PDF 支數小工具（ps- 前綴；原封保留） */
     .ps-muted{color:#5b6b81}.ps-small{font-size:.86rem}.ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
     .ps-pill{display:inline-block;padding:0 6px;border:1px solid #dbe6ff;background:#eef4ff;border-radius:999px}
     .ps-grid{display:grid;gap:12px}@media(min-width:920px){.ps-grid{grid-template-columns:1.1fr .9fr}}
@@ -64,6 +63,9 @@
   </style>
 </head>
 <body>
+  <!-- 共用 Header 置入點 -->
+  <div id="__header"></div>
+
   <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
@@ -82,30 +84,6 @@
     <span class="wm-item" style="top:90%; left:45%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
-
-  <!-- 頂部導覽 -->
-  <header class="topbar">
-    <div class="brand">
-      <a href="index.html" class="logo-link" aria-label="回首頁">
-        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-      </a>
-      <span class="site-title" id="siteTitle">薪資計算機</span>
-    </div>
-    <nav class="nav-links" aria-label="主選單">
-      <a href="index.html">額度計算機</a>
-      <a href="payroll.html">薪資計算機</a>
-      <a href="care-info.html">長照相關資訊</a>
-      <a href="news.html">最新公告</a>
-      <a href="contact.html">聯繫方式</a>
-      <a href="about.html">關於我們</a>
-    </nav>
-    <div class="actions">
-      <button class="btn pill btn-gray" id="btnPrint" type="button">列印</button>
-      <button class="btn pill btn-green" id="btnResetAll" type="button">全部清空</button>
-    </div>
-  </header>
-
-  <div class="divider"></div>
 
   <main class="container">
     <!-- KPI -->
@@ -1047,6 +1025,6 @@
         }
       });
     })();
-  </script>
+  <script src="include.js" defer></script>
 </body>
 </html>
