@@ -1,25 +1,26 @@
-<!-- header.html -->
+<!-- 統一的頂欄：類別與 class 名稱完全沿用你既有 CSS（不調整版面配置） -->
 <header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <a class="brand-link" href="./index.html" data-title>額度計算機</a>
-    </div>
+  <div class="brand">
+    <a href="index.html" class="logo-link" aria-label="回首頁">
+      <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+    </a>
+    <span class="site-title" id="siteTitle">額度計算機</span>
+  </div>
 
-    <!-- 導覽列（保持你原本的結構與 class，避免影響樣式） -->
-    <nav class="nav-links" aria-label="主導覽">
-      <a href="./index.html" data-nav="index">額度計算機</a>
-      <a href="./payroll.html" data-nav="payroll">薪資計算機</a>
-      <a href="./quickref.html" data-nav="quickref">碼別速查</a>
-    </nav>
+  <!-- 中段導覽（等寬、置中），項目與順序不改 -->
+  <nav class="nav-links" aria-label="主選單">
+    <a href="index.html">額度計算機</a>
+    <a href="payroll.html">薪資計算機</a>
+    <a href="care-info.html">長照相關資訊</a>
+    <a href="news.html">最新公告</a>
+    <a href="contact.html">聯繫方式</a>
+    <a href="about.html">關於我們</a>
+  </nav>
 
-    <!-- 右側操作區：A/B 切換 + 其他功能 -->
-    <div class="actions">
-      <div class="seg">
-        <button id="btnUnitA" type="button" class="seg-btn" aria-pressed="false">A 單位</button>
-        <button id="btnUnitB" type="button" class="seg-btn" aria-pressed="false">B 單位</button>
-      </div>
-      <button id="btnPrint" class="ghost" type="button" title="列印">列印</button>
-      <button id="btnResetAll" class="ghost" type="button" title="清空">清空</button>
-    </div>
+  <!-- 右側按鈕區：id 與你原本一致，讓既有 script.js 能找到 -->
+  <div class="actions">
+    <button class="btn pill btn-orange" id="btnUnitToggle" type="button">A單位</button>
+    <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
+    <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
   </div>
 </header>
