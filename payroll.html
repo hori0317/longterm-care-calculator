@@ -10,31 +10,35 @@
   <link rel="stylesheet" href="topbar-fixed.css" />
   <style>
     :root{
-      --wm-text:"@hori版權所有"; --wm-size:36px; --wm-angle:-25deg; --wm-alpha:.05; --wm-shift:120px;
+      --wm-text:"@hori版權所有";
+      --wm-size:36px;
+      --wm-angle:-25deg;
+      --wm-alpha:.05;
+      --wm-shift:120px;
     }
     .watermark{position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden;}
-    .wm-item{position:absolute; font-weight:700; font-size:var(--wm-size); color:rgba(0,0,0,var(--wm-alpha));
-      transform:rotate(var(--wm-angle)); white-space:nowrap; user-select:none;
-      animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
-    @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));}
-      100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
+    .wm-item{position:absolute; font-weight:700; font-size:var(--wm-size); color:rgba(0,0,0,var(--wm-alpha)); transform:rotate(var(--wm-angle)); white-space:nowrap; user-select:none; animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
+    @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));} 100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
     @media print{.watermark{opacity:.08}}
 
     /* 本頁小元件 */
     .kpi{display:flex; gap:16px; flex-wrap:wrap;}
-    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
-      display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
+    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
     .kpi .box .lbl{color:#7a7557; font-weight:700;}
     .kpi .box .num{font-size:24px; font-weight:900; color:#2e7d32;}
-    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
-      border-radius:12px; overflow:hidden;}
+
+    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
     .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
-    .right{text-align:right;} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+
+    .right{text-align:right;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
+
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
 
@@ -62,13 +66,13 @@
 <body>
   <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
-    <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:65%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:10%; --dur:13s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:40%; --dur:12s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:70%; --dur:14s;">@hori版權所有</span>
-    <span class="wm-item" style="top:50%; left:5%;  --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:5%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:50%; left:35%; --dur:11s;">@hori版權所有</span>
     <span class="wm-item" style="top:50%; left:65%; --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:75%; left:10%; --dur:13s;">@hori版權所有</span>
@@ -100,6 +104,7 @@
       <button class="btn pill btn-green" id="btnResetAll" type="button">全部清空</button>
     </div>
   </header>
+
   <div class="divider"></div>
 
   <main class="container">
@@ -172,6 +177,7 @@
         <div class="ps-progress"><div id="ps-bar" class="ps-bar"></div></div>
         <div id="ps-status" class="ps-small ps-muted" style="margin-top:6px">待上傳</div>
       </div>
+
       <pre id="ps-debug" class="ps-box ps-small" style="white-space:pre-wrap">偵錯訊息：</pre>
 
       <div style="display:grid;gap:12px;margin-top:10px;">
@@ -265,6 +271,7 @@
             </tbody>
           </table>
         </div>
+
         <div class="card" style="padding:14px;">
           <div class="row-mid" style="margin-bottom:10px;">
             <span class="pill-note">自動依「拆薪後薪資」抓 ≥ 薪資的最大投保級距</span>
@@ -352,32 +359,58 @@
 
       /* 勞健保級距表（員工自付） */
       const INS_TABLE = [
-        { grade:11100, labor:277, health:443 }, { grade:12540, labor:313, health:443 },
-        { grade:13500, labor:338, health:443 }, { grade:15840, labor:396, health:443 },
-        { grade:16500, labor:413, health:443 }, { grade:17280, labor:432, health:443 },
-        { grade:19047, labor:476, health:443 }, { grade:20008, labor:505, health:443 },
-        { grade:21009, labor:525, health:443 }, { grade:22000, labor:550, health:443 },
-        { grade:23100, labor:577, health:443 }, { grade:24000, labor:600, health:443 },
-        { grade:25250, labor:632, health:443 }, { grade:26400, labor:660, health:443 },
-        { grade:27600, labor:690, health:443 }, { grade:28590, labor:715, health:443 },
-        { grade:28800, labor:720, health:447 }, { grade:30300, labor:758, health:472 },
-        { grade:31800, labor:795, health:493 }, { grade:33300, labor:833, health:516 },
-        { grade:34800, labor:870, health:540 }, { grade:36300, labor:908, health:563 },
-        { grade:38200, labor:955, health:592 }, { grade:40100, labor:1002, health:622 },
-        { grade:41900, labor:1045, health:651 }, { grade:43900, labor:1098, health:681 },
-        { grade:45800, labor:1145, health:710 }, { grade:50600, labor:1145, health:785 },
-        { grade:53000, labor:1145, health:822 }, { grade:55400, labor:1145, health:859 },
-        { grade:57800, labor:1145, health:896 }, { grade:60800, labor:1145, health:943 },
-        { grade:63800, labor:1145, health:990 }, { grade:66800, labor:1145, health:1036 },
-        { grade:69800, labor:1145, health:1083 }, { grade:72800, labor:1145, health:1129 },
-        { grade:76500, labor:1145, health:1187 }, { grade:80200, labor:1145, health:1244 },
-        { grade:83900, labor:1145, health:1301 }, { grade:87600, labor:1145, health:1359 },
-        { grade:92100, labor:1145, health:1428 }, { grade:96600, labor:1145, health:1498 },
-        { grade:101100, labor:1145, health:1568 }, { grade:105600, labor:1145, health:1638 },
-        { grade:110100, labor:1145, health:1708 }, { grade:115500, labor:1145, health:1791 },
-        { grade:120900, labor:1145, health:1875 }, { grade:126300, labor:1145, health:1959 },
-        { grade:131700, labor:1145, health:2043 }, { grade:137100, labor:1145, health:2126 },
-        { grade:142500, labor:1145, health:2210 }, { grade:147900, labor:1145, health:2294 },
+        { grade:11100, labor:277, health:443 },
+        { grade:12540, labor:313, health:443 },
+        { grade:13500, labor:338, health:443 },
+        { grade:15840, labor:396, health:443 },
+        { grade:16500, labor:413, health:443 },
+        { grade:17280, labor:432, health:443 },
+        { grade:19047, labor:476, health:443 },
+        { grade:20008, labor:505, health:443 },
+        { grade:21009, labor:525, health:443 },
+        { grade:22000, labor:550, health:443 },
+        { grade:23100, labor:577, health:443 },
+        { grade:24000, labor:600, health:443 },
+        { grade:25250, labor:632, health:443 },
+        { grade:26400, labor:660, health:443 },
+        { grade:27600, labor:690, health:443 },
+        { grade:28590, labor:715, health:443 },
+        { grade:28800, labor:720, health:447 },
+        { grade:30300, labor:758, health:472 },
+        { grade:31800, labor:795, health:493 },
+        { grade:33300, labor:833, health:516 },
+        { grade:34800, labor:870, health:540 },
+        { grade:36300, labor:908, health:563 },
+        { grade:38200, labor:955, health:592 },
+        { grade:40100, labor:1002, health:622 },
+        { grade:41900, labor:1045, health:651 },
+        { grade:43900, labor:1098, health:681 },
+        { grade:45800, labor:1145, health:710 },
+        { grade:50600, labor:1145, health:785 },
+        { grade:53000, labor:1145, health:822 },
+        { grade:55400, labor:1145, health:859 },
+        { grade:57800, labor:1145, health:896 },
+        { grade:60800, labor:1145, health:943 },
+        { grade:63800, labor:1145, health:990 },
+        { grade:66800, labor:1145, health:1036 },
+        { grade:69800, labor:1145, health:1083 },
+        { grade:72800, labor:1145, health:1129 },
+        { grade:76500, labor:1145, health:1187 },
+        { grade:80200, labor:1145, health:1244 },
+        { grade:83900, labor:1145, health:1301 },
+        { grade:87600, labor:1145, health:1359 },
+        { grade:92100, labor:1145, health:1428 },
+        { grade:96600, labor:1145, health:1498 },
+        { grade:101100, labor:1145, health:1568 },
+        { grade:105600, labor:1145, health:1638 },
+        { grade:110100, labor:1145, health:1708 },
+        { grade:115500, labor:1145, health:1791 },
+        { grade:120900, labor:1145, health:1875 },
+        { grade:126300, labor:1145, health:1959 },
+        { grade:131700, labor:1145, health:2043 },
+        { grade:137100, labor:1145, health:2126 },
+        { grade:142500, labor:1145, health:2210 },
+        { grade:147900, labor:1145, health:2294 },
         { grade:150000, labor:1145, health:2327 }
       ];
 
@@ -389,15 +422,14 @@
         Object.keys(PRICE.AA).forEach(code=>{
           const price = PRICE.AA[code];
           const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${code}</td>
-            <td class="right mono">${F(price)}</td>
-            <td class="right"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
-            <td class="right mono" data-aa-sum="${code}">0</td>
-          `;
+          tr.innerHTML = `<td>${code}</td>
+  <td class="right mono">${F(price)}</td>
+  <td class="right"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
+  <td class="right mono" data-aa-sum="${code}">0</td>`;
           host.appendChild(tr);
         });
       }
+
       function buildGroup(tableId, key, savedKey){
         const host = document.querySelector(`#${tableId} tbody`);
         host.innerHTML = '';
@@ -405,12 +437,10 @@
         const k = key.toLowerCase();
         PRICE[key].forEach(item=>{
           const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${item.code}${item.name ? ' ' + item.name : ''}</td>
-            <td class="right mono">${F(item.price)}</td>
-            <td class="right"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
-            <td class="right mono" data-${k}-sum="${item.code}">0</td>
-          `;
+          tr.innerHTML = `<td>${item.code}${item.name ? ' ' + item.name : ''}</td>
+  <td class="right mono">${F(item.price)}</td>
+  <td class="right"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
+  <td class="right mono" data-${k}-sum="${item.code}">0</td>`;
           host.appendChild(tr);
         });
       }
@@ -429,6 +459,7 @@
         document.querySelector('#resAA').textContent = F(total);
         return total;
       }
+
       function calcGroup(key, sumId, kpiId, resId){
         let total = 0;
         const k = key.toLowerCase();
@@ -443,6 +474,7 @@
         document.querySelector(resId).textContent = F(total);
         return total;
       }
+
       function updateAll(){
         const sumAA = calcAA();
         const sumBA = calcGroup('BA', '#sumBA', '#kpiBA', '#resBA');
@@ -451,19 +483,23 @@
         const total = sumAA + sumBA + sumGA + sumSC;
         $('#kpiTotal').textContent = F(total);
         $('#resTotal').textContent = F(total);
+
         const ratioPct = N($('#ratioPct').value) || 0;
         const ratio = ratioPct / 100;
         $('#resRatio').textContent = ratioPct;
+
         const salary = Math.round(total * ratio);
         $('#kpiSalary').textContent = F(salary);
         $('#resSalary').textContent = F(salary);
+
         syncInsuranceBySalary(salary);
         saveAll();
       }
 
       /* 勞健保 */
       function buildInsOptions(){
-        const sel = $('#insGrade'); sel.innerHTML = '';
+        const sel = $('#insGrade');
+        sel.innerHTML = '';
         INS_TABLE.forEach(row=>{
           const opt = document.createElement('option');
           opt.value = row.grade;
@@ -471,16 +507,19 @@
           sel.appendChild(opt);
         });
       }
-function findGradeBySalary(sal){
-  const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
-  for (const v of list){
-    if (sal <= v) return v;  // 找到第一個「大於等於薪資」的級距
-  }
-  return list[list.length-1]; // 超過最高級距時用最後一級
-}
+
+      function findGradeBySalary(sal){
+        const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
+        for (const v of list){
+          if (sal <= v) return v; // 找到第一個「大於等於薪資」的級距
+        }
+        return list[list.length-1]; // 超過最高級距時用最後一級
+      }
+
       function getRow(grade){
         return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0];
       }
+
       function syncInsuranceBySalary(salary){
         const auto = $('#insAuto').checked;
         const sel = $('#insGrade');
@@ -521,7 +560,12 @@ function findGradeBySalary(sal){
         };
         localStorage.setItem('pl-params', JSON.stringify(params));
       }
-      function loadLS(key, fb){ try{ return JSON.parse(localStorage.getItem(key)||'') || fb; }catch(e){ return fb; } }
+
+      function loadLS(key, fb){
+        try{ return JSON.parse(localStorage.getItem(key)||'') || fb; }
+        catch(e){ return fb; }
+      }
+
       function restore(){
         const p = loadLS('pl-params', null);
         if (p){
@@ -603,8 +647,12 @@ function findGradeBySalary(sal){
           const target = norm(a.getAttribute('href'));
           if (target && target === here) a.classList.add('active');
         });
+
         // 同步頁面標題
-        const map = { index:'額度計算機', payroll:'薪資計算機', 'care-info':'長照相關資訊', news:'最新公告', contact:'聯繫方式', about:'關於我們' };
+        const map = {
+          index:'額度計算機', payroll:'薪資計算機', 'care-info':'長照相關資訊',
+          news:'最新公告', contact:'聯繫方式', about:'關於我們'
+        };
         const slug = here || 'payroll';
         const pageName = map[slug] || '薪資計算機';
         const st = document.getElementById('siteTitle');
@@ -633,10 +681,7 @@ function findGradeBySalary(sal){
       const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
 
       // 代碼別名（同碼合併）
-      const CODE_ALIAS = {
-        'BA05-1': 'BA05', 'BA05-2': 'BA05',
-        'BA16-1': 'BA16', 'BA16-2': 'BA16'
-      };
+      const CODE_ALIAS = { 'BA05-1': 'BA05', 'BA05-2': 'BA05', 'BA16-1': 'BA16', 'BA16-2': 'BA16' };
       const toCanon = c => CODE_ALIAS[c] || c;
 
       // 動態載入 pdf.js
@@ -654,7 +699,8 @@ function findGradeBySalary(sal){
                 pdfjsLib.GlobalWorkerOptions.workerSrc=`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.worker.min.js`;
                 await pdfjsLib.getDocument({data:new Uint8Array([0x25,0x50,0x44,0x46])}).promise.catch(()=>null);
               }catch{
-                pdfjsLib.GlobalWorkerOptions.workerSrc=""; pdfjsLib.GlobalWorkerOptions.workerPort=null;
+                pdfjsLib.GlobalWorkerOptions.workerSrc="";
+                pdfjsLib.GlobalWorkerOptions.workerPort=null;
               }
               return;
             }catch{}
@@ -677,7 +723,9 @@ function findGradeBySalary(sal){
       }
 
       // AA 單價（含 AA07）
-      function getAAUnit(){ return { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 }; }
+      function getAAUnit(){
+        return { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 };
+      }
 
       // 讀 PDF → 文字
       async function extractPdfText(file){
@@ -692,14 +740,17 @@ function findGradeBySalary(sal){
               const page=await pdf.getPage(i);
               const c=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false});
               const s=c.items.map(it=>it.str||'').join(' ');
-              texts.push(s); total+=s.length;
+              texts.push(s);
+              total+=s.length;
               setBar(100*i/pdf.numPages);
               if(statusEl) statusEl.textContent=`PDF 解析中 (${i}/${pdf.numPages}) · ${pdfVer||'pdf.js'}/${w.k}`;
             }
             URL.revokeObjectURL(url);
             log(`PDF.js 成功：頁=${texts.length} 字=${total}`);
             return {text:texts.join('\n'), pdf, charCount:total};
-          }catch(e){ log(`PDF.js 失敗(${w.k})：`+why(e)); }
+          }catch(e){
+            log(`PDF.js 失敗(${w.k})：`+why(e));
+          }
         }
         throw new Error('pdf.js failed');
       }
@@ -729,13 +780,18 @@ function findGradeBySalary(sal){
       function analyze(text){
         const units=getAAUnit(), fam={BA:{},AA:{},GA:{},SC:{}};
         const codeRe=/\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g, toHalf=v=>Math.round(v*2)/2;
+
         for (const raw of text.split(/\r?\n/)){
-          const line=raw.trim(); if(!line) continue;
-          const codes=[...line.matchAll(codeRe)]; if(!codes.length) continue;
+          const line=raw.trim();
+          if(!line) continue;
+          const codes=[...line.matchAll(codeRe)];
+          if(!codes.length) continue;
+
           for (const m of codes){
             const fullRaw=m[0];
             const canon = toCanon(fullRaw); // 先轉正規碼
             const head = canon.slice(0,2);
+
             if (head==='AA'){
               const after=line.slice(m.index+fullRaw.length, m.index+fullRaw.length+40);
               let amt=null, m1=after.match(/\$\s*([0-9][0-9,]*)/);
@@ -747,49 +803,66 @@ function findGradeBySalary(sal){
               const unit=units[canon]??units[canon.slice(0,4)];
               const zhi = (unit && amt) ? toHalf(amt/unit) : 0;
               const rec=fam.AA[canon]||{occ:0,sum:0};
-              rec.occ++; rec.sum+=zhi;
+              rec.occ++;
+              rec.sum+=zhi;
               fam.AA[canon]=rec;
             }else{
               const ctx=line.slice(Math.max(0,m.index-40), Math.min(line.length,m.index+fullRaw.length+40));
               const c=ctx.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
               const zhi = c ? Math.max(0, Math.min(20, parseInt(c[1],10))) : 0;
               const rec=(fam[head][canon]||{occ:0,sum:0});
-              rec.occ++; rec.sum+=zhi;
+              rec.occ++;
+              rec.sum+=zhi;
               fam[head][canon]=rec;
             }
           }
         }
+
         const rows=obj=>Object.entries(obj).map(([code,{occ,sum}])=>({code,occ,sum})).sort((a,b)=>a.code.localeCompare(b.code));
         return {BA:rows(fam.BA),AA:rows(fam.AA),GA:rows(fam.GA),SC:rows(fam.SC)};
       }
 
       // 渲染 & 匯出
       const tb={BA:$('#ps-t-BA tbody'),AA:$('#ps-t-AA tbody'),GA:$('#ps-t-GA tbody'),SC:$('#ps-t-SC tbody')};
+
       function renderRows(tbody, rows){
         if(!tbody) return;
         tbody.innerHTML='';
         for(const r of rows){
           const tr=document.createElement('tr');
-          tr.innerHTML=`
-            <td><span class="ps-pill">${r.code}</span></td>
-            <td class="ps-right">${r.occ}</td>
-            <td class="ps-right">${r.sum.toFixed(1)}</td>
-          `;
+          tr.innerHTML=`<td><span class="ps-pill">${r.code}</span></td>
+  <td class="ps-right">${r.occ}</td>
+  <td class="ps-right">${r.sum.toFixed(1)}</td>`;
           tbody.appendChild(tr);
         }
       }
-      function renderAll(res){ renderRows(tb.BA,res.BA); renderRows(tb.AA,res.AA); renderRows(tb.GA,res.GA); renderRows(tb.SC,res.SC); }
+      function renderAll(res){
+        renderRows(tb.BA,res.BA);
+        renderRows(tb.AA,res.AA);
+        renderRows(tb.GA,res.GA);
+        renderRows(tb.SC,res.SC);
+      }
+
       function exportCSV(res){
         const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(1)}`).join('\n')+'\n\n';
         const csv=blk('【BA】',res.BA)+blk('【AA】',res.AA)+blk('【GA】',res.GA)+blk('【SC】',res.SC);
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url; a.download='pdf-stat.csv'; a.click(); URL.revokeObjectURL(url);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download='pdf-stat.csv';
+        a.click();
+        URL.revokeObjectURL(url);
       }
+
       function exportJSON(res){
         const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:Number(r.sum.toFixed(1))}));
         const payload={BA:pick(res.BA),AA:pick(res.AA),GA:pick(res.GA),SC:pick(res.SC),meta:{generatedAt:new Date().toISOString()}};
         const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}), url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url; a.download='pdf-stat.json'; a.click(); URL.revokeObjectURL(url);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download='pdf-stat.json';
+        a.click();
+        URL.revokeObjectURL(url);
       }
 
       // 同步到表單（先清空 → 再寫入；AA 用 0.5 step；BA/GA/SC 取整）
@@ -802,6 +875,7 @@ function findGradeBySalary(sal){
       }
       const fwMap = {'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','－':'-','　':' '};
       function normalize(code){ return String(code||'').trim().replace(/[０-９－　]/g, ch=>fwMap[ch] ?? ch); }
+
       function setInputByCode(kind, code, val, step){
         const norm = normalize(code);
         const canon = toCanon(norm);
@@ -812,14 +886,17 @@ function findGradeBySalary(sal){
         sel.dispatchEvent(new Event('input',{bubbles:true}));
         return true;
       }
+
       function applyToPayroll(res){
         resetPayrollInputs();
         const miss = [];
+
         // AA：0.5 進位
         res.AA.forEach(r=>{
           const ok = setInputByCode('aa', r.code, r.sum, '0.5');
           if (!ok) miss.push(`AA：${normalize(r.code)}`);
         });
+
         // BA / GA / SC：整數
         res.BA.forEach(r=>{
           const ok = setInputByCode('ba', r.code, Math.round(r.sum));
@@ -845,7 +922,9 @@ function findGradeBySalary(sal){
             host.appendChild(warn);
           }
           warn.innerHTML = `<b>未同步的碼別（薪資表中沒有）：</b><br>${miss.map(m=>'• '+m).join('<br>')}`;
-        }else if (warn){ warn.remove(); }
+        }else if (warn){
+          warn.remove();
+        }
 
         document.getElementById('tblAA')?.scrollIntoView({behavior:'smooth', block:'start'});
       }
@@ -856,50 +935,85 @@ function findGradeBySalary(sal){
       const syncYesBtn = document.getElementById('ps-sync-yes');
       const syncNoBtn = document.getElementById('ps-sync-no');
       const AUTO_KEY = 'ps-auto-sync';
+
       function loadAutoSync(){ try{ return localStorage.getItem(AUTO_KEY)==='1'; }catch(e){ return false; } }
       function saveAutoSync(v){ try{ localStorage.setItem(AUTO_KEY, v?'1':'0'); }catch(e){} }
       function showSyncBar(on){ if(syncBar) syncBar.style.display = on ? 'flex' : 'none'; }
-      if (autoSyncEl){ autoSyncEl.checked = loadAutoSync(); autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked)); }
-      if (syncYesBtn){ syncYesBtn.addEventListener('click', ()=>{ if (last){ applyToPayroll(last); } showSyncBar(false); }); }
-      if (syncNoBtn){ syncNoBtn.addEventListener('click', ()=> showSyncBar(false)); }
+
+      if (autoSyncEl){
+        autoSyncEl.checked = loadAutoSync();
+        autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked));
+      }
+      if (syncYesBtn){
+        syncYesBtn.addEventListener('click', ()=>{
+          if (last){ applyToPayroll(last); }
+          showSyncBar(false);
+        });
+      }
+      if (syncNoBtn){
+        syncNoBtn.addEventListener('click', ()=> showSyncBar(false));
+      }
 
       // 綁定
       let last=null;
       async function handleFile(f){
-        if(!debug) return; debug.textContent='偵錯訊息：\n';
-        setBar(0); if(statusEl) statusEl.textContent='準備解析…';
+        if(!debug) return;
+        debug.textContent='偵錯訊息：\n';
+        setBar(0);
+        if(statusEl) statusEl.textContent='準備解析…';
         let pdfRes=null, text='';
-        try{ pdfRes=await extractPdfText(f); }catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
+
+        try{ pdfRes=await extractPdfText(f); }
+        catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
+
         if(pdfRes && pdfRes.charCount>0){
-          text=pdfRes.text; setBar(100);
+          text=pdfRes.text;
+          setBar(100);
           if(statusEl) statusEl.textContent='PDF 文字擷取完成';
         } else {
           try{
             const pdf= pdfRes?.pdf || await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
-            if(statusEl) statusEl.textContent='啟用 OCR…'; setBar(1);
-            text=await ocrPdfToText(pdf); setBar(100);
+            if(statusEl) statusEl.textContent='啟用 OCR…';
+            setBar(1);
+            text=await ocrPdfToText(pdf);
+            setBar(100);
             if(statusEl) statusEl.textContent='OCR 完成';
-          }catch(e){ log('OCR 也失敗：'+why(e)); alert('此 PDF 無法解析，可能是加密或損壞。'); return; }
+          }catch(e){
+            log('OCR 也失敗：'+why(e));
+            alert('此 PDF 無法解析，可能是加密或損壞。');
+            return;
+          }
         }
+
         const res=analyze(text);
         renderAll(res);
         last=res;
         document.getElementById('ps-apply').disabled=false;
         document.getElementById('ps-csv').disabled=false;
         document.getElementById('ps-json').disabled=false;
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
+
+        if (autoSyncEl && autoSyncEl.checked){
+          applyToPayroll(last);
+          showSyncBar(false);
+        } else {
+          showSyncBar(true);
+        }
       }
 
       const fileInput=$('#ps-file'), drop=$('#ps-drop');
-      if(fileInput){ fileInput.addEventListener('change',e=>{const f=e.target.files?.[0]; if(f) handleFile(f);}); }
+      if(fileInput){
+        fileInput.addEventListener('change',e=>{const f=e.target.files?.[0]; if(f) handleFile(f);});
+      }
       if(drop){
         ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#eef4ff';}));
         ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#f9fbff';}));
         drop.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files?.[0]; if(f) handleFile(f);});
       }
+
       document.getElementById('ps-csv').addEventListener('click',()=>last&&exportCSV(last));
       document.getElementById('ps-json').addEventListener('click',()=>last&&exportJSON(last));
       document.getElementById('ps-apply').addEventListener('click',()=> last && applyToPayroll(last));
+
       document.getElementById('ps-demo').addEventListener('click',()=>{
         const d=`嚴X雯 賴X女 2025/09/01 AA05 補助 $100
 嚴X雯 賴X女 2025/09/02 AA05 補助 $200
@@ -916,12 +1030,21 @@ function findGradeBySalary(sal){
 嚴X雯 王X美 2025-09-12 BA15-2 補助 1 $195
 嚴X雯 李OO 2025-09-03 GA09 補助 3
 嚴X雯 王OO 2025-09-04 SC09 自費 1`;
-        const r=analyze(d); renderAll(r); last=r; setBar(100);
+        const r=analyze(d);
+        renderAll(r);
+        last=r;
+        setBar(100);
         if(statusEl) statusEl.textContent='示範資料已載入';
         document.getElementById('ps-apply').disabled=false;
         document.getElementById('ps-csv').disabled=false;
         document.getElementById('ps-json').disabled=false;
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
+
+        if (autoSyncEl && autoSyncEl.checked){
+          applyToPayroll(last);
+          showSyncBar(false);
+        } else {
+          showSyncBar(true);
+        }
       });
     })();
   </script>
