@@ -1,10 +1,11 @@
 /**********************
  * script.js（額度計算機：週→月→總；總可改，改週即重置同步）
- * 版本：2025-11-12
+ * 版本：2025-11-12（修正版）
  * - 服務列 DOM 產生，每欄獨立 <td>（避免「沐浴0」黏在一起）
  * - 各列 tr.dataset.code = item.code；C 組 tr.dataset.cmode = "1"
  * - applyUnitEffects()：B 單位隱藏並歸零 BA09/BA09a 與整個 BD 組；A 單位恢復
  * - 與 include.js 整合：監聽 unit:toggle 事件；同時支援本頁直接按鈕綁定
+ * - ✅ 修正：與 common.js 統一使用 localStorage('app-unit')，且本檔恢復綁定 click
  **********************/
 
 /* 公用 */
@@ -81,8 +82,18 @@ const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180
 const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/* 狀態 */
-let currentUnit = (localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit) || "B").toUpperCase();
+/* ==== 狀態（統一用 app-unit，與 common.js 同步） ==== */
+const STORE_KEY = "app-unit";
+const getUnit = () => {
+  try{ const v = localStorage.getItem(STORE_KEY); return (v==="A"||v==="B")?v:"B"; }
+  catch(_){ return "B"; }
+};
+const setUnit = (u) => {
+  const v = (u==="A") ? "A" : "B";
+  try{ localStorage.setItem(STORE_KEY, v); }catch(_){}
+  return v;
+};
+let currentUnit = getUnit();
 const lastCalc = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
 /* 初始化 */
@@ -93,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
   bindHeaderInputs();
-  bindUnitToggle();           // 本頁保險綁一次
+  bindUnitToggle();           // ✅ 本頁恢復綁定 click
   applyUnitEffects();
   updateSCAvailability();
   updateResults();
@@ -119,12 +130,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* 也監聽 include.js 廣播的單位切換事件 */
+/* 也監聽 include.js 廣播的單位切換事件（同步所有頁狀態） */
 window.addEventListener("unit:toggle", (e)=>{
-  const next = (e?.detail?.unit || "").toUpperCase();
+  const next = ((e?.detail?.unit) || getUnit()).toUpperCase();
   if (next === "A" || next === "B"){
-    currentUnit = next;
-    localStorage.setItem("unit", currentUnit);
+    currentUnit = setUnit(next);
     applyUnitEffects();
     updateResults();
   }
@@ -451,31 +461,50 @@ function updateCaregiverSalary(){
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* A/B 切換（本頁不再綁 click，僅初始化外觀；切換靠 include.js 的 unit:toggle） */
+/* ✅ A/B 切換（本頁直接綁定 click，並對外廣播 unit:toggle） */
 function bindUnitToggle(){
   const btn = $("#btnUnitToggle");
   if(!btn) return;
 
   // 初始化目前單位與按鈕外觀
-  const initUnit = (localStorage.getItem("unit") || btn.dataset.unit || "B").toUpperCase();
-  currentUnit = (initUnit === "A" || initUnit === "B") ? initUnit : "B";
-  localStorage.setItem("unit", currentUnit);
-
+  currentUnit = getUnit();
   btn.textContent = `${currentUnit}單位`;
   btn.dataset.unit = currentUnit;
   btn.classList.remove("btn-green","btn-orange");
   btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
 
-  // ⚠️ 不再綁定 btn.addEventListener("click", ...)！
+  // 綁定點擊
+  btn.addEventListener("click", ()=>{
+    const next = (currentUnit === "A") ? "B" : "A";
+    currentUnit = setUnit(next);
+
+    // 對所有頁面（含本頁）廣播狀態
+    window.dispatchEvent(new CustomEvent("unit:toggle", { detail: { unit: currentUnit }}));
+
+    // 本頁即時套用
+    applyUnitEffects();
+    updateResults();
+  });
 }
 
 /* ★ 單位效果（本版重寫） */
 function applyUnitEffects(){
-  // C 組：B 隱藏、A 顯示
+  // ✅ 以儲存狀態為準，確保與 common.js/其他頁同步
+  currentUnit = getUnit();
+
+  // 更新按鈕外觀（避免不同步）
+  const btn = $("#btnUnitToggle");
+  if (btn){
+    btn.textContent = `${currentUnit}單位`;
+    btn.dataset.unit = currentUnit;
+    btn.classList.remove("btn-green","btn-orange");
+    btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
+  }
+
+  // C 組：B 隱藏、A 顯示（B 時清零）
   const cBox = document.querySelector('[data-group="C"]');
   if (cBox){
     currentUnit === "B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden");
-    // B 單位時，同步歸零 C 組輸入
     if (currentUnit === "B"){
       cBox.querySelectorAll("tbody tr").forEach(tr=>{
         tr.dataset.use = "0";
@@ -486,7 +515,7 @@ function applyUnitEffects(){
     }
   }
 
-  // ★ BD 組：B 隱藏並歸零；A 顯示
+  // BD 組：B 隱藏並歸零鎖定；A 顯示並解鎖
   const bdBox = document.querySelector('[data-group="BD"]');
   if (bdBox){
     if (currentUnit === "B"){
@@ -503,7 +532,7 @@ function applyUnitEffects(){
     }
   }
 
-  // ★ BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
+  // BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
   const baTable = document.querySelector('[data-group="BA"] table');
   if (baTable){
     const rows = baTable.tBodies[0]?.rows || [];
