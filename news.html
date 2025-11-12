@@ -3,78 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-  <!-- <title> 交給下方腳本動態設定；先給預設避免閃爍 -->
   <title>最新公告｜長照工具</title>
   <meta name="description" content="單位公告與更新資訊。">
-
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
-  <!-- 載入順序：common → style → topbar（避免覆蓋打架） -->
-  <link rel="stylesheet" href="common.css?v=20251112-a1" />
-  <link rel="stylesheet" href="style.css?v=20251112-a1" />
-  <link rel="stylesheet" href="topbar-fixed.css?v=20251112-a1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="topbar-fixed.css" />
+  <script src="script.js" defer></script>
 </head>
-<body data-header="lite">
-  <!-- ✅ 共用頂欄（本頁走 header-lite，不顯示右上按鈕） -->
-  <div id="__header"></div>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" class="logo-link"><img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" /></a>
+      <span class="site-title" id="siteTitle">最新公告</span>
+    </div>
+    <nav class="nav-links" aria-label="主選單">
+      <a href="index.html">額度計算機</a>
+      <a href="payroll.html">薪資計算機</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+    <div class="actions actions-ghost"></div>
+  </header>
   <div class="divider"></div>
 
   <main class="container">
     <section class="card">
       <h1 class="card-title">最新公告</h1>
       <p class="hint">公告列表區塊</p>
-
-      <!-- 你之後要放公告卡片、分頁、搜尋等元件可加在這裡 -->
-      <!-- 範例： -->
-      <!--
-      <article class="card" style="margin-top:12px;">
-        <h2 class="card-title">[2025-11-12] 額度計算機更新</h2>
-        <p>說明文字……</p>
-      </article>
-      -->
     </section>
   </main>
 
-  <!-- ✅ 共用底欄 -->
-  <div id="__footer"></div>
-
-  <!-- 🔧 腳本：先注入 header/footer，再跑共用與頁面邏輯 -->
-  <script src="include.js?v=20251112-a1" defer></script>
-  <script src="common.js?v=20251112-a1" defer></script>
-
-  <!-- 導覽高亮與 <title>：等 header 注入完成再跑一次，避免非同步錯過 -->
-  <script>
-    (function(){
-      function slug(){
-        const p=(location.pathname.split('/').pop()||'news.html').toLowerCase();
-        return p.replace(/\.html?$/,'') || 'news';
-      }
-      function setActiveAndTitle(){
-        const s = slug();
-        // nav 高亮
-        document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-          const t=(a.getAttribute('href')||'').replace(/\.html?$/,'').toLowerCase()||'index';
-          if(t===s) a.classList.add('active');
-        });
-        // 標題
-        const map={
-          index:'額度計算機',
-          payroll:'薪資計算機',
-          'care-info':'長照相關資訊',
-          news:'最新公告',
-          contact:'聯繫方式',
-          about:'關於我們'
-        };
-        const titleTxt = map[s] || '最新公告';
-        document.title = titleTxt + '｜長照工具';
-        const st = document.querySelector('.site-title');
-        if (st) st.textContent = titleTxt;
-      }
-      // 嘗試在 DOMReady、load、以及自定事件後重跑，確保命中
-      document.addEventListener('DOMContentLoaded', setActiveAndTitle);
-      window.addEventListener('load', setActiveAndTitle);
-      window.addEventListener('hashchange', setActiveAndTitle);
-    })();
-  </script>
+  <footer id="bottomDock" class="footerbar">
+    <div class="foot"><span class="ok">© hori</span></div>
+  </footer>
 </body>
 </html>
