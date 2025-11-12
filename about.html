@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- 交給 common.js 動態設定 <title> -->
+  <title>長照資訊系統</title>
+  <meta name="description" content="機構簡介、服務理念與團隊成員。" />
+
+  <link rel="icon" type="image/x-icon" href="YORU.ico" />
+  <!-- 載入順序：common → style → topbar -->
+  <link rel="stylesheet" href="common.css?v=20251111-b1" />
+  <link rel="stylesheet" href="style.css?v=20251112-a1" />
+  <link rel="stylesheet" href="topbar-fixed.css?v=20251112-a1" />
+</head>
+
+<body>
+  <!-- 頂欄（由 include.js 動態載入 header.html） -->
+  <div id="__header"></div>
+
+  <main class="container">
+    <section class="card">
+      <h1 class="card-title">關於我們</h1>
+      <p>本頁為骨架，可放置：服務理念、緣起、團隊介紹、合作夥伴、品質政策等內容。</p>
+    </section>
+  </main>
+
+  <!-- 頁尾 -->
+  <div id="__footer"></div>
+
+  <!-- 共用腳本（順序很重要：先載入 header/footer，再執行主邏輯） -->
+  <script src="include.js?v=20251111-b1" defer></script>
+  <script src="common.js?v=20251111-b1" defer></script>
+  <script src="script.js?v=20251112-a1" defer></script>
+
+  <!-- 讓導覽高亮在 header 注入後再補跑一次（避免非同步載入時機差） -->
+  <script>
+    // 如果 include.js 是非同步載入 header，等 window.load 再跑一次高亮
+    window.addEventListener('load', function () {
+      if (typeof window.dispatchEvent === 'function') {
+        // 觸發一次 hashchange，讓 script.js 內的 setActiveNav() 重跑
+        window.dispatchEvent(new Event('hashchange'));
+      }
+    });
+  </script>
+</body>
+</html>
