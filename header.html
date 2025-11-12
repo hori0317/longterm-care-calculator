@@ -1,29 +1,50 @@
-<!-- header.html -->
-<header class="topbar">
-  <div class="inner">
-    <div class="brand">
-      <a href="index.html" class="logo-link" aria-label="回首頁">
-        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-      </a>
-      <span class="site-title" id="siteTitle">額度計算機</span>
-    </div>
-
-    <div class="nav-wrap">
-      <nav class="nav-links" aria-label="主選單">
-        <a href="index.html">額度計算機</a>
-        <a href="payroll.html">薪資計算機</a>
-        <a href="care-info.html">長照相關資訊</a>
-        <a href="news.html">最新公告</a>
-        <a href="contact.html">聯繫方式</a>
-        <a href="about.html">關於我們</a>
-      </nav>
-    </div>
-
-    <div class="actions">
-      <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="A">A單位</button>
-      <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
-      <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
-    </div>
-  </div>
-</header>
-<div class="divider"></div>
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/header-lite.html b/header-lite.html
+index 381fe9c9a3c8b79af6105453707e539205be427f..a11824060a734f4180651c2189a9e10017b58cb0 100644
+--- a/header-lite.html
++++ b/header-lite.html
+@@ -1,25 +1,21 @@
+-<!-- 精簡 Header（無右側按鈕；同樣保留 .inner/.nav-wrap 結構） -->
++<!-- 精簡 Header（無右側按鈕；採用新版網格配置） -->
+ <header class="topbar">
+-  <div class="inner">
+-    <div class="brand">
+-      <a href="index.html" class="logo-link" aria-label="回首頁">
+-        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+-      </a>
+-      <span class="site-title" id="siteTitle">額度計算機</span>
+-    </div>
++  <div class="brand">
++    <a href="index.html" class="logo-link" aria-label="回首頁">
++      <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
++    </a>
++    <span class="site-title" id="siteTitle">額度計算機</span>
++  </div>
+ 
+-    <div class="nav-wrap">
+-      <nav class="nav-links" aria-label="主選單">
+-        <a href="index.html">額度計算機</a>
+-        <a href="payroll.html">薪資計算機</a>
+-        <a href="care-info.html">長照相關資訊</a>
+-        <a href="news.html">最新公告</a>
+-        <a href="contact.html">聯繫方式</a>
+-        <a href="about.html">關於我們</a>
+-      </nav>
+-    </div>
++  <nav class="nav-links" aria-label="主選單">
++    <a href="index.html">額度計算機</a>
++    <a href="payroll.html">薪資計算機</a>
++    <a href="care-info.html">長照相關資訊</a>
++    <a href="news.html">最新公告</a>
++    <a href="contact.html">聯繫方式</a>
++    <a href="about.html">關於我們</a>
++  </nav>
+ 
+-    <div class="actions actions-ghost"></div>
+-  </div>
++  <div class="actions actions-ghost"></div>
+ </header>
+ <div class="divider"></div>
+ 
+EOF
+)
