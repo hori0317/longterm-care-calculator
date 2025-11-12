@@ -1,10 +1,11 @@
-<!-- 完整 Header（符合 topbar-fixed.css 的 .inner/.nav-wrap 結構） -->
+<!-- 共用：頂欄（片段檔，勿含 <html>） -->
 <header class="topbar">
   <div class="inner">
     <div class="brand">
       <a href="index.html" class="logo-link" aria-label="回首頁">
         <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       </a>
+      <!-- 由 include.js 依據 <title> 自動帶入頁名（「｜」前段落） -->
       <span class="site-title" id="siteTitle">額度計算機</span>
     </div>
 
@@ -19,10 +20,11 @@
       </nav>
     </div>
 
-    <div class="actions">
+    <!-- 右側動作：預設給三顆；若某頁想客製，可在該頁放一個 #header-actions-slot 供 include.js 置換 -->
+    <div class="actions" id="headerActions">
       <button class="btn pill btn-orange" id="btnUnitToggle" type="button">A單位</button>
       <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
-      <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
+      <button class="btn pill btn-green"  id="btnResetAll"    type="button">清空</button>
     </div>
   </div>
 </header>
