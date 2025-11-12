@@ -1,4 +1,4 @@
-/**********************
+/********************** 
  * script.js（週→月→總；總可改，但改週即重置同步）
  * 重點修正：服務列改用 DOM 建構，每欄獨立 <td>，避免「沐浴0」黏在一起
  * 本版新增：
@@ -78,8 +78,8 @@ const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180
 const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/* 狀態（★ 強化：優先讀取 <html data-unit>，再退回 localStorage；預設 A） */
-let currentUnit = (document.documentElement.dataset.unit || localStorage.getItem("unit") || "A");
+/* 狀態 */
+let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
 const lastCalc = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
 /* 初始化 */
@@ -87,10 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
   bindHeaderInputs();
-
-  // ★ 不在這裡主綁切換（避免與 header 重複），只做外觀同步
   bindUnitToggle();
-
   applyUnitEffects();
   updateSCAvailability();
   updateResults();
@@ -103,15 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   adjustTopbarPadding();
   adjustDockPadding();
-
-  window.addEventListener('resize', ()=>{
-    adjustTopbarPadding();
-    adjustDockPadding();
-  });
-  window.addEventListener('orientationchange', ()=>{
-    adjustTopbarPadding();
-    adjustDockPadding();
-  });
+  window.addEventListener('resize', ()=>{ adjustTopbarPadding(); adjustDockPadding(); });
+  window.addEventListener('orientationchange', ()=>{ adjustTopbarPadding(); adjustDockPadding(); });
 
   const dock = document.getElementById('bottomDock');
   if(window.ResizeObserver && dock){
@@ -123,16 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ★ 監聽 include.js 廣播的 unit-change：由這裡統一處理效果＋重算 */
-window.addEventListener("unit-change", (ev)=>{
-  const u = ev?.detail?.unit;
-  if(!u) return;
-  currentUnit = u;
-  localStorage.setItem("unit", currentUnit);
-  applyUnitEffects();
-  updateResults();
-});
-
 /* AA 區 */
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
@@ -142,10 +122,12 @@ function renderAddons(){
   ADDONS.forEach(a=>{
     const row = document.createElement("div");
     row.className="addon-row";
-    row.innerHTML = `<div>${a.code}</div>
-<div class="addon-inputs">
-  <input type="number" id="${a.code}_count" value="${toInt(saved[`${a.code}_count`])}" min="0" step="1" />
-</div>`;
+    row.innerHTML = `
+      <div>${a.code}</div>
+      <div class="addon-inputs">
+        <input type="number" id="${a.code}_count" value="${toInt(saved[`${a.code}_count`])}" min="0" step="1" />
+      </div>
+    `;
     host.appendChild(row);
   });
 }
@@ -167,14 +149,7 @@ function renderTables(){
   const container = $("#tables");
   if(!container) return;
   container.innerHTML="";
-
-  const titles = {
-    BA:"BA碼（照顧服務）",
-    BD:"BD碼（社區服務）",
-    C :"C碼（專業服務｜一包制）",
-    GA:"GA碼（喘息服務）",
-    SC:"SC碼（居家短照服務）"
-  };
+  const titles = { BA:"BA碼（照顧服務）", BD:"BD碼（社區服務）", C :"C碼（專業服務｜一包制）", GA:"GA碼（喘息服務）", SC:"SC碼（居家短照服務）" };
 
   Object.keys(serviceData).forEach(code=>{
     const groupBox = document.createElement("div");
@@ -185,23 +160,27 @@ function renderTables(){
 
     const table=document.createElement("table");
     if(code === "C"){
-      table.innerHTML = `<thead><tr>
-  <th style="min-width:260px">服務項目</th>
-  <th>單價(每組)</th>
-  <th>每月組數</th>
-  <th>總金額</th>
-</tr></thead>
-<tbody></tbody>`;
+      table.innerHTML = `
+        <thead><tr>
+          <th style="min-width:260px">服務項目</th>
+          <th>單價(每組)</th>
+          <th>每月組數</th>
+          <th>總金額</th>
+        </tr></thead>
+        <tbody></tbody>
+      `;
     }else{
-      table.innerHTML= `<thead><tr>
-  <th style="min-width:260px">服務項目</th>
-  <th>單價</th>
-  <th>週次數</th>
-  <th>月次數</th>
-  <th>總次數</th>
-  <th>總金額</th>
-</tr></thead>
-<tbody></tbody>`;
+      table.innerHTML= `
+        <thead><tr>
+          <th style="min-width:260px">服務項目</th>
+          <th>單價</th>
+          <th>週次數</th>
+          <th>月次數</th>
+          <th>總次數</th>
+          <th>總金額</th>
+        </tr></thead>
+        <tbody></tbody>
+      `;
     }
 
     const tbody=table.querySelector("tbody");
@@ -213,6 +192,7 @@ function renderTables(){
 
       if(code === "C"){
         tr.dataset.cmode = "1"; // 標記為 C 組
+
         const tdItem = document.createElement("td");
         const tdPrice = document.createElement("td");
         const tdGrp = document.createElement("td");
@@ -239,12 +219,10 @@ function renderTables(){
         gInp.addEventListener("change", onCGroupChange);
 
         tdGrp.appendChild(gInp);
-        tr.appendChild(tdItem);
-        tr.appendChild(tdPrice);
-        tr.appendChild(tdGrp);
-        tr.appendChild(tdAmt);
+        tr.appendChild(tdItem); tr.appendChild(tdPrice); tr.appendChild(tdGrp); tr.appendChild(tdAmt);
       }else{
         tr.dataset.cmode = "0";
+
         const tdItem = document.createElement("td");
         const tdPrice = document.createElement("td");
         const tdWk = document.createElement("td");
@@ -259,22 +237,9 @@ function renderTables(){
         const week = document.createElement("input");
         const month = document.createElement("input");
         const total = document.createElement("input");
-        week.className="inp-week";
-        week.type="number";
-        week.min="0";
-        week.step="1";
-        week.value="0";
-
-        month.className="inp-month";
-        month.type="number";
-        month.value="0";
-        month.readOnly = true;
-
-        total.className="inp-total";
-        total.type="number";
-        total.min="0";
-        total.step="1";
-        total.value="0";
+        week.className="inp-week"; week.type="number"; week.min="0"; week.step="1"; week.value="0";
+        month.className="inp-month"; month.type="number"; month.value="0"; month.readOnly = true;
+        total.className="inp-total"; total.type="number"; total.min="0"; total.step="1"; total.value="0";
 
         // 週次變動 → 月次=ceil(週*4.5)，總次=月次、回同步
         const onWeekChange = ()=>{
@@ -287,7 +252,6 @@ function renderTables(){
           updateOneRow(code, i);
           updateResults();
         };
-
         // 總次自由改：manual=1；直到再次改週次才重設
         const onTotalChange = ()=>{
           tr.dataset.manual = "1";
@@ -296,24 +260,15 @@ function renderTables(){
           updateOneRow(code, i);
           updateResults();
         };
-
         week.addEventListener("input", onWeekChange);
         week.addEventListener("change", onWeekChange);
         total.addEventListener("input", onTotalChange);
         total.addEventListener("change", onTotalChange);
 
-        tdWk.appendChild(week);
-        tdMon.appendChild(month);
-        tdTot.appendChild(total);
-        tdAmt.className="cell-amount";
-        tdAmt.textContent="0";
+        tdWk.appendChild(week); tdMon.appendChild(month); tdTot.appendChild(total);
+        tdAmt.className="cell-amount"; tdAmt.textContent="0";
 
-        tr.appendChild(tdItem);
-        tr.appendChild(tdPrice);
-        tr.appendChild(tdWk);
-        tr.appendChild(tdMon);
-        tr.appendChild(tdTot);
-        tr.appendChild(tdAmt);
+        tr.appendChild(tdItem); tr.appendChild(tdPrice); tr.appendChild(tdWk); tr.appendChild(tdMon); tr.appendChild(tdTot); tr.appendChild(tdAmt);
       }
       tbody.appendChild(tr);
     });
@@ -359,21 +314,18 @@ function updateSCAvailability(){
     if(!hasForeign) inp.value = 0;
   });
   const warn=$("#warnSCfg");
-  if(warn){
-    !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden");
-  }
+  if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
 }
 
 /* 統計（含 C / 排 C 兩組；不主動覆寫使用者的 total） */
 function updateResults(){
   let sumBA=0, sumGA=0, sumSC=0, sumC=0;
-
   const tables = document.querySelectorAll("#tables table");
   const groups = Object.keys(serviceData);
+
   groups.forEach((g, idx) => {
     const tbody = tables[idx]?.tBodies[0];
     if(!tbody) return;
-
     [...tbody.rows].forEach((tr, i) => {
       const price = Number(serviceData[g][i].price) || 0;
       let use = toInt(tr.dataset.use);
@@ -393,10 +345,10 @@ function updateResults(){
       const amt = price * use;
       if (tr.dataset.cmode === "1"){
         sumBA += amt;
-        sumC += amt;
+        sumC  += amt;
       } else if (g==="GA") sumGA += amt;
-      else if (g==="SC") sumSC += amt;
-      else sumBA += amt;
+      else if (g==="SC")  sumSC += amt;
+      else                sumBA += amt;
 
       const cell=tr.querySelector(".cell-amount");
       if(cell) cell.textContent = amt.toLocaleString();
@@ -436,7 +388,6 @@ function updateResults(){
 
   // 顯示（採含 C）
   $("#grantQuota") && ($("#grantQuota").value = grantBA.toLocaleString());
-
   const rBA = Math.max(0, grantBA - inc.allowBA);
   const rGA = Math.max(0, grantGA - inc.allowGA);
   const rSC = Math.max(0, grantSC - inc.allowSC);
@@ -447,23 +398,19 @@ function updateResults(){
   setText("#sumRemainGA", rGA);
   setText("#sumGrantSC", grantSC);
   setText("#sumRemainSC", rSC);
-
   setText("#sumRemainBA_foot", rBA);
   setText("#sumRemainGA_foot", rGA);
   setText("#sumRemainSC_foot", rSC);
-
   setText("#sumCopay", inc.copay);
   setText("#sumSelfpay", inc.self);
   setText("#sumGovSubsidy", inc.gov);
   setText("#sumGrand", inc.grand);
-
   setText("#sumGovSubsidy_foot", inc.gov);
   setText("#sumSelfpay_foot", inc.self);
   setText("#sumGrand_foot", inc.grand);
-
   toggle("#overMain", inc.overBA>0);
-  toggle("#overGA", inc.overGA>0);
-  toggle("#overSC", inc.overSC>0);
+  toggle("#overGA",   inc.overGA>0);
+  toggle("#overSC",   inc.overSC>0);
 
   // 薪資（含C／排C）
   lastCalc.gov_inc = inc.gov;
@@ -480,27 +427,26 @@ function updateCaregiverSalary(){
   Object.keys(AA_PRICE).forEach(c=>{
     aaTotal += toInt(saved[`${c}_count`]) * AA_PRICE[c];
   });
-
   const baseGov = (currentUnit==="B") ? lastCalc.gov_exC : lastCalc.gov_inc;
   const baseSelf= (currentUnit==="B") ? lastCalc.self_exC: lastCalc.self_inc;
   const total=Math.round((aaTotal + baseGov + baseSelf) * 0.6);
-
   const target=$("#caregiverSalary");
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* ★ A/B 外觀同步（不在這裡綁 click，避免與 header 重複） */
+/* A/B 切換：B 隱藏 C、BD、BA09/BA09a；薪資不含 C */
 function bindUnitToggle(){
   const btn=$("#btnUnitToggle");
   if(!btn) return;
-  // 僅同步畫面狀態
-  btn.textContent = `${currentUnit}單位`;
-  btn.dataset.unit = currentUnit;
-  btn.classList.remove("btn-green","btn-orange");
-  btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
+  btn.addEventListener("click", ()=>{
+    currentUnit = (currentUnit==="A") ? "B" : "A";
+    localStorage.setItem("unit", currentUnit);
+    applyUnitEffects();
+    updateResults();
+  });
 }
 
-/* ★ 單位效果（保持你的原本行為） */
+/* ★ 單位效果（本版重寫） */
 function applyUnitEffects(){
   // 按鈕外觀與文字
   const btn = $("#btnUnitToggle");
@@ -525,17 +471,14 @@ function applyUnitEffects(){
       bdBox.querySelectorAll("tbody tr").forEach(tr=>{
         tr.dataset.use = "0";
         tr.querySelectorAll("input").forEach(inp=>{
-          inp.value = 0;
-          inp.disabled = true;
+          inp.value = 0; inp.disabled = true;
         });
         const cell = tr.querySelector(".cell-amount");
         if (cell) cell.textContent = "0";
       });
     }else{
       bdBox.classList.remove("hidden");
-      bdBox.querySelectorAll("tbody tr input").forEach(inp=>{
-        inp.disabled = false;
-      });
+      bdBox.querySelectorAll("tbody tr input").forEach(inp=>{ inp.disabled = false; });
     }
   }
 
@@ -554,16 +497,14 @@ function applyUnitEffects(){
         const week = tr.querySelector(".inp-week");
         const month = tr.querySelector(".inp-month");
         const total = tr.querySelector(".inp-total");
-        if (week) { week.value = 0; week.disabled = true; }
+        if (week)  { week.value = 0; week.disabled = true; }
         if (month) { month.value = 0; }
         if (total) { total.value = 0; total.disabled = true; }
         const cell = tr.querySelector(".cell-amount");
         if (cell) cell.textContent = "0";
       }else{
         tr.classList.remove("hidden");
-        tr.querySelectorAll("input").forEach(inp=>{
-          inp.disabled = false;
-        });
+        tr.querySelectorAll("input").forEach(inp=>{ inp.disabled = false; });
       }
     });
   }
@@ -571,13 +512,11 @@ function applyUnitEffects(){
 
 /* 小工具 */
 function setText(sel, num){
-  const el=$(sel);
-  if(!el) return;
+  const el=$(sel); if(!el) return;
   el.textContent = Number(num).toLocaleString();
 }
 function toggle(sel, show){
-  const el=$(sel);
-  if(!el) return;
+  const el=$(sel); if(!el) return;
   show ? el.classList.remove("hidden") : el.classList.add("hidden");
 }
 function resetAll(){
@@ -602,31 +541,39 @@ function adjustTopbarPadding(){
 /* ---- 導覽：依當前網址自動高亮（支援多頁 + 錨點） ---- */
 (function(){
   function normPath(pathname){
+    // 移除結尾斜線 → 把 / 或 /index.html 視為 /index → 去掉 .html
     let p = String(pathname || '/').trim();
     if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
     p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
     const seg = p.split('/').pop() || 'index';
     return seg.toLowerCase();
   }
+
   function setActiveNav(){
     const herePath = normPath(location.pathname);
     const hereHash = (location.hash || '').toLowerCase();
 
+    // 先清除舊的 active
     document.querySelectorAll('.nav-links a.active').forEach(a=>a.classList.remove('active'));
 
     document.querySelectorAll('.nav-links a[href]').forEach(a=>{
       const raw = (a.getAttribute('href') || '').trim();
       if (!raw) return;
+
       let active = false;
 
       if (raw.startsWith('#')){
+        // 單頁錨點：僅當前 hash 完全相同才亮（避免全部 # 錨點同時亮）
         active = (raw.toLowerCase() === hereHash && hereHash !== '');
       } else {
+        // 多頁：以檔名比對（/page、/page.html、/ 皆可）
         try{
           const url = new URL(raw, location.origin);
           const targetPath = normPath(url.pathname);
-          active = (targetPath === herePath) || (targetPath === 'index' && (herePath === '' || herePath === 'index'));
+          active = (targetPath === herePath) ||
+                   (targetPath === 'index' && (herePath === '' || herePath === 'index'));
         }catch(e){
+          // 相對連結 fallback
           const hrefClean = raw.replace(/^\.\//,'').replace(/\.html?$/i,'').replace(/\/$/,'') || 'index';
           active = (hrefClean.toLowerCase() === herePath);
         }
@@ -635,7 +582,8 @@ function adjustTopbarPadding(){
       if (active) a.classList.add('active');
     });
   }
+
   window.addEventListener('DOMContentLoaded', setActiveNav);
   window.addEventListener('hashchange', setActiveNav);
-  window.addEventListener('popstate', setActiveNav);
+  window.addEventListener('popstate', setActiveNav); // 處理前進/後退
 })();
