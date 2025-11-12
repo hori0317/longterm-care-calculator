@@ -1,122 +1,106 @@
-// include.js
-(function () {
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const LS_UNIT_KEY = 'ltc-unit'; // 'A' | 'B'
+<script>
+/* include.js ─ 動態載入 header/footer，並處理導覽高亮＋右上角按鈕行為 */
+(async function(){
+  // 依 body data-header 選 lite 或完整
+  const headerUrl = (document.body.dataset.header === 'lite') ? 'header-lite.html' : 'header.html';
 
-  // 依頁面檔名推斷標題
-  const PAGE_TITLES = {
-    'index.html': '額度計算機',
-    'payroll.html': '薪資計算機',
-    'quickref.html': '碼別速查'
-  };
-
-  function getPageName() {
-    try {
-      const u = new URL(location.href);
-      const p = u.pathname.split('/').filter(Boolean).pop() || 'index.html';
-      return p.toLowerCase();
-    } catch {
-      return 'index.html';
+  async function inject(id, url){
+    const host = document.getElementById(id);
+    if(!host) return;
+    try{
+      const res = await fetch(url, { cache: 'no-cache' });
+      host.innerHTML = await res.text();
+    }catch(e){
+      host.innerHTML = `<div style="color:#b00020;font-weight:700;">無法載入 ${url}</div>`;
     }
   }
 
-  function getUnit() {
-    try {
-      const v = localStorage.getItem(LS_UNIT_KEY);
-      return v === 'B' ? 'B' : 'A';
-    } catch { return 'A'; }
-  }
+  // 1) 載入
+  await inject('__header', headerUrl);
+  await inject('__footer', 'footer.html');
 
-  function setUnit(unit) {
-    const u = unit === 'B' ? 'B' : 'A';
-    try { localStorage.setItem(LS_UNIT_KEY, u); } catch {}
-    document.documentElement.dataset.unit = u; // <html data-unit="A|B">
-    // 按鈕外觀
-    const a = $('#btnUnitA'), b = $('#btnUnitB');
-    if (a && b) {
-      a.setAttribute('aria-pressed', String(u === 'A'));
-      b.setAttribute('aria-pressed', String(u === 'B'));
-      a.classList.toggle('active', u === 'A');
-      b.classList.toggle('active', u === 'B');
+  // 2) 導覽高亮＋標題同步（在插入 header 後執行）
+  (function(){
+    function norm(pathname){
+      let p = String(pathname||'/').trim();
+      if (p.length > 1 && p.endsWith('/')) p = p.slice(0,-1);
+      p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i,'');
+      return (p.split('/').pop() || 'index').toLowerCase();
     }
-    // 廣播事件給各頁（index.html 的 script.js 可接收）
-    const ev = new CustomEvent('unit-change', { detail: { unit: u } });
-    window.dispatchEvent(ev);
-  }
-
-  async function fetchText(url) {
-    const r = await fetch(url, { cache: 'no-store' });
-    if (!r.ok) throw new Error(url + ' load failed');
-    return await r.text();
-  }
-
-  async function loadShell() {
-    // 載入 header
-    const headerHost = $('#__header');
-    if (headerHost) {
-      headerHost.innerHTML = await fetchText('header.html');
-    }
-    // 載入 footer
-    const footerHost = $('#__footer');
-    if (footerHost) {
-      footerHost.innerHTML = await fetchText('footer.html');
-    }
-  }
-
-  function applyTitleAndNav() {
-    const page = getPageName();
-    const title = PAGE_TITLES[page] || '長照工具';
-    // 設定 <title>
-    const t = document.title || '';
-    if (!t.includes(title)) document.title = `${title}｜長照工具`;
-
-    // Header 標題連結文字
-    const brand = $('[data-title]');
-    if (brand) brand.textContent = title;
-
-    // 導覽高亮
-    $$('[data-nav]').forEach(a => {
-      const key = (a.getAttribute('data-nav') || '').toLowerCase();
-      const href = (a.getAttribute('href') || '').toLowerCase();
-      const active = href.endsWith(page) || key && page.startsWith(key);
-      a.classList.toggle('active', !!active);
-      if (active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    const here = norm(location.pathname);
+    // 高亮
+    document.querySelectorAll('.nav-links a[href]').forEach(a=>{
+      const raw = (a.getAttribute('href')||'').trim();
+      if(!raw) return;
+      let tgt = raw.replace(/^\.\//,'').replace(/\.html?$/i,'').replace(/\/$/,'') || 'index';
+      if (tgt === here) a.classList.add('active');
     });
-  }
+    // 標題
+    const map = {
+      index:'額度計算機',
+      payroll:'薪資計算機',
+      'care-info':'長照相關資訊',
+      news:'最新公告',
+      contact:'聯繫方式',
+      about:'關於我們'
+    };
+    const title = map[here] || '額度計算機';
+    const st = document.getElementById('siteTitle');
+    if (st) st.textContent = title;
+    document.title = `${title}｜長照工具`;
+  })();
 
-  function wireHeaderActions() {
-    // A/B 單位
-    const btnA = $('#btnUnitA');
-    const btnB = $('#btnUnitB');
-    if (btnA) btnA.addEventListener('click', () => setUnit('A'));
-    if (btnB) btnB.addEventListener('click', () => setUnit('B'));
+  // 3) A/B 單位按鈕 & 列印/清空 綁定（不改你既有 script.js，僅負責發事件）
+  (function(){
+    const html = document.documentElement;
+    const KEY = 'unit';
 
-    // 初始 unit
+    function getUnit(){
+      const s = localStorage.getItem(KEY);
+      return (s === 'A' || s === 'B') ? s : 'A';
+    }
+    function setUnit(u){
+      localStorage.setItem(KEY, u);
+      html.dataset.unit = u;
+      // 廣播給頁面自身（你的 script.js 可在 unit-change 之後跑 applyUnitEffects）
+      window.dispatchEvent(new CustomEvent('unit-change', { detail: { unit:u }}));
+    }
+    // 初始寫入 data-unit（避免 CSS/JS 取不到）
     setUnit(getUnit());
 
-    // 列印/清空按鈕的實作由各頁監聽（避免改動你原本頁面邏輯）
-    // 這裡不處理行為，只保留按鈕節點（index/payroll 內已有監聽）
-  }
+    // 綁定三顆按鈕（若頁面沒有就略過）
+    const btnUnit = document.getElementById('btnUnitToggle');
+    const btnPrint = document.getElementById('btnPrint');
+    const btnReset = document.getElementById('btnReset') || document.getElementById('btnResetAll');
 
-  async function boot() {
-    try {
-      await loadShell();
-      applyTitleAndNav();
-      wireHeaderActions();
-    } catch (e) {
-      console.error('include.js init error:', e);
+    if (btnUnit){
+      // 依目前狀態顯示文字
+      const syncText = () => { btnUnit.textContent = `${getUnit()}單位`; };
+      syncText();
+
+      btnUnit.addEventListener('click', ()=>{
+        const next = (getUnit()==='A') ? 'B' : 'A';
+        setUnit(next);
+        syncText();
+      });
     }
-  }
 
-  // 啟動
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
+    if (btnPrint){
+      btnPrint.addEventListener('click', ()=> window.print());
+    }
 
-  // 對外（可被頁面用到）
-  window.getUnit = getUnit;
-  window.setUnit = setUnit;
+    if (btnReset){
+      btnReset.addEventListener('click', ()=>{
+        // 盡量呼叫你頁面原本的 resetAll()；若沒有就刷新
+        if (typeof window.resetAll === 'function') {
+          window.resetAll();
+        } else {
+          // 退而求其次：清幾個常見的地方儲存鍵
+          ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params','addons'].forEach(k=>localStorage.removeItem(k));
+          location.reload();
+        }
+      });
+    }
+  })();
 })();
+</script>
