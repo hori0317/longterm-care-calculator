@@ -1,11 +1,10 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/header-lite.html b/header-lite.html
-index 381fe9c9a3c8b79af6105453707e539205be427f..a11824060a734f4180651c2189a9e10017b58cb0 100644
---- a/header-lite.html
-+++ b/header-lite.html
-@@ -1,25 +1,21 @@
--<!-- 精簡 Header（無右側按鈕；同樣保留 .inner/.nav-wrap 結構） -->
-+<!-- 精簡 Header（無右側按鈕；採用新版網格配置） -->
+diff --git a/header.html b/header.html
+index aa500cd73f4d7573740cdc7052fc38a4e2695a96..57973326f4131d3a23cdb5cd756daadb7c2292f6 100644
+--- a/header.html
++++ b/header.html
+@@ -1,29 +1,25 @@
+ <!-- header.html -->
  <header class="topbar">
 -  <div class="inner">
 -    <div class="brand">
@@ -40,9 +39,16 @@ index 381fe9c9a3c8b79af6105453707e539205be427f..a11824060a734f4180651c2189a9e100
 +    <a href="about.html">關於我們</a>
 +  </nav>
  
--    <div class="actions actions-ghost"></div>
--  </div>
-+  <div class="actions actions-ghost"></div>
+-    <div class="actions">
+-      <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="A">A單位</button>
+-      <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
+-      <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
+-    </div>
++  <div class="actions">
++    <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="A">A單位</button>
++    <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
++    <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
+   </div>
  </header>
  <div class="divider"></div>
  
