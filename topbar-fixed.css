@@ -76,7 +76,9 @@ body[data-page="contact"] .nav-links a[href="contact.html"]::after,
 body[data-page="about"] .nav-links a[href="about.html"]::after{
   content:"";
   position:absolute;
-  left:12%; right:12%; bottom:0;
+  left:0;
+  right:0;
+  bottom:0;
   height:2.5px;
   background:var(--orange);
   border-radius:3px;
