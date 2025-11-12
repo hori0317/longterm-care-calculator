@@ -1,5 +1,20 @@
+<!-- 共用頁尾：保留 KPI 欄位（index 用得到）、統一備註區（由 include.js 填字） -->
 <footer id="bottomDock" class="footerbar">
-  <div class="foot">
-    <span class="ok">※ 每年 <b>2 月</b> 和 <b>8 月</b> 調整投保級距，並於次月 <b>1 號</b> 生效。</span>
+  <!-- 指標/KPI（index.html 會自動更新；其他頁維持 0 也沒關係） -->
+  <div class="foot" id="footKpis">
+    <span>BA 剩餘：<b id="sumRemainBA_foot">0</b></span>
+    <span>GA 剩餘：<b id="sumRemainGA_foot">0</b></span>
+    <span>SC 剩餘：<b id="sumRemainSC_foot">0</b></span>
+    <span class="ok">補助：<b id="sumGovSubsidy_foot">0</b></span>
+    <span class="warn">自付：<b id="sumSelfpay_foot">0</b></span>
+    <span>總額：<b id="sumGrand_foot">0</b></span>
+  </div>
+
+  <!-- 備註（集中管理；include.js 會放入預設備註 + 每頁額外備註） -->
+  <div class="foot" id="footerNotes">
+    <!-- include.js 會填入：
+      ※ 每年 2 月與 8 月調整投保級距，並於次月 1 號生效。
+      以及各頁 data-notes 指定的內容
+    -->
   </div>
 </footer>
