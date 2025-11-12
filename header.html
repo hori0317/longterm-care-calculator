@@ -1,6 +1,8 @@
 <header class="topbar">
   <div class="brand">
-    <a href="index.html" class="logo-link"><img src="org-logo.png" alt="logo"></a>
+    <a href="index.html" class="logo-link">
+      <img src="org-logo.png" alt="機構標誌">
+    </a>
     <span class="site-title">長照相關資訊</span>
   </div>
 
@@ -14,9 +16,11 @@
   </nav>
 
   <div class="actions">
-    <button class="btn pill btn-orange">B單位</button>
-    <button class="btn pill btn-green">重置</button>
-    <button class="btn pill btn-gray" onclick="window.print()">列印</button>
+    <!-- 這顆按鈕供 A/B 單位切換用 -->
+    <button id="btnUnitToggle" class="btn pill btn-orange" type="button" data-unit="B">B單位</button>
+    <!-- 這顆按鈕呼叫 resetAll() -->
+    <button id="btnReset" class="btn pill btn-green" type="button">重置</button>
+    <button class="btn pill btn-gray" type="button" onclick="window.print()">列印</button>
   </div>
 </header>
 <div class="divider"></div>
