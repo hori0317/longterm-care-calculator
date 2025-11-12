@@ -1,86 +1,128 @@
 <script>
-/* include.js ─ 動態注入 header/footer，並處理導覽高亮 + A/B 按鈕行為 */
-(async function(){
-  // 確保有佔位元素
-  if(!document.getElementById('__header')){
-    const h = document.createElement('div'); h.id = '__header';
-    document.body.prepend(h);
-  }
-  if(!document.getElementById('__footer')){
-    const f = document.createElement('div'); f.id = '__footer';
-    document.body.appendChild(f);
-  }
+/** include.js — 注入 header/footer、導覽高亮、A/B 單位切換、通用按鈕繫結 */
+(function () {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  const headerUrl = (document.body.dataset.header === 'lite')
-    ? 'header-lite.html' : 'header.html';
-
-  async function inject(id, url){
-    const host = document.getElementById(id);
-    if(!host) return;
-    try{
-      const res = await fetch(url, { cache: 'no-cache' });
-      host.innerHTML = await res.text();
-    }catch(e){
-      host.innerHTML = `<div style="color:#b00020;font-weight:700;">無法載入 ${url}</div>`;
+  /** 取得當前檔名（容忍 /index.html 與子路徑） */
+  function getCurrentFile() {
+    try {
+      const url = new URL(window.location.href);
+      let path = url.pathname;
+      // GitHub Pages 子路徑處理：/repo/ 或 /repo/sub/...
+      if (path.endsWith('/')) path += 'index.html';
+      const file = path.split('/').pop();
+      return file || 'index.html';
+    } catch {
+      return 'index.html';
     }
   }
 
-  await inject('__header', headerUrl);
-  await inject('__footer', 'footer.html');
-
-  /* 導覽高亮與標題 */
-  (function(){
-    function norm(pathname){
-      let p = String(pathname||'/').trim();
-      if (p.length>1 && p.endsWith('/')) p = p.slice(0,-1);
-      p = p.replace(/\/(index\.html?)?$/i,'/index').replace(/\.html?$/i,'');
-      return (p.split('/').pop()||'index').toLowerCase();
+  /** 注入外部片段到容器 */
+  async function inject(targetSel, url) {
+    const box = $(targetSel);
+    if (!box) return null;
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`${url} ${res.status}`);
+      const html = await res.text();
+      box.innerHTML = html;
+      return box;
+    } catch (e) {
+      console.warn('載入失敗：', url, e);
+      return null;
     }
-    const here = norm(location.pathname);
-    document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-      const raw=(a.getAttribute('href')||'').trim();
-      if(!raw) return;
-      const tgt = raw.replace(/^\.\//,'').replace(/\.html?$/i,'').replace(/\/$/,'') || 'index';
-      if(tgt===here) a.classList.add('active');
+  }
+
+  /** 設定導覽高亮與網站標題 */
+  function initHeaderBehavior(scope) {
+    if (!scope) return;
+
+    // 1) 依檔名高亮
+    const cur = getCurrentFile();
+    const links = $$('.nav-links a', scope);
+    links.forEach(a => {
+      try {
+        const href = a.getAttribute('href') || '';
+        // 只比對檔名；允許相對位址
+        const name = href.split('/').pop() || 'index.html';
+        if (name === cur) a.classList.add('active');
+      } catch {}
     });
-    const map = {
-      index:'額度計算機', payroll:'薪資計算機', 'care-info':'長照相關資訊',
-      news:'最新公告', contact:'聯繫方式', about:'關於我們'
-    };
-    const title = map[here] || '額度計算機';
-    const st = document.getElementById('siteTitle'); if(st) st.textContent = title;
-    document.title = `${title}｜長照工具`;
-  })();
 
-  /* A/B 單位與常用按鈕（不改你原本 script.js，僅廣播 unit-change） */
-  (function(){
-    const html = document.documentElement;
-    const KEY = 'unit';
-    const getUnit = () => (localStorage.getItem(KEY)==='B' ? 'B' : 'A');
-    const setUnit = (u) => {
-      localStorage.setItem(KEY,u);
-      html.dataset.unit = u;
-      window.dispatchEvent(new CustomEvent('unit-change',{detail:{unit:u}}));
-    };
-    setUnit(getUnit()); // 初始化
-
-    const btnUnit = document.getElementById('btnUnitToggle');
-    const btnPrint = document.getElementById('btnPrint');
-    const btnReset = document.getElementById('btnReset') || document.getElementById('btnResetAll');
-
-    if (btnUnit){
-      const sync = ()=> btnUnit.textContent = `${getUnit()}單位`;
-      sync();
-      btnUnit.addEventListener('click', ()=>{ setUnit(getUnit()==='A'?'B':'A'); sync(); });
+    // 2) 網站標題文字依頁面 title 帶入（只取「｜」前半段）
+    const t = document.title || '';
+    const siteTitle = $('#siteTitle', scope);
+    if (siteTitle) {
+      const pageName = t.includes('｜') ? t.split('｜')[0] : t;
+      if (pageName.trim()) siteTitle.textContent = pageName.trim();
     }
-    if (btnPrint){ btnPrint.addEventListener('click', ()=>window.print()); }
-    if (btnReset){
-      btnReset.addEventListener('click', ()=>{
-        if (typeof window.resetAll === 'function') return window.resetAll();
-        ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params','addons'].forEach(k=>localStorage.removeItem(k));
-        location.reload();
+
+    // 3) 通用按鈕繫結（列印/清空）
+    const printBtn = $('#btnPrint', scope);
+    if (printBtn) printBtn.addEventListener('click', () => window.print());
+
+    const resetBtn = $('#btnReset', scope) || $('#btnResetAll', scope);
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (typeof window.resetAll === 'function') {
+          window.resetAll();              // 你原本的全清邏輯
+        } else {
+          // 後備：清空所有 <input type="number/text">
+          $$('input[type="number"], input[type="text"]').forEach(i => { if (!i.readOnly) i.value = ''; });
+        }
       });
     }
-  })();
+
+    // 4) A/B 單位切換（寫到 <html data-unit>，廣播 unit-change）
+    const htmlEl = document.documentElement;
+    const btnToggle = $('#btnUnitToggle', scope);
+
+    function setUnit(u) {
+      const unit = (u === 'A' || u === 'B') ? u : 'A';
+      htmlEl.dataset.unit = unit;
+      try { localStorage.setItem('unit', unit); } catch {}
+      if (btnToggle) btnToggle.textContent = unit + '單位';
+
+      // 廣播事件
+      window.dispatchEvent(new CustomEvent('unit-change', { detail: { unit } }));
+
+      // 嘗試呼叫你既有的效果函式
+      try { window.applyUnitEffects ? window.applyUnitEffects(unit) : null; } catch (e) {
+        console.warn('applyUnitEffects 執行例外：', e);
+      }
+    }
+
+    // 初始化單位（localStorage → data-unit）
+    let init = 'A';
+    try { init = localStorage.getItem('unit') || 'A'; } catch {}
+    setUnit(init);
+
+    if (btnToggle) {
+      btnToggle.addEventListener('click', () => setUnit(htmlEl.dataset.unit === 'A' ? 'B' : 'A'));
+    }
+  }
+
+  /** 頁尾備註不需特殊行為，保留空間即可 */
+  function initFooterBehavior(scope) {
+    // 預留：若未來要在 footer 放切換或動態年份，可在此處理
+  }
+
+  // ===== 實際注入流程 =====
+  async function boot() {
+    // header：若頁面已有 #__header，就注入；否則忽略（不改你的版面）
+    const h = await inject('#__header', 'header.html');
+    if (h) initHeaderBehavior(h);
+
+    // footer：同理
+    const f = await inject('#__footer', 'footer.html');
+    if (f) initFooterBehavior(f);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 })();
 </script>
