@@ -451,31 +451,22 @@ function updateCaregiverSalary(){
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* A/B 切換（本頁保險綁定；include.js 也會廣播） */
+/* A/B 切換（本頁不再綁 click，僅初始化外觀；切換靠 include.js 的 unit:toggle） */
 function bindUnitToggle(){
-  const btn=$("#btnUnitToggle");
+  const btn = $("#btnUnitToggle");
   if(!btn) return;
 
-  // 初始外觀與儲存
+  // 初始化目前單位與按鈕外觀
   const initUnit = (localStorage.getItem("unit") || btn.dataset.unit || "B").toUpperCase();
-  currentUnit = (initUnit==="A"||initUnit==="B") ? initUnit : "B";
+  currentUnit = (initUnit === "A" || initUnit === "B") ? initUnit : "B";
   localStorage.setItem("unit", currentUnit);
-  stylizeBtn();
 
-  btn.addEventListener("click", ()=>{
-    currentUnit = (currentUnit==="A") ? "B" : "A";
-    localStorage.setItem("unit", currentUnit);
-    stylizeBtn();
-    applyUnitEffects();
-    updateResults();
-  });
+  btn.textContent = `${currentUnit}單位`;
+  btn.dataset.unit = currentUnit;
+  btn.classList.remove("btn-green","btn-orange");
+  btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
 
-  function stylizeBtn(){
-    btn.textContent = `${currentUnit}單位`;
-    btn.dataset.unit = currentUnit;
-    btn.classList.remove("btn-green","btn-orange");
-    btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
-  }
+  // ⚠️ 不再綁定 btn.addEventListener("click", ...)！
 }
 
 /* ★ 單位效果（本版重寫） */
