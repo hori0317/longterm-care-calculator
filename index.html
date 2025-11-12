@@ -20,24 +20,30 @@
       align-items: start;
     }
     @media (max-width: 1024px){
-      .grid-2{ grid-template-columns: 1.8fr 1.2fr; }
+      .grid-2{
+        grid-template-columns: 1.8fr 1.2fr;
+      }
     }
     @media (max-width: 860px){
-      .grid-2{ grid-template-columns: 1fr; }
+      .grid-2{
+        grid-template-columns: 1fr;
+      }
     }
     /* 防止隱藏占位容器佔空間 */
-    #addonPlaceholders{ display:none; }
+    #addonPlaceholders{
+      display:none;
+    }
   </style>
 </head>
 <body>
   <div class="watermark" aria-hidden="true">
-    <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:65%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:10%; --dur:13s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:40%; --dur:12s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:70%; --dur:14s;">@hori版權所有</span>
-    <span class="wm-item" style="top:50%; left:5%;  --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:5%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:50%; left:35%; --dur:11s;">@hori版權所有</span>
     <span class="wm-item" style="top:50%; left:65%; --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:75%; left:10%; --dur:13s;">@hori版權所有</span>
@@ -55,6 +61,7 @@
       </a>
       <span class="site-title" id="siteTitle">額度計算機</span>
     </div>
+
     <nav class="nav-links" aria-label="主選單">
       <a href="index.html">額度計算機</a>
       <a href="payroll.html">薪資計算機</a>
@@ -63,12 +70,14 @@
       <a href="contact.html">聯繫方式</a>
       <a href="about.html">關於我們</a>
     </nav>
+
     <div class="actions">
       <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="B">B單位</button>
       <button class="btn pill btn-green" id="btnReset" type="button">重置</button>
       <button class="btn pill btn-gray" id="btnPrint" type="button" onclick="window.print()">列印</button>
     </div>
   </header>
+
   <div class="divider"></div>
 
   <main class="container">
@@ -76,6 +85,7 @@
     <section class="grid-2">
       <div class="card">
         <h2 class="card-title">基本資料</h2>
+
         <div class="form-row">
           <label>身分類別：</label>
           <div class="chips">
@@ -108,6 +118,7 @@
             <label class="chip"><input type="radio" name="foreign" value="0" checked> 無</label>
           </div>
         </div>
+
         <div id="warnSCfg" class="note warn">未勾選外籍看護，SC 目前不可用。</div>
 
         <div class="qrbox">
