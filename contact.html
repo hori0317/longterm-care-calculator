@@ -3,19 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PDF 支數自動統計｜長照工具</title>
-  <meta name="description" content="上傳 PDF，自動統計 BA/AA/GA/SC 支數。AA 依金額÷單價換算（量化為 0.5 倍數）；若為掃描影像自動啟用 OCR（chi_tra+eng）。" />
+  <title>薪資計算機(舊版)</title>
+  <meta name="description" content="上傳 PDF，自動統計 BA/AA/GA/SC 支數。AA 依金額÷單價換算（量化為 0.5 倍數）；若為掃描影像自動啟用 OCR（chi_tra+eng）。">
 
-  <!-- 共用樣式（置頂）：確保與全站一致 -->
-  <link rel="icon" type="image/x-icon" href="YORU.ico" />
-  <link rel="stylesheet" href="common.css?v=20251111-b1" />
-  <link rel="stylesheet" href="style.css?v=20251112-a1" />
-  <link rel="stylesheet" href="topbar-fixed.css?v=20251112-a1" />
-
-  <!-- 本頁專屬樣式（僅限本頁視覺，避免覆蓋共用色票） -->
   <style>
-    :root{--pdf-bg:#f6f8fb;--panel:#fff;--t:#0b1220;--muted:#5b6b81;--acc:#2667ff;--br:16px}
-    html,body{background:var(--pdf-bg);color:var(--t)}
+    :root{--bg:#f6f8fb;--panel:#fff;--text:#0b1220;--muted:#5b6b81;--accent:#2667ff;--br:16px}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
     .wrap{max-width:1120px;margin:0 auto;padding:20px 16px 40px}
     .card{background:var(--panel);border:1px solid #e1e6ef;border-radius:var(--br);box-shadow:0 4px 14px rgba(20,40,80,.06);padding:16px;margin:12px 0}
     h1{font-size:1.5rem;margin:.4rem 0}
@@ -43,42 +36,31 @@
     .hint{display:inline-block;margin-left:8px;color:#845400}
   </style>
 
-  <!-- pdf.js 多版本回退 -->
+  <!-- 多版本 pdf.js 逐版回退（4.x → 3.x → 2.x；worker 失敗時同執行緒） -->
   <script>
     let __pdfReady = null, __pdfVersionUsed = null;
-
-    function loadScript(src){
-      return new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = res;
-        s.onerror = () => rej(new Error('load fail ' + src));
-        document.head.appendChild(s);
-      });
+    async function loadScript(src){
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('load fail '+src));document.head.appendChild(s);});
     }
-
     async function tryLoadPdfjs(ver){
       if (window.pdfjsLib) delete window.pdfjsLib;
-      await loadScript(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${ver}/build/pdf.min.js`);
+      await loadScript(https://cdn.jsdelivr.net/npm/pdfjs-dist@${ver}/build/pdf.min.js);
       __pdfVersionUsed = ver;
       try{
-        // 啟用 worker；若瀏覽器/來源阻擋，fallback 為同執行緒
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${ver}/build/pdf.worker.min.js`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = https://cdn.jsdelivr.net/npm/pdfjs-dist@${ver}/build/pdf.worker.min.js;
         await pdfjsLib.getDocument({ data: new Uint8Array([0x25,0x50,0x44,0x46,0x2D]) }).promise.catch(()=>null);
       }catch(_){
         pdfjsLib.GlobalWorkerOptions.workerSrc = "";
         pdfjsLib.GlobalWorkerOptions.workerPort = null;
       }
     }
-
     async function ensurePdfjs(){
       if (__pdfReady){ await __pdfReady; return; }
       __pdfReady = (async ()=>{
         const cand = ["4.2.67","3.11.174","2.16.105"];
-        let ok = false, lastErr = null;
+        let ok=false,lastErr=null;
         for (const v of cand){
-          try { await tryLoadPdfjs(v); ok = true; break; }
-          catch(e){ lastErr = e; }
+          try{ await tryLoadPdfjs(v); ok=true; break; }catch(e){ lastErr=e; }
         }
         if(!ok) throw lastErr || new Error("pdf.js load failed");
       })();
@@ -92,12 +74,8 @@
     async function ensureTesseract(){
       if (__ocrReady){ await __ocrReady; return; }
       __ocrReady = (async ()=>{
-        if (!window.Tesseract){
-          await new Promise((res, rej) => {
-            const s = document.createElement('script');
-            s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js';
-            s.onload = res; s.onerror = rej; document.head.appendChild(s);
-          });
+        if(!window.Tesseract){
+          await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
         }
         Tesseract.setLogging(false);
       })();
@@ -106,15 +84,13 @@
   </script>
 </head>
 <body>
-<!-- 指定用精簡版頂欄 -->
-<div id="__header" data-header="header-lite.html"></div>
+  <!-- 共用頂欄注入 -->
+  <div id="__header"></div>
 
   <div class="wrap">
     <h1>PDF 支數自動統計（AA 金額換算）</h1>
-    <p class="muted">
-      上傳報表後自動統計 <span class="pill">BA</span> / <span class="pill">AA</span> / <span class="pill">GA</span> / <span class="pill">SC</span>。
-      <span class="hint">AA 以「金額 ÷ 單價」換算支數（四捨五入到最接近 0.5）；BA/GA/SC 讀「補助/自費」後的整數。</span>
-    </p>
+    <p class="muted">上傳報表後自動統計 <span class="pill">BA</span> / <span class="pill">AA</span> / <span class="pill">GA</span> / <span class="pill">SC</span>。
+      <span class="hint">AA 以「金額 ÷ 單價」換算支數（四捨五入到最接近 0.5）；BA/GA/SC 讀「補助/自費」後的整數。</span></p>
 
     <div class="card row">
       <div>
@@ -190,24 +166,18 @@
         <ul>
           <li>代碼：<code>(BA|AA|GA|SC)\d{2}(?:-\d+)?</code></li>
           <li>BA/GA/SC：支數＝行內「補助 / 自費」後的整數（1–20）。</li>
-          <li>AA：支數＝（AA 碼之後最近的金額 ÷ 單價），並<strong>量化為 0.5 的倍數</strong>。</li>
+          <li>AA：支數＝（AA 碼之後最近的金額 ÷ 單價），並**量化為 0.5 的倍數**。</li>
           <li>若 PDF 無文字層，改以 OCR 逐頁辨識後再統計。</li>
         </ul>
       </details>
     </div>
   </div>
 
-  <!-- 主程式 -->
   <script>
   (function(){
     const $ = s => document.querySelector(s);
     const debug = $('#debug'), bar = $('#bar'), statusEl = $('#status');
-
-    function log(s){
-      const t = (typeof s==='string') ? s : JSON.stringify(s,null,2);
-      debug.textContent += t + '\\n';
-      try{ console.log('[pdf-stat]', s); }catch(_){}
-    }
+    function log(s){ debug.textContent += (typeof s==='string'?s:JSON.stringify(s,null,2)) + '\n'; console.log('[pdf-stat]', s); }
     function whyStr(e){ return (e && (e.message || e.reason || e.type || e.name)) || String(e); }
     function setBar(p){ bar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
 
@@ -256,14 +226,14 @@
             const s = content.items.map(it=>it.str||'').join(' ');
             total += s.length; texts.push(s);
             setBar(100 * i / pdf.numPages);
-            statusEl.textContent = `PDF 解析中 (${i}/${pdf.numPages}) · pdf.js ${__pdfVersionUsed} · ${way.kind}`;
+            statusEl.textContent = PDF 解析中 (${i}/${pdf.numPages}) · pdf.js ${__pdfVersionUsed} · ${way.kind};
           }
           URL.revokeObjectURL(url);
-          log(`PDF.js 解析（${way.kind}）：頁數 ${pdf.numPages}，總字元 ${total} · 版本 ${__pdfVersionUsed}`);
-          if (pdf.numPages>0) log(`預覽：${texts[0].slice(0,200).replace(/\\s+/g,' ')}`);
-          return { text: texts.join('\\n'), charCount: total, pages: pdf.numPages, pdf };
+          log(PDF.js 解析（${way.kind}）：頁數 ${pdf.numPages}，總字元 ${total} · 版本 ${__pdfVersionUsed});
+          if (pdf.numPages>0) log(預覽：${texts[0].slice(0,200).replace(/\s+/g,' ')});
+          return { text: texts.join('\n'), charCount: total, pages: pdf.numPages, pdf };
         }catch(e){
-          lastErr=e; log(`PDF.js 方式「${way.kind}」失敗：`+whyStr(e));
+          lastErr=e; log(PDF.js 方式「${way.kind}」失敗：+whyStr(e));
         }
       }
       throw lastErr || new Error('pdf.js all ways failed');
@@ -284,15 +254,15 @@
           canvas.width = viewport.width; canvas.height = viewport.height;
           await page.render({ canvasContext: ctx, viewport }).promise;
 
-          statusEl.textContent = `OCR 執行中（第 ${i}/${total} 頁）…`;
+          statusEl.textContent = OCR 執行中（第 ${i}/${total} 頁）…;
           setBar(100 * (i-1) / total);
           const res = await worker.recognize(canvas, { rectangle: null });
           all.push(res.data.text || '');
           setBar(100 * i / total);
         }
-        const text = all.join('\\n');
-        log(`OCR 完成：總字元 ${text.length}`);
-        log(`預覽：${text.slice(0,200).replace(/\\s+/g,' ')}`);
+        const text = all.join('\n');
+        log(OCR 完成：總字元 ${text.length});
+        log(預覽：${text.slice(0,200).replace(/\s+/g,' ')});
         return text;
       } catch(e){
         log('OCR 錯誤：' + whyStr(e)); throw e;
@@ -304,9 +274,9 @@
     // —— 統計：BA/GA/SC 讀次數；AA 以金額÷單價（且量化為 0.5 倍數）
     function analyze(text){
       const units = getAAUnit();
-      const fam = { BA:{}, AA:{}, GA:{}, SC:{} };
-      const lines = text.split(/\\r?\\n/);
-      const codeRe = /\\b(BA|AA|GA|SC)\\d{2}(?:-\\d+)?\\b/g;
+      const fam = {BA:{}, AA:{}, GA:{}, SC:{}}.
+      const lines = text.split(/\r?\n/);
+      const codeRe = /\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g;
 
       const toHalf = v => Math.round(v * 2) / 2;
 
@@ -329,11 +299,11 @@
             const after = line.slice(m.index + fullCode.length, m.index + fullCode.length + 32);
             let amt = null;
 
-            const m1 = after.match(/\\$\\s*([0-9][0-9,]*)/);
+            let m1 = after.match(/\$\s*([0-9][0-9,]*)/);
             if (m1){
               amt = parseInt(m1[1].replace(/,/g,''), 10);
             } else {
-              const m2 = after.match(/\\b([0-9]{2,6})\\b/);
+              let m2 = after.match(/\b([0-9]{2,6})\b/);
               if (m2) amt = parseInt(m2[1], 10);
             }
 
@@ -343,12 +313,12 @@
             }
 
           } else {
-            // BA/GA/SC：抓「補助/自費」後的整數
+            // BA/GA/SC：從 AA 會抓金額不同，這裡抓「補助/自費」後的整數
             const start = Math.max(0, m.index - 40);
             const end   = Math.min(line.length, m.index + fullCode.length + 40);
             const ctx   = line.slice(start, end);
 
-            const cMatch = ctx.match(/(?:補\\s*助|自\\s*費)[^0-9]{0,6}([0-9]{1,2})\\b/);
+            const cMatch = ctx.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
             if (cMatch){
               const v = parseInt(cMatch[1],10);
               if (v >= 1 && v <= 20) zhi = v;
@@ -369,16 +339,14 @@
       return { BA: rows(fam.BA), AA: rows(fam.AA), GA: rows(fam.GA), SC: rows(fam.SC) };
     }
 
-    // 渲染
+    // 渲染（三欄）
     function renderRows(tbody, rows){
       tbody.innerHTML = '';
       for(const r of rows){
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><span class="pill">${r.code}</span></td>
-          <td class="right">${r.occ}</td>
-          <td class="right">${(Number.isFinite(r.sum)? r.sum : 0).toFixed(3)}</td>
-        `;
+        tr.innerHTML = <td><span class="pill">${r.code}</span></td>
+                        <td class="right">${r.occ}</td>
+                        <td class="right">${r.sum.toFixed(3)}</td>;
         tbody.appendChild(tr);
       }
     }
@@ -391,7 +359,7 @@
 
     // 匯出
     function exportCSV(res){
-      const blk=(title,rows)=>`${title}\\n碼別,出現筆數,Σ支數\\n` + rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(3)}`).join('\\n') + '\\n\\n';
+      const blk=(title,rows)=>${title}\n碼別,出現筆數,Σ支數\n+rows.map(r=>${r.code},${r.occ},${r.sum.toFixed(3)}).join('\n')+'\n\n';
       const csv= blk('【BA 統計】',res.BA)+blk('【AA 統計】',res.AA)+blk('【GA 統計】',res.GA)+blk('【SC 統計】',res.SC);
       const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob);
       const a=document.createElement('a'); a.href=url; a.download='pdf-stat.csv'; a.click(); URL.revokeObjectURL(url);
@@ -406,7 +374,7 @@
     let last=null;
 
     async function handleFile(file){
-      debug.textContent='偵錯訊息：\\n'; setBar(0); statusEl.textContent='準備解析…';
+      debug.textContent='偵錯訊息：\n'; setBar(0); statusEl.textContent='準備解析…';
       let pdfResult=null, text='';
       try{
         pdfResult = await extractPdfText(file);
@@ -464,7 +432,7 @@
 
     // 示範資料（AA 金額換算；BA/GA/SC 以次數）
     btnDemo.addEventListener('click', ()=>{
-      const demo = `嚴雅雯 賴美女 2025/09/01 AA05 補助 $100
+      const demo = 嚴雅雯 賴美女 2025/09/01 AA05 補助 $100
 嚴雅雯 賴美女 2025/09/02 AA05 補助 $200
 嚴雅雯 張財進 2025/09/02 AA06 自費 $200
 嚴雅雯 賴美女 2025/09/06 AA09 補助 $770
@@ -473,7 +441,7 @@
 嚴雅雯 江昭輝 2025-09-01 BA07 補助 1 $325
 嚴雅雯 張財進 2025-09-02 BA11 自費 2 $195
 嚴雅雯 李OO   2025-09-03 GA05 補助 3
-嚴雅雯 王OO   2025-09-04 SC02 自費 1`;
+嚴雅雯 王OO   2025-09-04 SC02 自費 1;
       const res = analyze(demo);
       renderAll(res);
       last = res;
@@ -481,17 +449,6 @@
       setBar(100); statusEl.textContent = '示範資料已載入';
     });
   })();
-  </script>
-
-  <!-- 共用腳本（header/footer 注入 + 導覽高亮） -->
-  <script src="include.js?v=20251111-b1" defer></script>
-  <script src="common.js?v=20251111-b1" defer></script>
-
-  <!-- header 非同步注入後，保險再觸發一次導覽高亮 -->
-  <script>
-    window.addEventListener('load', function () {
-      try{ window.dispatchEvent(new Event('hashchange')); }catch(_){}
-    });
   </script>
 
   <!-- 共用底欄注入 -->
