@@ -1,14 +1,22 @@
-<!-- 共用：頁尾備註（片段檔，勿含 <html>） -->
 <footer class="site-footer">
   <div class="inner">
     <section class="notes">
-      <h3 class="note-title">備註與說明</h3>
-      <ul class="note-list">
-        <li>投保級距：每年 <b>2 月</b> 與 <b>8 月</b> 由主管機關進行調整與公告；如遇公告異動，請以最新公文為準。</li>
-        <li>本網站僅供長照服務試算與內部作業參考，實際給付／核銷以各縣市政府與中央規定為準。</li>
-        <li>若您發現碼別或單價異動，歡迎回報以利更新。</li>
+      <h3>備註</h3>
+      <ul>
+        <li>每年 2 月、8 月調整投保級距。</li>
+        <li>本工具僅供輔助計算，實際申報以政府公告及個案核定為準。</li>
+        <li>隱私保護：請勿輸入可識別個人身分之資訊。</li>
       </ul>
-      <p class="muted small">@hori 版權所有</p>
+    </section>
+    <section class="legal">
+      <small>© <span id="yCopy"></span> hori. All rights reserved.</small>
     </section>
   </div>
+  <script>
+    // 動態年份
+    (function(){ 
+      var y=document.getElementById("yCopy"); 
+      if(y) y.textContent = new Date().getFullYear(); 
+    })();
+  </script>
 </footer>
