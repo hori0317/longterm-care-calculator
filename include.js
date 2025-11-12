@@ -1,9 +1,6 @@
-<script>
 (async function(){
   // 決定 header 檔案：若 body 有 data-header="lite" → 載入 header-lite.html
-  const headerType = document.body.dataset.header === 'lite'
-    ? 'header-lite.html'
-    : 'header.html';
+  const headerType = document.body.dataset.header === 'lite' ? 'header-lite.html' : 'header.html';
 
   async function inject(id, url){
     const el = document.getElementById(id);
@@ -20,4 +17,3 @@
   await inject('__header', headerType);
   await inject('__footer', 'footer.html');
 })();
-</script>
