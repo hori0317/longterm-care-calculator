@@ -1,29 +1,35 @@
-/* 導覽列上浮 + 底線效果（全站共用） */
-.nav-links a {
+/* common.css
+   全站共用樣式（不含版型結構），專門放導覽上浮/顏色等視覺效果。
+   — 讓 topbar-fixed.css 專注在「排列/對齊」；底線仍交由它的 ::after 負責。
+*/
+
+/* 導覽列：上浮＋顏色（不畫底線，避免與 ::after 打架） */
+.nav-links a{
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 8px 4px 10px;
-  border-bottom: 2px solid transparent;
+  padding: 8px 4px 10px;         /* 為底線預留空間 */
   text-decoration: none !important;
-  transition: color .2s, transform .2s, border-color .2s;
+  transition: color .2s, transform .2s;
   color: #333;
   font-weight: 600;
   white-space: nowrap;
 }
-
-.nav-links a:hover {
+.nav-links a:hover{
   color: var(--orange);
   transform: translateY(-1px);
 }
-
-.nav-links a.active {
+.nav-links a.active{
   color: var(--orange);
-  border-bottom-color: var(--orange);
-  transform: translateY(-1.5px);
+  transform: translateY(-1.5px); /* 微微上浮 */
 }
 
-/* 避免之前 ::after 的底線重疊 */
-.nav-links a.active::after {
-  content: none !important;
+/* 無障礙：降低動態 */
+@media (prefers-reduced-motion: reduce){
+  .nav-links a,
+  .nav-links a:hover,
+  .nav-links a.active{
+    transition: none;
+    transform: none;
+  }
 }
