@@ -1,0 +1,29 @@
+/* 導覽列上浮 + 底線效果（全站共用） */
+.nav-links a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 4px 10px;
+  border-bottom: 2px solid transparent;
+  text-decoration: none !important;
+  transition: color .2s, transform .2s, border-color .2s;
+  color: #333;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.nav-links a:hover {
+  color: var(--orange);
+  transform: translateY(-1px);
+}
+
+.nav-links a.active {
+  color: var(--orange);
+  border-bottom-color: var(--orange);
+  transform: translateY(-1.5px);
+}
+
+/* 避免之前 ::after 的底線重疊 */
+.nav-links a.active::after {
+  content: none !important;
+}
