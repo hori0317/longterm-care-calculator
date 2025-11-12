@@ -1,11 +1,12 @@
-/********************** 
+/**********************
  * script.js（週→月→總；總可改，但改週即重置同步）
  * 重點修正：服務列改用 DOM 建構，每欄獨立 <td>，避免「沐浴0」黏在一起
- * 本版功能：
+ * 本版新增（整合版）：
  * - 產表時每列加入 tr.dataset.code = item.code
  * - C 組 tr.dataset.cmode = "1"（供統計排 C 用）
- * - applyUnitEffects()：B 單位隱藏並歸零 BA09/BA09a 與整個 BD 組；A 單位恢復
- * - setActiveNav(): 導覽高亮（支援 /index.html、#hash、前進/後退）
+ * - applyUnitEffects()：B 單位隱藏並歸零鎖定 BD、BA09/BA09a；A 單位恢復
+ * - A/B 單位切換：A=含 C；B=排 C（計算面以有效金額 eff* 實作）
+ * - AA 區新增 AA07=760，僅參與居服薪資計算
  **********************/
 
 /* 公用 */
@@ -21,8 +22,8 @@ function toInt(v){
 const $ = s => document.querySelector(s);
 const WEEKS_PER_MONTH = 4.5;
 
-/* AA 區（只顯示項目＋次數；計算用） */
-const AA_PRICE = { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 };
+/* AA 區（只顯示項目＋次數；計算用：參與居服薪資） */
+const AA_PRICE = { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 };
 const ADDONS = Object.keys(AA_PRICE).map(code=>({code}));
 
 /* 服務清單 */
@@ -76,8 +77,8 @@ const serviceData = {
 
 /* 額度 */
 const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180 };
-const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
-const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
+const GA_CAP   = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
+const SC_CAP   = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
 /* 狀態 */
 let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
@@ -88,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
   bindHeaderInputs();
-  bindUnitToggle();
+  bindUnitToggle();      // 可能在 header 注入前呼叫；內部有後援機制
   applyUnitEffects();
   updateSCAvailability();
   updateResults();
@@ -114,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* AA 區 */
+/* AA 區（只參與薪資計算） */
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
   const host = $("#addonRows");
@@ -279,7 +280,7 @@ function renderTables(){
     container.appendChild(groupBox);
   });
 
-  applyUnitEffects(); // B 單位隱藏 C / BD / BA09/BA09a
+  applyUnitEffects(); // B 單位隱藏 C / BD / BA09/BA09a（顯示層與鎖定）
 }
 
 /* 單列金額（只讀 data-use） */
@@ -318,21 +319,23 @@ function updateSCAvailability(){
   if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
 }
 
-/* 統計（含 C / 排 C 兩組；不主動覆寫使用者的 total） */
+/* 統計（A：全額計；B：排除 C 與被鎖的列） */
 function updateResults(){
   let sumBA=0, sumGA=0, sumSC=0, sumC=0;
+
   const tables = document.querySelectorAll("#tables table");
   const groups = Object.keys(serviceData);
 
   groups.forEach((g, idx) => {
     const tbody = tables[idx]?.tBodies[0];
     if(!tbody) return;
+
     [...tbody.rows].forEach((tr, i) => {
       const price = Number(serviceData[g][i].price) || 0;
       let use = toInt(tr.dataset.use);
 
-      // 初次（use=0 且非 C）：依週→月種初值一次
-      if(tr.dataset.cmode!=="1" && !use){
+      // 非 C 首次導值（沿用週→月→總）
+      if(tr.dataset.cmode !== "1" && !use){
         const w = toInt(tr.querySelector(".inp-week")?.value);
         const m = Math.ceil(w * WEEKS_PER_MONTH);
         if(m>0){
@@ -344,7 +347,9 @@ function updateResults(){
       }
 
       const amt = price * use;
-      if (tr.dataset.cmode === "1"){
+
+      // A：全算；B：C 會在後段以 effBA 排除
+      if (tr.dataset.cmode === "1"){ // C 組
         sumBA += amt;
         sumC  += amt;
       } else if (g==="GA") sumGA += amt;
@@ -355,6 +360,12 @@ function updateResults(){
       if(cell) cell.textContent = amt.toLocaleString();
     });
   });
+
+  // ===== 關鍵差異：依單位決定「用來顯示/計算」的有效金額 =====
+  // A：含 C；B：排 C
+  const effBA = (currentUnit === "B") ? (sumBA - sumC) : sumBA;
+  const effGA = sumGA;
+  const effSC = sumSC;
 
   // 身分/額度
   const idtyRaw = (document.querySelector("input[name='idty']:checked")||{}).value || "一般戶";
@@ -367,6 +378,7 @@ function updateResults(){
   const grantGA = GA_CAP[cms] || 0;
   const grantSC = SC_CAP[cms] || 0;
 
+  // 以「有效金額」計算（A=含C、B=排C）
   const calc = (ba,ga,sc)=>{
     const allowBA = Math.min(ba, grantBA);
     const allowGA = Math.min(ga, grantGA);
@@ -384,14 +396,13 @@ function updateResults(){
     return {allowBA,allowGA,allowSC,overBA,overGA,overSC,copay,gov,self,grand};
   };
 
-  const inc = calc(sumBA, sumGA, sumSC);        // 含 C
-  const exC = calc(sumBA - sumC, sumGA, sumSC); // 排 C（B 單位薪資用）
+  const res = calc(effBA, effGA, effSC);
 
-  // 顯示（採含 C）
+  // 顯示（以「有效金額」為主，因此 A/B 會看到不同結果）
   $("#grantQuota") && ($("#grantQuota").value = grantBA.toLocaleString());
-  const rBA = Math.max(0, grantBA - inc.allowBA);
-  const rGA = Math.max(0, grantGA - inc.allowGA);
-  const rSC = Math.max(0, grantSC - inc.allowSC);
+  const rBA = Math.max(0, grantBA - res.allowBA);
+  const rGA = Math.max(0, grantGA - res.allowGA);
+  const rSC = Math.max(0, grantSC - res.allowSC);
 
   setText("#sumGrantBA", grantBA);
   setText("#sumRemainBA", rBA);
@@ -402,52 +413,76 @@ function updateResults(){
   setText("#sumRemainBA_foot", rBA);
   setText("#sumRemainGA_foot", rGA);
   setText("#sumRemainSC_foot", rSC);
-  setText("#sumCopay", inc.copay);
-  setText("#sumSelfpay", inc.self);
-  setText("#sumGovSubsidy", inc.gov);
-  setText("#sumGrand", inc.grand);
-  setText("#sumGovSubsidy_foot", inc.gov);
-  setText("#sumSelfpay_foot", inc.self);
-  setText("#sumGrand_foot", inc.grand);
-  toggle("#overMain", inc.overBA>0);
-  toggle("#overGA",   inc.overGA>0);
-  toggle("#overSC",   inc.overSC>0);
+  setText("#sumCopay", res.copay);
+  setText("#sumSelfpay", res.self);
+  setText("#sumGovSubsidy", res.gov);
+  setText("#sumGrand", res.grand);
+  setText("#sumGovSubsidy_foot", res.gov);
+  setText("#sumSelfpay_foot", res.self);
+  setText("#sumGrand_foot", res.grand);
 
-  // 薪資（含C／排C）
-  lastCalc.gov_inc = inc.gov;
-  lastCalc.self_inc = inc.self;
-  lastCalc.gov_exC = exC.gov;
-  lastCalc.self_exC = exC.self;
+  toggle("#overMain", effBA > grantBA);
+  toggle("#overGA",   effGA > grantGA);
+  toggle("#overSC",   effSC > grantSC);
+
+  // 存入供薪資用（注意：薪資也要跟 A/B 一樣邏輯）
+  lastCalc.gov_inc = res.gov;   // 這裡已是「有效金額」版
+  lastCalc.self_inc = res.self;
   updateCaregiverSalary();
 }
 
-/* 居服薪資(6/4) = (AA總 + 補助 + 自付) × 0.6 */
+/* 居服薪資(6/4) = (AA小計 + 有效補助 + 有效自付) × 0.6
+   有效 = A：含C；B：排C（已在 updateResults 內完成切換） */
 function updateCaregiverSalary(){
   const saved=JSON.parse(localStorage.getItem("addons")||"{}");
   let aaTotal=0;
   Object.keys(AA_PRICE).forEach(c=>{
     aaTotal += toInt(saved[`${c}_count`]) * AA_PRICE[c];
   });
-  const baseGov = (currentUnit==="B") ? lastCalc.gov_exC : lastCalc.gov_inc;
-  const baseSelf= (currentUnit==="B") ? lastCalc.self_exC: lastCalc.self_inc;
-  const total=Math.round((aaTotal + baseGov + baseSelf) * 0.6);
+  // 這裡直接用 lastCalc（已是「有效金額」）
+  const total=Math.round((aaTotal + lastCalc.gov_inc + lastCalc.self_inc) * 0.6);
   const target=$("#caregiverSalary");
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* A/B 切換：B 隱藏 C、BD、BA09/BA09a；薪資不含 C */
+/* A/B 切換：B 隱藏 C、BD、BA09/BA09a；切換後重算（不再只改外觀） */
 function bindUnitToggle(){
-  const btn=$("#btnUnitToggle");
-  if(!btn) return;
-  btn.addEventListener("click", ()=>{
-    currentUnit = (currentUnit==="A") ? "B" : "A";
+  // 若 header 尚未注入，改用觀察器等待
+  const btnNow = document.getElementById('btnUnitToggle');
+  if (btnNow) {
+    attachToggleHandler(btnNow);
+    return;
+  }
+
+  // 1) 等 include.js 派發的事件
+  document.addEventListener('header:ready', () => {
+    const b = document.getElementById('btnUnitToggle');
+    if (b && !b.__bound) attachToggleHandler(b);
+  });
+
+  // 2) 後備：MutationObserver 監看 header 區塊
+  const mo = new MutationObserver(() => {
+    const b = document.getElementById('btnUnitToggle');
+    if (b && !b.__bound) {
+      attachToggleHandler(b);
+      mo.disconnect();
+    }
+  });
+  mo.observe(document.documentElement, { childList:true, subtree:true });
+}
+function attachToggleHandler(btn){
+  if (!btn || btn.__bound) return;
+  btn.__bound = true;
+
+  btn.addEventListener('click', ()=>{
+    currentUnit = (currentUnit === "A") ? "B" : "A";
     localStorage.setItem("unit", currentUnit);
-    applyUnitEffects();
-    updateResults();
+    applyUnitEffects();   // 顯示/鎖定/歸零必要列
+    updateResults();      // ★ 以 A/B 不同規則重算所有數字（包含上方 KPI 與右下薪資）
   });
 }
 
-/* ★ 單位效果（本版重寫） */
+/* ★ 單位效果（顯示層 + 必要的歸零/解鎖） */
 function applyUnitEffects(){
   // 按鈕外觀與文字
   const btn = $("#btnUnitToggle");
@@ -458,39 +493,43 @@ function applyUnitEffects(){
     btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
   }
 
-  // C 組：B 隱藏、A 顯示
+  // C 組：B 隱藏；A 顯示
   const cBox = document.querySelector('[data-group="C"]');
   if (cBox){
-    currentUnit === "B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden");
+    if (currentUnit === "B"){
+      cBox.classList.add("hidden");
+      // 保留使用者輸入；真正的「不計入」交給 updateResults 排除 sumC
+      cBox.querySelectorAll("input").forEach(inp=> inp.disabled = true);
+    }else{
+      cBox.classList.remove("hidden");
+      cBox.querySelectorAll("input").forEach(inp=> inp.disabled = false);
+    }
   }
 
-  // ★ BD 組：B 隱藏並歸零；A 顯示並解鎖
+  // BD 組：B 隱藏並「清零+鎖定」；A 顯示並解鎖
   const bdBox = document.querySelector('[data-group="BD"]');
   if (bdBox){
     if (currentUnit === "B"){
       bdBox.classList.add("hidden");
       bdBox.querySelectorAll("tbody tr").forEach(tr=>{
         tr.dataset.use = "0";
-        tr.querySelectorAll("input").forEach(inp=>{
-          inp.value = 0; inp.disabled = true;
-        });
-        const cell = tr.querySelector(".cell-amount");
-        if (cell) cell.textContent = "0";
+        tr.querySelectorAll("input").forEach(inp=>{ inp.value = 0; inp.disabled = true; });
+        const cell = tr.querySelector(".cell-amount"); if (cell) cell.textContent = "0";
       });
     }else{
       bdBox.classList.remove("hidden");
-      bdBox.querySelectorAll("tbody tr input").forEach(inp=>{ inp.disabled = false; });
+      bdBox.querySelectorAll("tbody tr input").forEach(inp=> inp.disabled = false);
     }
   }
 
-  // ★ BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
+  // BA09 / BA09a：僅 A 單位可用；B 隱藏並清零鎖定
   const baTable = document.querySelector('[data-group="BA"] table');
   if (baTable){
     const rows = baTable.tBodies[0]?.rows || [];
     [...rows].forEach(tr=>{
       const code = tr.dataset.code || "";
-      const isSpecial = (code === "BA09" || code === "BA09a");
-      if (!isSpecial) return;
+      const isBath = (code === "BA09" || code === "BA09a");
+      if (!isBath) return;
 
       if (currentUnit === "B"){
         tr.classList.add("hidden");
@@ -501,11 +540,10 @@ function applyUnitEffects(){
         if (week)  { week.value = 0; week.disabled = true; }
         if (month) { month.value = 0; }
         if (total) { total.value = 0; total.disabled = true; }
-        const cell = tr.querySelector(".cell-amount");
-        if (cell) cell.textContent = "0";
+        const cell = tr.querySelector(".cell-amount"); if (cell) cell.textContent = "0";
       }else{
         tr.classList.remove("hidden");
-        tr.querySelectorAll("input").forEach(inp=>{ inp.disabled = false; });
+        tr.querySelectorAll("input").forEach(inp=> inp.disabled = false);
       }
     });
   }
@@ -588,14 +626,3 @@ function adjustTopbarPadding(){
   window.addEventListener('hashchange', setActiveNav);
   window.addEventListener('popstate', setActiveNav); // 處理前進/後退
 })();
-/* --------------------------------------------------
-   ★ 監聽共用 header 廣播的 unit:toggle 事件
-   （讓按鈕切換後自動套用 applyUnitEffects() 與 updateResults()）
--------------------------------------------------- */
-window.addEventListener("unit:toggle", (ev)=>{
-  const newUnit = (ev.detail && ev.detail.unit) || "B";
-  currentUnit = newUnit;
-  localStorage.setItem("unit", newUnit);
-  if (typeof applyUnitEffects === "function") applyUnitEffects();
-  if (typeof updateResults === "function") updateResults();
-});
