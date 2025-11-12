@@ -1,35 +1,68 @@
-/* common.css
-   全站共用樣式（不含版型結構），專門放導覽上浮/顏色等視覺效果。
-   — 讓 topbar-fixed.css 專注在「排列/對齊」；底線仍交由它的 ::after 負責。
-*/
+/* =====================
+   common.css（全站共用）
+   - 僅放工具/可復用的基礎樣式
+   - 主題色票、卡片、表格等維持在 style.css
+===================== */
 
-/* 導覽列：上浮＋顏色（不畫底線，避免與 ::after 打架） */
-.nav-links a{
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 4px 10px;         /* 為底線預留空間 */
-  text-decoration: none !important;
-  transition: color .2s, transform .2s;
-  color: #333;
-  font-weight: 600;
-  white-space: nowrap;
+/* Reset 基線（簡化，不與 style.css 衝突） */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+/* 文本工具 */
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+.right { text-align: right; }
+
+/* Tag/Chip 小物件（各頁可共用） */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--line, #e0e0e0);
+  border-radius: 999px; background: #fff; cursor: pointer;
+  user-select: none; font-weight: 700;
 }
-.nav-links a:hover{
-  color: var(--orange);
-  transform: translateY(-1px);
-}
-.nav-links a.active{
-  color: var(--orange);
-  transform: translateY(-1.5px); /* 微微上浮 */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Note 樣式 */
+.note { display: block; padding: 8px 10px; border-radius: 8px; background: #fff; border: 1px solid var(--line, #e0e0e0); }
+.note.warn { background: #fff7e6; border-color: #f6d28b; color: #8a5700; }
+.note.ok   { background: #eefcf0; border-color: #c6edcf; color: #2e7d32; }
+
+/* 表單通用 */
+.form-row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
+.form-row > label { font-weight: 800; color: var(--ink, #333); }
+.form-row input[type="number"], .form-row input[type="text"] {
+  height: 34px; padding: 6px 10px; border: 1px solid var(--line, #e0e0e0); border-radius: 8px; background: #fff;
 }
 
-/* 無障礙：降低動態 */
-@media (prefers-reduced-motion: reduce){
-  .nav-links a,
-  .nav-links a:hover,
-  .nav-links a.active{
-    transition: none;
-    transform: none;
-  }
+/* CMS 選擇格 */
+.cms { display: flex; gap: 8px; flex-wrap: wrap; }
+.cms > label { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.cms > label > input { position: absolute; inset: 0; opacity: 0; }
+.cms > label > span {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 9px; font-weight: 800;
+  border: 1px solid var(--line, #e0e0e0); background: #fff;
 }
+.cms > label > input:checked + span {
+  border-color: var(--green, #2e7d32);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--green, #2e7d32) 30%, transparent);
+}
+
+/* 容器（與 topbar-fixed.css 的 .container 寬度一致） */
+.container { max-width: var(--inner-max, 1160px); margin: 0 auto; padding: 16px; }
+
+/* 導覽列：小螢幕橫向捲動的保險（若無 .nav-wrap 也能滾） */
+.topbar { background: var(--bg, #fff); }
+.topbar .nav-links {
+  display: grid; grid-template-columns: repeat(6, 1fr); place-items: center;
+  width: var(--nav-width, 720px);
+}
+@media (max-width: 860px) {
+  /* 讓導覽在窄螢幕時可橫向捲動（即使沒有 .nav-wrap） */
+  .topbar .inner { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .topbar .nav-links { min-width: max(560px, var(--nav-width, 720px)); }
+}
+
+/* ===== 強制隱藏工具（務必放在檔案最後以提高優先權） ===== */
+.hidden{ display: none !important; }
+tr.hidden{ display: none !important; }
+[data-group].hidden{ display: none !important; }
