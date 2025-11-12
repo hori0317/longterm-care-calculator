@@ -78,8 +78,8 @@ const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180
 const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/* 狀態 */
-let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
+/* 狀態（★ 強化：優先讀取 <html data-unit>，再退回 localStorage；預設 A） */
+let currentUnit = (document.documentElement.dataset.unit || localStorage.getItem("unit") || "A");
 const lastCalc = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
 /* 初始化 */
@@ -87,7 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
   bindHeaderInputs();
+
+  // ★ 不在這裡主綁切換（避免與 header 重複），只做外觀同步
   bindUnitToggle();
+
   applyUnitEffects();
   updateSCAvailability();
   updateResults();
@@ -118,6 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if(window.ResizeObserver && topbar){
     new ResizeObserver(()=>adjustTopbarPadding()).observe(topbar);
   }
+});
+
+/* ★ 監聽 include.js 廣播的 unit-change：由這裡統一處理效果＋重算 */
+window.addEventListener("unit-change", (ev)=>{
+  const u = ev?.detail?.unit;
+  if(!u) return;
+  currentUnit = u;
+  localStorage.setItem("unit", currentUnit);
+  applyUnitEffects();
+  updateResults();
 });
 
 /* AA 區 */
@@ -476,19 +489,18 @@ function updateCaregiverSalary(){
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* A/B 切換：B 隱藏 C、BD、BA09/BA09a；薪資不含 C */
+/* ★ A/B 外觀同步（不在這裡綁 click，避免與 header 重複） */
 function bindUnitToggle(){
   const btn=$("#btnUnitToggle");
   if(!btn) return;
-  btn.addEventListener("click", ()=>{
-    currentUnit = (currentUnit==="A") ? "B" : "A";
-    localStorage.setItem("unit", currentUnit);
-    applyUnitEffects();
-    updateResults();
-  });
+  // 僅同步畫面狀態
+  btn.textContent = `${currentUnit}單位`;
+  btn.dataset.unit = currentUnit;
+  btn.classList.remove("btn-green","btn-orange");
+  btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
 }
 
-/* ★ 單位效果（本版重寫） */
+/* ★ 單位效果（保持你的原本行為） */
 function applyUnitEffects(){
   // 按鈕外觀與文字
   const btn = $("#btnUnitToggle");
@@ -590,7 +602,6 @@ function adjustTopbarPadding(){
 /* ---- 導覽：依當前網址自動高亮（支援多頁 + 錨點） ---- */
 (function(){
   function normPath(pathname){
-    // 移除結尾斜線 → 把 / 或 /index.html 視為 /index → 去掉 .html
     let p = String(pathname || '/').trim();
     if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
     p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
@@ -601,7 +612,6 @@ function adjustTopbarPadding(){
     const herePath = normPath(location.pathname);
     const hereHash = (location.hash || '').toLowerCase();
 
-    // 先清除舊的 active
     document.querySelectorAll('.nav-links a.active').forEach(a=>a.classList.remove('active'));
 
     document.querySelectorAll('.nav-links a[href]').forEach(a=>{
@@ -610,16 +620,13 @@ function adjustTopbarPadding(){
       let active = false;
 
       if (raw.startsWith('#')){
-        // 單頁錨點：僅當前 hash 完全相同才亮（避免全部 # 錨點同時亮）
         active = (raw.toLowerCase() === hereHash && hereHash !== '');
       } else {
-        // 多頁：以檔名比對（/page、/page.html、/ 皆可）
         try{
           const url = new URL(raw, location.origin);
           const targetPath = normPath(url.pathname);
           active = (targetPath === herePath) || (targetPath === 'index' && (herePath === '' || herePath === 'index'));
         }catch(e){
-          // 相對連結 fallback
           const hrefClean = raw.replace(/^\.\//,'').replace(/\.html?$/i,'').replace(/\/$/,'') || 'index';
           active = (hrefClean.toLowerCase() === herePath);
         }
@@ -630,5 +637,5 @@ function adjustTopbarPadding(){
   }
   window.addEventListener('DOMContentLoaded', setActiveNav);
   window.addEventListener('hashchange', setActiveNav);
-  window.addEventListener('popstate', setActiveNav); // 處理前進/後退
+  window.addEventListener('popstate', setActiveNav);
 })();
