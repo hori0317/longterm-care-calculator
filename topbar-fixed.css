@@ -1,109 +1,106 @@
 /* =====================
-   頂欄固定 + 導覽橫向滑動修正版
-   適用於 include.js 共用 header
+   頂欄固定 + 三欄定位（品牌 / 導覽 / 動作）
+   讓所有頁面導覽列位置一致，無論右上有無按鈕
+   版本：2025-11-12
 ===================== */
 
 :root {
+  /* 內寬與導覽欄視覺寬度（可依站點調整） */
   --inner-max: 1160px;
   --nav-width: 720px;
 }
 
-/* === 全域設定 === */
+/* ---- 基線與背景（與 style.css 主題變數協作） ---- */
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
   color: var(--ink);
   background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC",
+               "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
 }
 
-/* === 頂欄 === */
+/* ---- 頂欄 ---- */
 .topbar {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
+  background: var(--bg);                 /* 與全站背景一致 */
+  border-bottom: 1px solid var(--line);  /* 與全站線色一致 */
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* 內層容器 */
+/* 置中容器：使用 3 欄 Grid，確保品牌/導覽/按鈕寬度穩定 */
 .topbar .inner {
   max-width: var(--inner-max);
   margin: 0 auto;
   padding: 10px 20px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 240px 1fr 240px; /* 左固定 240 / 中間自動 / 右固定 240 */
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  column-gap: 16px;
 }
 
-/* === 品牌區（靠左 + 放大） === */
+/* 品牌：靠左 + 放大 */
 .brand {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 12px;
-  flex-shrink: 0;
-  min-width: 220px;
+  min-width: 0;
 }
 .logo-link img {
-  height: 46px;   /* 放大 logo */
+  height: 46px;         /* 放大 logo */
   width: auto;
   display: block;
 }
 .site-title {
   font-weight: 800;
-  font-size: 1.4rem;  /* 放大字體 */
-  letter-spacing: 0.05em;
+  font-size: 1.4rem;    /* 放大標題 */
+  letter-spacing: .05em;
   white-space: nowrap;
 }
 
-/* === 導覽列外層（可水平滾動） === */
+/* 導覽外層：可水平捲動（手機可滑、桌機有細滾輪） */
 .nav-wrap {
-  flex: 1;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,0.2) transparent;
+  scrollbar-color: rgba(0,0,0,0.25) transparent;
 }
-.nav-wrap::-webkit-scrollbar {
-  height: 6px;
-}
+.nav-wrap::-webkit-scrollbar { height: 6px; }
 .nav-wrap::-webkit-scrollbar-thumb {
   background: rgba(0,0,0,0.25);
   border-radius: 4px;
 }
-.nav-wrap::-webkit-scrollbar-track {
-  background: transparent;
-}
+.nav-wrap::-webkit-scrollbar-track { background: transparent; }
 
-/* === 導覽連結（固定間距 + 不被壓縮） === */
+/* 導覽列：inline-flex + 固定字距，避免擠壓跳動 */
 .nav-links {
   display: inline-flex;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0 0.5rem;
-  white-space: nowrap;
+  gap: 1.5rem;         /* 各頁一致的間距 */
+  padding: 0 .5rem;
+  white-space: nowrap; /* 不中斷換行，靠 nav-wrap 滾動 */
 }
 .nav-links a {
   text-decoration: none;
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
   padding: 8px 0;
   position: relative;
-  flex-shrink: 0;
-  transition: color 0.2s, transform 0.2s;
+  flex-shrink: 0;      /* 不被壓縮 */
+  transition: color .2s, transform .2s;
 }
 .nav-links a:hover {
   color: var(--green);
   transform: translateY(-1px);
 }
-.nav-links a.active {
-  color: var(--orange);
-}
+
+/* 單一真相：由此檔案畫底線，其他檔案請勿再加 border-bottom */
+.nav-links a.active { color: var(--orange); }
 .nav-links a.active::after {
   content: "";
   position: absolute;
@@ -115,56 +112,60 @@ body {
   border-radius: 3px;
 }
 
-/* === 右側動作按鈕 === */
-.actions {
+/* 動作按鈕區：固定寬度 240px，無按鈕頁面用 .actions-ghost 佔位 */
+.actions,
+.actions-ghost {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  min-width: 220px;
   justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;   /* grid 已固定欄寬，這裡允許內容縮在欄內 */
 }
-.btn {
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  background: #eee;
-  transition: background 0.2s;
+
+/* 只佔位、不顯示內容（保持欄位寬度一致） */
+.actions-ghost {
+  visibility: hidden;           /* 內容不可見 */
+}
+
+/* 按鈕樣式（與全站色票一致） */
+.btn { 
+  border: none; 
+  padding: 8px 14px; 
+  border-radius: 8px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  background: #eee; 
+  transition: filter .2s ease; 
 }
 .pill { border-radius: 999px; }
 .btn-orange { background: var(--orange); color: #fff; }
-.btn-green { background: #2e7d32; color: #fff; }
-.btn-gray { background: #9ca3af; color: #fff; }
-.btn:hover { filter: brightness(1.1); }
+.btn-green  { background: #2e7d32;  color: #fff; }
+.btn-gray   { background: #9ca3af;  color: #fff; }
+.btn:hover  { filter: brightness(1.08); }
 
-/* === 分隔線 === */
-.divider { height: 8px; }
-
-/* === 內容容器 === */
+/* 頂欄下分隔與內容容器（保持各頁一致） */
+.divider { height: 8px; background: var(--bg); }
 .container {
   max-width: var(--inner-max);
   margin: 0 auto;
   padding: 16px;
 }
 
-/* === 響應式微調 === */
+/* 響應式：窄螢幕保持三欄，但允許導覽自行捲動 */
 @media (max-width: 900px) {
   .topbar .inner {
-    flex-wrap: wrap;
-    gap: 8px;
+    grid-template-columns: 220px 1fr 220px;
+    padding: 10px 16px;
   }
-  .nav-wrap {
-    order: 3;
-    width: 100%;
+  .logo-link img { height: 42px; }
+  .site-title { font-size: 1.25rem; }
+}
+@media (max-width: 640px) {
+  .topbar .inner {
+    grid-template-columns: 200px 1fr 200px;
+    padding: 8px 12px;
   }
-  .brand {
-    order: 1;
-  }
-  .actions {
-    order: 2;
-    justify-content: flex-end;
-    width: 100%;
-  }
+  .logo-link img { height: 38px; }
+  .site-title { font-size: 1.15rem; }
+  .nav-links { gap: 1.1rem; }
 }
