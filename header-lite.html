@@ -1,19 +1,25 @@
 <header class="topbar">
-  <div class="brand">
-    <a href="index.html" class="logo-link"><img src="org-logo.png" alt="logo"></a>
-    <span class="site-title">長照相關資訊</span>
+  <div class="inner">
+    <div class="brand">
+      <a href="index.html" class="logo-link" aria-label="回首頁">
+        <img src="org-logo.png" alt="logo">
+      </a>
+      <span class="site-title">長照相關資訊</span>
+    </div>
+
+    <div class="nav-wrap">
+      <nav class="nav-links" aria-label="主選單">
+        <a href="index.html">額度計算機</a>
+        <a href="payroll.html">薪資計算機</a>
+        <a href="care-info.html">長照相關資訊</a>
+        <a href="news.html">最新公告</a>
+        <a href="contact.html">聯繫方式</a>
+        <a href="about.html">關於我們</a>
+      </nav>
+    </div>
+
+    <!-- 以空容器保寬，確保中間導覽置中；不顯示任何按鈕 -->
+    <div class="actions actions-ghost" aria-hidden="true" style="visibility:hidden"></div>
   </div>
-
-  <nav class="nav-links" aria-label="主選單">
-    <a href="index.html">額度計算機</a>
-    <a href="payroll.html">薪資計算機</a>
-    <a href="care-info.html">長照相關資訊</a>
-    <a href="news.html">最新公告</a>
-    <a href="contact.html">聯繫方式</a>
-    <a href="about.html">關於我們</a>
-  </nav>
-
-  <!-- 空容器保留寬度，確保導覽仍置中；不顯示任何按鈕 -->
-  <div class="actions actions-ghost" aria-hidden="true"></div>
 </header>
 <div class="divider"></div>
