@@ -588,3 +588,14 @@ function adjustTopbarPadding(){
   window.addEventListener('hashchange', setActiveNav);
   window.addEventListener('popstate', setActiveNav); // 處理前進/後退
 })();
+/* --------------------------------------------------
+   ★ 監聽共用 header 廣播的 unit:toggle 事件
+   （讓按鈕切換後自動套用 applyUnitEffects() 與 updateResults()）
+-------------------------------------------------- */
+window.addEventListener("unit:toggle", (ev)=>{
+  const newUnit = (ev.detail && ev.detail.unit) || "B";
+  currentUnit = newUnit;
+  localStorage.setItem("unit", newUnit);
+  if (typeof applyUnitEffects === "function") applyUnitEffects();
+  if (typeof updateResults === "function") updateResults();
+});
