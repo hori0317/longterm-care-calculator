@@ -6,8 +6,11 @@
   <title>薪資計算機｜長照工具</title>
   <meta name="description" content="輸入本月 AA / BA / GA / SC 的支數，計總額並依比例拆薪；可從 PDF 自動統計並選擇是否同步，右側即時比對勞健保扣款，得出實領。">
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
+  <!-- 共用樣式（請保持與站上其他頁一致） -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="topbar-fixed.css" />
+
+  <!-- 本頁需要的小範圍樣式（維持你原本的版面與視覺） -->
   <style>
     :root{
       --wm-text:"@hori版權所有";
@@ -17,19 +20,20 @@
       --wm-shift:120px;
     }
     .watermark{position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden;}
-    .wm-item{position:absolute; font-weight:700; font-size:var(--wm-size); color:rgba(0,0,0,var(--wm-alpha));
-      transform:rotate(var(--wm-angle)); white-space:nowrap; user-select:none; animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
+    .wm-item{
+      position:absolute; font-weight:700; font-size:var(--wm-size);
+      color:rgba(0,0,0,var(--wm-alpha)); transform:rotate(var(--wm-angle));
+      white-space:nowrap; user-select:none; animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;
+    }
     @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));} 100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
     @media print{.watermark{opacity:.08}}
 
-    /* 本頁小元件（原封保留） */
+    /* 本頁 KPI/tables（承襲你之前的設定） */
     .kpi{display:flex; gap:16px; flex-wrap:wrap;}
-    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
-      display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
+    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
     .kpi .box .lbl{color:#7a7557; font-weight:700;}
     .kpi .box .num{font-size:24px; font-weight:900; color:#2e7d32;}
-    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
-      border-radius:12px; overflow:hidden;}
+    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
     .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
@@ -41,7 +45,7 @@
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
 
-    /* PDF 支數小工具（ps- 前綴；原封保留） */
+    /* PDF 支數小工具（ps- 前綴） */
     .ps-muted{color:#5b6b81}.ps-small{font-size:.86rem}.ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
     .ps-pill{display:inline-block;padding:0 6px;border:1px solid #dbe6ff;background:#eef4ff;border-radius:999px}
     .ps-grid{display:grid;gap:12px}@media(min-width:920px){.ps-grid{grid-template-columns:1.1fr .9fr}}
@@ -60,12 +64,17 @@
     .ps-table tbody tr:hover{background:#f5f8ff}
     .ps-right{text-align:right}
     .ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
+
+    /* 行動裝置表格橫向滾動（與 style.css 一致） */
+    @media (max-width:860px){
+      #tables{overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:calc(var(--dock-h) + 14px); display:block;}
+      #tables table{min-width:780px; table-layout:fixed; width:max-content;}
+      #tables th,#tables td{padding:10px 12px; font-size:14px; line-height:1.2; white-space:nowrap;}
+      #tables input[type="number"]{width:58px; height:32px; font-size:14px;}
+    }
   </style>
 </head>
 <body>
-  <!-- 共用 Header 置入點 -->
-  <div id="__header"></div>
-
   <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
@@ -85,11 +94,15 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
+  <!-- 🔹 共用 Header 插槽（由 include.js 載入 header.html / header-lite.html） -->
+  <div id="__header"></div>
+
   <main class="container">
-    <!-- KPI -->
+    <!-- KPI 區 -->
     <section class="card" style="margin-bottom:16px;">
       <h1 class="card-title" style="font-size:22px;">本月薪資總覽</h1>
       <p class="hint">輸入各碼別本月支數 → 計總額 → 依比例拆薪；右側即時比對勞健保扣款，算出「實領」。</p>
+
       <div class="kpi" style="margin-top:10px;">
         <div class="box"><div class="lbl">AA 小計</div><div class="num" id="kpiAA">0</div></div>
         <div class="box"><div class="lbl">BA 小計</div><div class="num" id="kpiBA">0</div></div>
@@ -121,7 +134,10 @@
     <!-- PDF 支數自動統計 -->
     <section class="card ps-card" id="ps-widget">
       <h2 class="card-title">PDF 支數自動統計（帶入表單）</h2>
-      <p class="ps-muted">上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5），AA 單價固定。</p>
+      <p class="ps-muted">
+        上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。
+        AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5），AA 單價固定。
+      </p>
 
       <label class="ps-drop" id="ps-drop">
         <input type="file" id="ps-file" accept="application/pdf" />
@@ -166,6 +182,7 @@
             <tbody></tbody>
           </table>
         </div>
+
         <div class="ps-box">
           <h3 class="ps-h3">AA 統計</h3>
           <table id="ps-t-AA" class="ps-table">
@@ -173,6 +190,7 @@
             <tbody></tbody>
           </table>
         </div>
+
         <div class="ps-box">
           <h3 class="ps-h3">GA 統計</h3>
           <table id="ps-t-GA" class="ps-table">
@@ -180,6 +198,7 @@
             <tbody></tbody>
           </table>
         </div>
+
         <div class="ps-box">
           <h3 class="ps-h3">SC 統計</h3>
           <table id="ps-t-SC" class="ps-table">
@@ -235,6 +254,7 @@
     <section class="card">
       <h2 class="card-title">⑥ 薪資結果 & 勞健保扣款</h2>
       <div class="grid-2" style="margin-top:8px;">
+
         <div class="card" style="padding:14px;">
           <table class="tbl">
             <tbody>
@@ -278,20 +298,18 @@
               </tr>
             </tbody>
           </table>
+
           <div class="row-mid" style="margin-top:12px;">
             <div class="pill-note">實領（拆薪後薪資－勞健保合計）：<b class="mono" id="netPay">0</b></div>
           </div>
         </div>
+
       </div>
     </section>
   </main>
 
-  <!-- 底部資訊條 -->
-  <footer id="bottomDock" class="footerbar">
-    <div class="foot">
-      <span class="ok">※ 每年 <b>2 月</b> 和 <b>8 月</b> 調整投保級距，並於次月 <b>1 號</b> 生效。</span>
-    </div>
-  </footer>
+  <!-- 🔹 共用 Footer 插槽（由 include.js 載入 footer.html） -->
+  <div id="__footer"></div>
 
   <!-- 主邏輯（輸入/計算/勞健保/儲存） -->
   <script>
@@ -301,7 +319,7 @@
       const N = v => (isFinite(+v) ? +v : 0);
       const F = v => new Intl.NumberFormat('zh-Hant-TW', { maximumFractionDigits: 0 }).format(v);
 
-      /* 單價（固定，含 AA07=760；BA15-1/15-2 分列；GA09/SC09=770） */
+      /* 單價（固定，含 AA07；BA15-1/15-2 分列；GA09/SC09=770） */
       const PRICE = {
         AA: { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 },
         BA: [
@@ -392,7 +410,7 @@
         { grade:150000, labor:1145, health:2327 }
       ];
 
-      /* 建表（輸入） */
+      /* === 建表（輸入） === */
       function buildAA(){
         const host = document.querySelector('#tblAA tbody');
         host.innerHTML = '';
@@ -400,10 +418,12 @@
         Object.keys(PRICE.AA).forEach(code=>{
           const price = PRICE.AA[code];
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${code}</td>
-  <td class="right mono">${F(price)}</td>
-  <td class="right"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
-  <td class="right mono" data-aa-sum="${code}">0</td>`;
+          tr.innerHTML = `
+            <td>${code}</td>
+            <td class="right mono">${F(price)}</td>
+            <td class="right"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
+            <td class="right mono" data-aa-sum="${code}">0</td>
+          `;
           host.appendChild(tr);
         });
       }
@@ -415,15 +435,17 @@
         const k = key.toLowerCase();
         PRICE[key].forEach(item=>{
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${item.code}${item.name ? ' ' + item.name : ''}</td>
-  <td class="right mono">${F(item.price)}</td>
-  <td class="right"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
-  <td class="right mono" data-${k}-sum="${item.code}">0</td>`;
+          tr.innerHTML = `
+            <td>${item.code}${item.name ? ' ' + item.name : ''}</td>
+            <td class="right mono">${F(item.price)}</td>
+            <td class="right"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
+            <td class="right mono" data-${k}-sum="${item.code}">0</td>
+          `;
           host.appendChild(tr);
         });
       }
 
-      /* 計算 */
+      /* === 計算 === */
       function calcAA(){
         let total = 0;
         Object.keys(PRICE.AA).forEach(code=>{
@@ -458,6 +480,7 @@
         const sumBA = calcGroup('BA', '#sumBA', '#kpiBA', '#resBA');
         const sumGA = calcGroup('GA', '#sumGA', '#kpiGA', '#resGA');
         const sumSC = calcGroup('SC', '#sumSC', '#kpiSC', '#resSC');
+
         const total = sumAA + sumBA + sumGA + sumSC;
         $('#kpiTotal').textContent = F(total);
         $('#resTotal').textContent = F(total);
@@ -474,7 +497,7 @@
         saveAll();
       }
 
-      /* 勞健保 */
+      /* === 勞健保 === */
       function buildInsOptions(){
         const sel = $('#insGrade');
         sel.innerHTML = '';
@@ -485,19 +508,12 @@
           sel.appendChild(opt);
         });
       }
-
       function findGradeBySalary(sal){
         const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
-        for (const v of list){
-          if (sal <= v) return v; // 找到第一個「大於等於薪資」的級距
-        }
-        return list[list.length-1]; // 超過最高級距時用最後一級
+        for (const v of list){ if (sal <= v) return v; }
+        return list[list.length-1];
       }
-
-      function getRow(grade){
-        return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0];
-      }
-
+      function getRow(grade){ return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0]; }
       function syncInsuranceBySalary(salary){
         const auto = $('#insAuto').checked;
         const sel = $('#insGrade');
@@ -517,7 +533,7 @@
         $('#resNet').textContent = F(net);
       }
 
-      /* 儲存／還原 */
+      /* === 儲存／還原 === */
       function saveAll(){
         const aa = {};
         Object.keys(PRICE.AA).forEach(code=> aa[code]=+(document.querySelector(`input[data-aa="${code}"]`).value||0));
@@ -538,12 +554,9 @@
         };
         localStorage.setItem('pl-params', JSON.stringify(params));
       }
-
       function loadLS(key, fb){
-        try{ return JSON.parse(localStorage.getItem(key)||'') || fb; }
-        catch(e){ return fb; }
+        try{ return JSON.parse(localStorage.getItem(key)||'') || fb; }catch(e){ return fb; }
       }
-
       function restore(){
         const p = loadLS('pl-params', null);
         if (p){
@@ -556,7 +569,7 @@
         }
       }
 
-      /* 事件 */
+      /* === 事件 === */
       function wire(){
         ['#tblAA','#tblBA','#tblGA','#tblSC'].forEach(id=>{
           document.querySelectorAll(`${id} input[type="number"]`).forEach(inp=>{
@@ -591,15 +604,19 @@
           saveAll();
         });
 
-        // 右上角按鈕
-        $('#btnPrint').addEventListener('click', ()=>window.print());
-        $('#btnResetAll').addEventListener('click', ()=>{
-          ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params'].forEach(k=>localStorage.removeItem(k));
-          location.reload();
+        // 右上角按鈕：列印/全部清空（按鈕由 header 注入，這裡只負責功能）
+        document.addEventListener('click', (e)=>{
+          const t = e.target;
+          if (!(t instanceof HTMLElement)) return;
+          if (t.id === 'btnPrint') window.print();
+          if (t.id === 'btnResetAll'){
+            ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params'].forEach(k=>localStorage.removeItem(k));
+            location.reload();
+          }
         });
       }
 
-      /* 啟動 */
+      /* === 啟動 === */
       buildAA();
       buildGroup('tblBA','BA','pl-ba');
       buildGroup('tblGA','GA','pl-ga');
@@ -609,36 +626,7 @@
       wire();
       updateAll();
 
-      // 導覽高亮
-      (function(){
-        function norm(href){
-          try{
-            const u=new URL(href, location.origin);
-            let p=u.pathname.trim();
-            if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
-            p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
-            return p.split('/').pop().toLowerCase();
-          }catch(e){return '';}
-        }
-        const here = norm(location.href);
-        document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-          const target = norm(a.getAttribute('href'));
-          if (target && target === here) a.classList.add('active');
-        });
-
-        // 同步頁面標題
-        const map = {
-          index:'額度計算機', payroll:'薪資計算機', 'care-info':'長照相關資訊',
-          news:'最新公告', contact:'聯繫方式', about:'關於我們'
-        };
-        const slug = here || 'payroll';
-        const pageName = map[slug] || '薪資計算機';
-        const st = document.getElementById('siteTitle');
-        if (st) st.textContent = pageName;
-        document.title = `${pageName}｜長照工具`;
-      })();
-
-      // 防拷
+      // 基礎的防拷（可保留或移除）
       document.addEventListener('contextmenu', e => e.preventDefault());
       document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
@@ -649,7 +637,7 @@
     })();
   </script>
 
-  <!-- PDF 解析 + 帶入表單（含 OCR 後援；同步前清空；AA 0.5 進位；BA05-1=BA05；BA16-1/-2=BA16） -->
+  <!-- PDF 解析 + 帶入表單（含 OCR 後援；同步前清空；AA 0.5 進位；別名合併 BA05-1→BA05、BA16-1/-2→BA16） -->
   <script>
     (() => {
       const $ = s => document.querySelector(s);
@@ -701,9 +689,7 @@
       }
 
       // AA 單價（含 AA07）
-      function getAAUnit(){
-        return { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 };
-      }
+      function getAAUnit(){ return { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 }; }
 
       // 讀 PDF → 文字
       async function extractPdfText(file){
@@ -718,17 +704,13 @@
               const page=await pdf.getPage(i);
               const c=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false});
               const s=c.items.map(it=>it.str||'').join(' ');
-              texts.push(s);
-              total+=s.length;
-              setBar(100*i/pdf.numPages);
+              texts.push(s); total+=s.length; setBar(100*i/pdf.numPages);
               if(statusEl) statusEl.textContent=`PDF 解析中 (${i}/${pdf.numPages}) · ${pdfVer||'pdf.js'}/${w.k}`;
             }
             URL.revokeObjectURL(url);
             log(`PDF.js 成功：頁=${texts.length} 字=${total}`);
             return {text:texts.join('\n'), pdf, charCount:total};
-          }catch(e){
-            log(`PDF.js 失敗(${w.k})：`+why(e));
-          }
+          }catch(e){ log(`PDF.js 失敗(${w.k})：`+why(e)); }
         }
         throw new Error('pdf.js failed');
       }
@@ -745,8 +727,7 @@
           await p.render({canvasContext:ctx,viewport:v}).promise;
           if(statusEl) statusEl.textContent=`OCR 執行中（${i}/${pdf.numPages}）`;
           const r=await worker.recognize(cvs);
-          all.push(r.data.text||'');
-          setBar(100*i/pdf.numPages);
+          all.push(r.data.text||''); setBar(100*i/pdf.numPages);
         }
         await worker.terminate();
         const t=all.join('\n');
@@ -758,102 +739,70 @@
       function analyze(text){
         const units=getAAUnit(), fam={BA:{},AA:{},GA:{},SC:{}};
         const codeRe=/\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g, toHalf=v=>Math.round(v*2)/2;
-
         for (const raw of text.split(/\r?\n/)){
-          const line=raw.trim();
-          if(!line) continue;
-          const codes=[...line.matchAll(codeRe)];
-          if(!codes.length) continue;
-
+          const line=raw.trim(); if(!line) continue;
+          const codes=[...line.matchAll(codeRe)]; if(!codes.length) continue;
           for (const m of codes){
             const fullRaw=m[0];
-            const canon = toCanon(fullRaw); // 先轉正規碼
+            const canon = toCanon(fullRaw); // 正規化
             const head = canon.slice(0,2);
 
             if (head==='AA'){
               const after=line.slice(m.index+fullRaw.length, m.index+fullRaw.length+40);
               let amt=null, m1=after.match(/\$\s*([0-9][0-9,]*)/);
               if (m1) amt=parseInt(m1[1].replace(/,/g,''),10);
-              else {
-                const m2=after.match(/\b([0-9]{2,6})\b/);
-                if(m2) amt=parseInt(m2[1],10);
-              }
+              else { const m2=after.match(/\b([0-9]{2,6})\b/); if(m2) amt=parseInt(m2[1],10); }
               const unit=units[canon]??units[canon.slice(0,4)];
               const zhi = (unit && amt) ? toHalf(amt/unit) : 0;
-              const rec=fam.AA[canon]||{occ:0,sum:0};
-              rec.occ++;
-              rec.sum+=zhi;
-              fam.AA[canon]=rec;
+              const rec=fam.AA[canon]||{occ:0,sum:0}; rec.occ++; rec.sum+=zhi; fam.AA[canon]=rec;
+
             }else{
               const ctx=line.slice(Math.max(0,m.index-40), Math.min(line.length,m.index+fullRaw.length+40));
               const c=ctx.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
               const zhi = c ? Math.max(0, Math.min(20, parseInt(c[1],10))) : 0;
-              const rec=(fam[head][canon]||{occ:0,sum:0});
-              rec.occ++;
-              rec.sum+=zhi;
-              fam[head][canon]=rec;
+              const rec=(fam[head][canon]||{occ:0,sum:0}); rec.occ++; rec.sum+=zhi; fam[head][canon]=rec;
             }
           }
         }
-
         const rows=obj=>Object.entries(obj).map(([code,{occ,sum}])=>({code,occ,sum})).sort((a,b)=>a.code.localeCompare(b.code));
         return {BA:rows(fam.BA),AA:rows(fam.AA),GA:rows(fam.GA),SC:rows(fam.SC)};
       }
 
       // 渲染 & 匯出
       const tb={BA:$('#ps-t-BA tbody'),AA:$('#ps-t-AA tbody'),GA:$('#ps-t-GA tbody'),SC:$('#ps-t-SC tbody')};
-
       function renderRows(tbody, rows){
-        if(!tbody) return;
-        tbody.innerHTML='';
+        if(!tbody) return; tbody.innerHTML='';
         for(const r of rows){
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td><span class="ps-pill">${r.code}</span></td>
-  <td class="ps-right">${r.occ}</td>
-  <td class="ps-right">${r.sum.toFixed(1)}</td>`;
+          tr.innerHTML= `
+            <td><span class="ps-pill">${r.code}</span></td>
+            <td class="ps-right">${r.occ}</td>
+            <td class="ps-right">${r.sum.toFixed(1)}</td>
+          `;
           tbody.appendChild(tr);
         }
       }
-      function renderAll(res){
-        renderRows(tb.BA,res.BA);
-        renderRows(tb.AA,res.AA);
-        renderRows(tb.GA,res.GA);
-        renderRows(tb.SC,res.SC);
-      }
-
+      function renderAll(res){ renderRows(tb.BA,res.BA); renderRows(tb.AA,res.AA); renderRows(tb.GA,res.GA); renderRows(tb.SC,res.SC); }
       function exportCSV(res){
         const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(1)}`).join('\n')+'\n\n';
         const csv=blk('【BA】',res.BA)+blk('【AA】',res.AA)+blk('【GA】',res.GA)+blk('【SC】',res.SC);
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob);
-        const a=document.createElement('a');
-        a.href=url;
-        a.download='pdf-stat.csv';
-        a.click();
-        URL.revokeObjectURL(url);
+        const a=document.createElement('a'); a.href=url; a.download='pdf-stat.csv'; a.click(); URL.revokeObjectURL(url);
       }
-
       function exportJSON(res){
         const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:Number(r.sum.toFixed(1))}));
         const payload={BA:pick(res.BA),AA:pick(res.AA),GA:pick(res.GA),SC:pick(res.SC),meta:{generatedAt:new Date().toISOString()}};
         const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}), url=URL.createObjectURL(blob);
-        const a=document.createElement('a');
-        a.href=url;
-        a.download='pdf-stat.json';
-        a.click();
-        URL.revokeObjectURL(url);
+        const a=document.createElement('a'); a.href=url; a.download='pdf-stat.json'; a.click(); URL.revokeObjectURL(url);
       }
 
       // 同步到表單（先清空 → 再寫入；AA 用 0.5 step；BA/GA/SC 取整）
       function resetPayrollInputs(){
         document.querySelectorAll('#tblAA input[type="number"][data-aa], #tblBA input[type="number"][data-ba], #tblGA input[type="number"][data-ga], #tblSC input[type="number"][data-sc]')
-          .forEach(inp=>{
-            inp.value = '0';
-            inp.dispatchEvent(new Event('input',{bubbles:true}));
-          });
+          .forEach(inp=>{ inp.value = '0'; inp.dispatchEvent(new Event('input',{bubbles:true})); });
       }
       const fwMap = {'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','－':'-','　':' '};
       function normalize(code){ return String(code||'').trim().replace(/[０-９－　]/g, ch=>fwMap[ch] ?? ch); }
-
       function setInputByCode(kind, code, val, step){
         const norm = normalize(code);
         const canon = toCanon(norm);
@@ -864,30 +813,15 @@
         sel.dispatchEvent(new Event('input',{bubbles:true}));
         return true;
       }
-
       function applyToPayroll(res){
         resetPayrollInputs();
         const miss = [];
-
         // AA：0.5 進位
-        res.AA.forEach(r=>{
-          const ok = setInputByCode('aa', r.code, r.sum, '0.5');
-          if (!ok) miss.push(`AA：${normalize(r.code)}`);
-        });
-
+        res.AA.forEach(r=>{ const ok = setInputByCode('aa', r.code, r.sum, '0.5'); if (!ok) miss.push(`AA：${normalize(r.code)}`); });
         // BA / GA / SC：整數
-        res.BA.forEach(r=>{
-          const ok = setInputByCode('ba', r.code, Math.round(r.sum));
-          if (!ok) miss.push(`BA：${normalize(r.code)}`);
-        });
-        res.GA.forEach(r=>{
-          const ok = setInputByCode('ga', r.code, Math.round(r.sum));
-          if (!ok) miss.push(`GA：${normalize(r.code)}`);
-        });
-        res.SC.forEach(r=>{
-          const ok = setInputByCode('sc', r.code, Math.round(r.sum));
-          if (!ok) miss.push(`SC：${normalize(r.code)}`);
-        });
+        res.BA.forEach(r=>{ const ok = setInputByCode('ba', r.code, Math.round(r.sum)); if (!ok) miss.push(`BA：${normalize(r.code)}`); });
+        res.GA.forEach(r=>{ const ok = setInputByCode('ga', r.code, Math.round(r.sum)); if (!ok) miss.push(`GA：${normalize(r.code)}`); });
+        res.SC.forEach(r=>{ const ok = setInputByCode('sc', r.code, Math.round(r.sum)); if (!ok) miss.push(`SC：${normalize(r.code)}`); });
 
         let warn = document.getElementById('ps-miss');
         const host = document.querySelector('#ps-widget');
@@ -900,9 +834,7 @@
             host.appendChild(warn);
           }
           warn.innerHTML = `<b>未同步的碼別（薪資表中沒有）：</b><br>${miss.map(m=>'• '+m).join('<br>')}`;
-        }else if (warn){
-          warn.remove();
-        }
+        }else if (warn){ warn.remove(); }
 
         document.getElementById('tblAA')?.scrollIntoView({behavior:'smooth', block:'start'});
       }
@@ -913,85 +845,56 @@
       const syncYesBtn = document.getElementById('ps-sync-yes');
       const syncNoBtn = document.getElementById('ps-sync-no');
       const AUTO_KEY = 'ps-auto-sync';
-
       function loadAutoSync(){ try{ return localStorage.getItem(AUTO_KEY)==='1'; }catch(e){ return false; } }
       function saveAutoSync(v){ try{ localStorage.setItem(AUTO_KEY, v?'1':'0'); }catch(e){} }
       function showSyncBar(on){ if(syncBar) syncBar.style.display = on ? 'flex' : 'none'; }
-
-      if (autoSyncEl){
-        autoSyncEl.checked = loadAutoSync();
-        autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked));
-      }
-      if (syncYesBtn){
-        syncYesBtn.addEventListener('click', ()=>{
-          if (last){ applyToPayroll(last); }
-          showSyncBar(false);
-        });
-      }
-      if (syncNoBtn){
-        syncNoBtn.addEventListener('click', ()=> showSyncBar(false));
-      }
+      if (autoSyncEl){ autoSyncEl.checked = loadAutoSync(); autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked)); }
+      if (syncYesBtn){ syncYesBtn.addEventListener('click', ()=>{ if (last){ applyToPayroll(last); } showSyncBar(false); }); }
+      if (syncNoBtn){ syncNoBtn.addEventListener('click', ()=> showSyncBar(false)); }
 
       // 綁定
       let last=null;
       async function handleFile(f){
         if(!debug) return;
-        debug.textContent='偵錯訊息：\n';
-        setBar(0);
+        debug.textContent='偵錯訊息：\n'; setBar(0);
         if(statusEl) statusEl.textContent='準備解析…';
         let pdfRes=null, text='';
 
-        try{ pdfRes=await extractPdfText(f); }
-        catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
-
+        try{ pdfRes=await extractPdfText(f); }catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
         if(pdfRes && pdfRes.charCount>0){
-          text=pdfRes.text;
-          setBar(100);
+          text=pdfRes.text; setBar(100);
           if(statusEl) statusEl.textContent='PDF 文字擷取完成';
         } else {
           try{
             const pdf= pdfRes?.pdf || await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
-            if(statusEl) statusEl.textContent='啟用 OCR…';
-            setBar(1);
-            text=await ocrPdfToText(pdf);
-            setBar(100);
+            if(statusEl) statusEl.textContent='啟用 OCR…'; setBar(1);
+            text=await ocrPdfToText(pdf); setBar(100);
             if(statusEl) statusEl.textContent='OCR 完成';
-          }catch(e){
-            log('OCR 也失敗：'+why(e));
-            alert('此 PDF 無法解析，可能是加密或損壞。');
-            return;
-          }
+          }catch(e){ log('OCR 也失敗：'+why(e)); alert('此 PDF 無法解析，可能是加密或損壞。'); return; }
         }
 
         const res=analyze(text);
-        renderAll(res);
-        last=res;
+        renderAll(res); last=res;
         document.getElementById('ps-apply').disabled=false;
         document.getElementById('ps-csv').disabled=false;
         document.getElementById('ps-json').disabled=false;
 
-        if (autoSyncEl && autoSyncEl.checked){
-          applyToPayroll(last);
-          showSyncBar(false);
-        } else {
-          showSyncBar(true);
-        }
+        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); }
+        else { showSyncBar(true); }
       }
 
       const fileInput=$('#ps-file'), drop=$('#ps-drop');
-      if(fileInput){
-        fileInput.addEventListener('change',e=>{const f=e.target.files?.[0]; if(f) handleFile(f);});
-      }
+      if(fileInput){ fileInput.addEventListener('change',e=>{const f=e.target.files?.[0]; if(f) handleFile(f);}); }
       if(drop){
         ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#eef4ff';}));
         ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#f9fbff';}));
         drop.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files?.[0]; if(f) handleFile(f);});
       }
-
       document.getElementById('ps-csv').addEventListener('click',()=>last&&exportCSV(last));
       document.getElementById('ps-json').addEventListener('click',()=>last&&exportJSON(last));
       document.getElementById('ps-apply').addEventListener('click',()=> last && applyToPayroll(last));
 
+      // 示範資料
       document.getElementById('ps-demo').addEventListener('click',()=>{
         const d=`嚴X雯 賴X女 2025/09/01 AA05 補助 $100
 嚴X雯 賴X女 2025/09/02 AA05 補助 $200
@@ -1008,23 +911,18 @@
 嚴X雯 王X美 2025-09-12 BA15-2 補助 1 $195
 嚴X雯 李OO 2025-09-03 GA09 補助 3
 嚴X雯 王OO 2025-09-04 SC09 自費 1`;
-        const r=analyze(d);
-        renderAll(r);
-        last=r;
-        setBar(100);
+        const r=analyze(d); renderAll(r); last=r; setBar(100);
         if(statusEl) statusEl.textContent='示範資料已載入';
         document.getElementById('ps-apply').disabled=false;
         document.getElementById('ps-csv').disabled=false;
         document.getElementById('ps-json').disabled=false;
-
-        if (autoSyncEl && autoSyncEl.checked){
-          applyToPayroll(last);
-          showSyncBar(false);
-        } else {
-          showSyncBar(true);
-        }
+        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); }
+        else { showSyncBar(true); }
       });
     })();
+  </script>
+
+  <!-- 共用載入（header/footer + 導覽高亮 + 頁面按鈕注入） -->
   <script src="include.js" defer></script>
 </body>
 </html>
