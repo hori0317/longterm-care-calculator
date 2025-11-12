@@ -46,8 +46,8 @@ a:hover{ text-decoration:underline; }
   background:rgba(255,253,245,.9);
   backdrop-filter:blur(6px);
   border-bottom:1px solid var(--line);
-  flex-wrap:nowrap;                /* 不換行 */
-  overflow-x:auto;                 /* 窄螢幕可橫向滑動 */
+  flex-wrap:nowrap;
+  overflow-x:auto;
   -webkit-overflow-scrolling:touch;
 }
 .brand{
@@ -55,7 +55,7 @@ a:hover{ text-decoration:underline; }
   font-weight:700; letter-spacing:1px;
   flex:0 0 auto;
   min-width:max-content;
-  white-space:nowrap;              /* 不允許換行 */
+  white-space:nowrap;
 }
 .brand img{
   height:60px; width:auto;
@@ -66,7 +66,7 @@ a:hover{ text-decoration:underline; }
 .site-title{
   font-size:20px; font-weight:700;
   margin-right:28px;
-  white-space:nowrap;              /* 額度試算機不換行 */
+  white-space:nowrap;
 }
 
 /* 導覽列：中間置中 */
@@ -291,6 +291,7 @@ a:hover{ text-decoration:underline; }
   padding:12px 18px;
   border-bottom:1px solid var(--line);
   font-weight:800;
+  text-align:center;
 }
 #tables th:first-child,
 #tables td:first-child {
@@ -369,27 +370,26 @@ img, a img {
 /* === 手機板表格：維持單行、允許橫向滑動，不自動換行 === */
 #tables {
   width: 100%;
-  overflow-x: auto;                 /* 表格整體可左右滑動 */
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  display: block;                   /* 讓 overflow 生效 */
+  display: block;
 }
 
 #tables table {
-  width: max-content;               /* 表格寬度依內容自動展開 */
+  width: max-content;
   min-width: 100%;
   border-collapse: collapse;
-  table-layout: auto;               /* 自然寬度配置，不固定比例 */
+  table-layout: auto;
 }
 
 /* 所有欄位內容保持單行顯示，不換行 */
 #tables th,
 #tables td {
   white-space: nowrap !important;
-  text-align: right;
   padding: 6px 10px;
 }
 
-/* 第一欄（服務項目）靠左，其餘靠右 */
+/* 第一欄（服務項目）靠左，其餘置中 */
 #tables th:first-child,
 #tables td:first-child {
   text-align: left;
@@ -398,7 +398,7 @@ img, a img {
 /* 單價欄固定寬度，避免太窄貼到名稱 */
 #tables .cell-price {
   width: 80px;
-  text-align: right;
+  text-align: center;
 }
 
 /* 行高與字體縮放，讓手機顯示更平整 */
@@ -431,22 +431,19 @@ img, a img {
 
 /* =========================================================
    ▼ Topbar 對齊修正 & 導覽間距升級（新增）
-   - 三欄格線固定：左 brand / 中 nav / 右 actions
-   - 沒有按鈕的頁面使用 .actions-ghost 佔位，保持寬度一致
-   - 桌機加大導覽間距；手機維持單行可滑動
 ========================================================= */
 .topbar{
   display:grid !important;
-  grid-template-columns: auto 1fr auto; /* 左：品牌｜中：導覽｜右：按鈕或佔位 */
+  grid-template-columns: auto 1fr auto;
   align-items:center;
-  padding:16px 32px; /* 間距再大一些 */
+  padding:16px 32px;
 }
 .brand{ grid-column:1; }
 .nav-links{
   grid-column:2;
   justify-content:center;
-  gap:40px;              /* 桌機間距更大 */
-  overflow-x:auto;       /* 手機可滑動 */
+  gap:40px;
+  overflow-x:auto;
   -webkit-overflow-scrolling:touch;
 }
 .actions{
@@ -457,11 +454,11 @@ img, a img {
 
 /* 沒有按鈕時，用這個佔位保持寬度一致（對齊首頁） */
 .actions-ghost{
-  min-width: 320px;   /* 依你三顆按鈕大約寬度估 320px，可再微調 */
-  height: 1px;        /* 幾乎不佔垂直空間 */
+  min-width: 320px;
+  height: 1px;
 }
 @media (max-width: 860px){
   .topbar{ padding:14px 16px; }
   .nav-links{ gap:20px; }
-  .actions-ghost{ min-width: 0; } /* 手機不需要硬性佔位 */
+  .actions-ghost{ min-width: 0; }
 }
