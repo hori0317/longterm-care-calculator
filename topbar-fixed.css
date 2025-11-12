@@ -1,63 +1,65 @@
-/* ===== 共用：頂欄固定版面，所有頁面載入這一份 ===== */
+/* 頂欄固定與導覽顯示「保護層」：
+   - 確保 .topbar / .nav-links / .brand 一定可見
+   - 不改你原先的色票與卡片風格（若變數缺失，提供安全預設）
+*/
 :root{
-  --inner-max: 1160px; /* 內層寬度，所有頁面一致 */
-  --nav-width: 720px;  /* 導覽列固定寬度，確保位置不變 */
-  --ink:#2f2f20;
-  --orange:#f59e0b;
-  --line:#e6dca3;
-  --bg:#fff6d5;
+  --topbar-h: 56px;
+  --inner-max: 1160px;
+  --card: #fff;
+  --line: #e6dca8;
+  --ink: #2f2f20;
+  --orange: #f59e0b;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0; color:var(--ink); background:#fffaf0;}
 
-/* 頂欄外層（黏上方） */
 .topbar{
-  position:sticky; top:0; z-index:1000; background:#fffaf0; border-bottom:1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 10010;
+  background: var(--card, #fff);
+  border-bottom: 1px solid var(--line, #e6dca8);
 }
-
-/* 內層：寬度固定，置中 */
 .topbar .inner{
-  max-width:var(--inner-max); margin:0 auto; padding:10px 16px;
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  max-width: var(--inner-max, 1160px);
+  margin: 0 auto;
+  height: var(--topbar-h, 56px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 12px;
 }
 
-/* 品牌區 */
-.brand{display:flex; align-items:center; gap:10px; min-width:220px;}
-.logo-link img{height:38px; width:auto; display:block}
-.site-title{font-weight:800; letter-spacing:.05em}
+.brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+.brand .logo-link{ display:inline-flex; align-items:center; }
+.brand img{ display:block; width:32px; height:32px; object-fit:contain; }
+.site-title{ font-weight:700; color:var(--ink,#2f2f20); white-space:nowrap; }
 
-/* 中間導覽列：寬度固定 + 6 等分網格（位置就不會漂） */
-.nav-wrap{display:flex; justify-content:center; flex:1;}
+.nav-wrap{ display:block !important; }
 .nav-links{
-  width:var(--nav-width); /* 固定寬度，所有頁一致 */
-  display:grid; grid-template-columns:repeat(6,1fr);
-  place-items:center; gap:0; /* 六等分置中 */
+  display:flex !important;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
 }
 .nav-links a{
-  text-decoration:none; color:var(--ink); font-weight:700; padding:8px 0; position:relative;
+  display:inline-block;
+  padding:6px 10px;
+  border-bottom:2px solid transparent;
+  text-decoration:none;
+  color:var(--ink,#2f2f20);
 }
-.nav-links a.active{color:var(--orange)}
-
-/* 修正版：只畫一條底線 */
-.nav-links a.active::after{
-  content:""; position:absolute; left:12%; right:12%; bottom:-6px;
-  height:2.5px; background:var(--orange); border-radius:3px;
+.nav-links a.active{
+  border-bottom-color:var(--orange,#f59e0b);
+  color:var(--orange,#f59e0b);
 }
 
-/* 移除舊版重疊底線（如果 style.css 內也有 active 下劃線樣式，可強制關閉） */
-.nav-links a.active{ text-decoration:none !important; border-bottom:none !important; }
+.actions{ display:flex; align-items:center; gap:8px; }
 
-/* 右側動作區：為了對齊，寬度固定，避免每頁按鈕不同而擠壓 */
-.actions{display:flex; gap:10px; align-items:center; justify-content:flex-end; min-width:220px;}
-.btn{border:0; padding:8px 14px; border-radius:8px; font-weight:700; cursor:pointer; background:#eee}
-.pill{border-radius:999px}
-.btn-orange{background:#f59e0b; color:#fff}
-.btn-green{background:#2e7d32; color:#fff}
-.btn-gray{background:#9ca3af; color:#fff}
+/* 水印層不要擋到頂欄 */
+.watermark{ pointer-events:none !important; z-index:100 !important; }
 
-/* 分隔線（頂欄下方） */
-.divider{height:8px}
-
-/* 版心容器（主內容也統一寬度） */
-.container{max-width:var(--inner-max); margin:0 auto; padding:16px}
+/* 小螢幕收斂間距（不動你的排版，只做安全邊界） */
+@media (max-width: 640px){
+  .topbar .inner{ gap:8px; padding:6px 10px; }
+  .nav-links{ gap:8px; }
+}
