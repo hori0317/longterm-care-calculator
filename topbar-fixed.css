@@ -19,11 +19,14 @@
 .topbar .inner{
   max-width: var(--inner-max, 1160px);
   margin: 0 auto;
-  min-height: var(--topbar-h, 56px); /* 避免固定高度造成擠壓 */
-  display: flex;
+  min-height: var(--topbar-h, 56px);
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
-  padding: 8px 12px;
+  padding: 10px 18px;
+  box-sizing: border-box;
 }
 
 /* 品牌區 */
@@ -33,13 +36,19 @@
 .topbar .site-title{ font-weight:700; color:var(--ink,#2f2f20); white-space:nowrap; }
 
 /* 導覽區：授權可換行但預設一行顯示 */
-.topbar .nav-wrap{ display:block !important; flex:1 1 auto; min-width:0; }
+.topbar .nav-wrap{
+  display:block !important;
+  grid-column:2;
+  min-width:0;
+  overflow:auto;
+}
 .topbar .nav-links{
   display:flex !important;
-  flex-wrap:wrap;
+  justify-content:center;
   align-items:center;
-  gap:12px;
-  overflow:auto; /* 避免字太多把右側按鈕擠掉 */
+  gap:24px;
+  padding:0 8px;
+  white-space:nowrap;
 }
 .topbar .nav-links a{
   display:inline-block;
