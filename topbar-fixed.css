@@ -1,3 +1,85 @@
+<<<<<<< codex/fix-navigation-missing-and-button-functionality
+/* 只處理頂欄顯示與不擋點擊；全部加上 .topbar 作用域，避免影響其他區塊 */
+:root{
+  --topbar-h: 56px;
+  --inner-max: 1160px;
+  --card: #fff;
+  --line: #e6dca8;
+  --ink: #2f2f20;
+  --orange: #f59e0b;
+}
+
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 10010;
+  background: var(--card, #fff);
+  border-bottom: 1px solid var(--line, #e6dca8);
+}
+
+.topbar .inner{
+  max-width: var(--inner-max, 1160px);
+  margin: 0 auto;
+  min-height: var(--topbar-h, 56px);
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  box-sizing: border-box;
+}
+
+/* 品牌區 */
+.topbar .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+.topbar .brand .logo-link{ display:inline-flex; align-items:center; }
+.topbar .brand img{ display:block; width:32px; height:32px; object-fit:contain; }
+.topbar .site-title{ font-weight:700; color:var(--ink,#2f2f20); white-space:nowrap; }
+
+/* 導覽區：授權可換行但預設一行顯示 */
+.topbar .nav-wrap{
+  display:block !important;
+  grid-column:2;
+  min-width:0;
+  overflow:auto;
+}
+.topbar .nav-links{
+  display:flex !important;
+  justify-content:center;
+  align-items:center;
+  gap:24px;
+  padding:0 8px;
+  white-space:nowrap;
+}
+.topbar .nav-links a{
+  display:inline-block;
+  padding:6px 10px;
+  border-bottom:2px solid transparent;
+  text-decoration:none;
+  color:var(--ink,#2f2f20);
+  white-space:nowrap;
+}
+.topbar .nav-links a.active{
+  border-bottom-color:var(--orange,#f59e0b);
+  color:var(--orange,#f59e0b);
+}
+
+/* 右側按鈕區：避免折行、保持靠右 */
+.topbar .actions{
+  display:flex; align-items:center; gap:8px;
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+/* 水印不要擋 header 點擊 */
+.watermark{ pointer-events:none !important; z-index:100 !important; }
+
+/* 小螢幕微調 */
+@media (max-width: 640px){
+  .topbar .inner{ gap:8px; padding:6px 10px; }
+  .topbar .nav-links{ gap:8px; }
+}
+=======
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/topbar-fixed.css b/topbar-fixed.css
 index 80b49dae998a4796474851de2af316d35e2a765b..fe6849ee76806543e66ebf6db8205441f60d2114 100644
@@ -90,3 +172,4 @@ index 80b49dae998a4796474851de2af316d35e2a765b..fe6849ee76806543e66ebf6db8205441
  
 EOF
 )
+>>>>>>> main
