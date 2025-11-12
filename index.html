@@ -20,22 +20,20 @@
       align-items: start;
     }
     @media (max-width: 1024px){
-      .grid-2{
-        grid-template-columns: 1.8fr 1.2fr;
-      }
+      .grid-2{ grid-template-columns: 1.8fr 1.2fr; }
     }
     @media (max-width: 860px){
-      .grid-2{
-        grid-template-columns: 1fr;
-      }
+      .grid-2{ grid-template-columns: 1fr; }
     }
     /* 防止隱藏占位容器佔空間 */
-    #addonPlaceholders{
-      display:none;
-    }
+    #addonPlaceholders{ display:none; }
   </style>
 </head>
 <body>
+  <!-- 共用 Header 置入點 -->
+  <div id="__header"></div>
+
+  <!-- 浮水印（保留你原設定） -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
@@ -53,32 +51,6 @@
     <span class="wm-item" style="top:90%; left:45%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
-
-  <header class="topbar">
-    <div class="brand">
-      <a href="index.html" class="logo-link" aria-label="回首頁">
-        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-      </a>
-      <span class="site-title" id="siteTitle">額度計算機</span>
-    </div>
-
-    <nav class="nav-links" aria-label="主選單">
-      <a href="index.html">額度計算機</a>
-      <a href="payroll.html">薪資計算機</a>
-      <a href="care-info.html">長照相關資訊</a>
-      <a href="news.html">最新公告</a>
-      <a href="contact.html">聯繫方式</a>
-      <a href="about.html">關於我們</a>
-    </nav>
-
-    <div class="actions">
-      <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="B">B單位</button>
-      <button class="btn pill btn-green" id="btnReset" type="button">重置</button>
-      <button class="btn pill btn-gray" id="btnPrint" type="button" onclick="window.print()">列印</button>
-    </div>
-  </header>
-
-  <div class="divider"></div>
 
   <main class="container">
     <!-- 兩欄版：移除「居服薪資(6/4)」整欄；保留「基本資料」與「個案額度及自付額」 -->
@@ -161,28 +133,18 @@
     </section>
   </main>
 
-  <footer id="bottomDock" class="footerbar">
-    <div class="foot">
-      <span>BA 剩餘：<b id="sumRemainBA_foot">0</b></span>
-      <span>GA 剩餘：<b id="sumRemainGA_foot">0</b></span>
-      <span>SC 剩餘：<b id="sumRemainSC_foot">0</b></span>
-      <span class="ok">補助：<b id="sumGovSubsidy_foot">0</b></span>
-      <span class="warn">自付：<b id="sumSelfpay_foot">0</b></span>
-      <span>總額：<b id="sumGrand_foot">0</b></span>
-    </div>
-  </footer>
+  <!-- 共用 Footer 置入點 -->
+  <div id="__footer"></div>
 
-  <!-- 導覽高亮與標題自動化（所有頁面同段） -->
+  <!-- 導覽高亮與標題自動化（保留原本段落） -->
   <script>
     (function(){
       function slug(){
         const p=(location.pathname.split('/').pop()||'index.html').toLowerCase();
         return p.replace(/\.html?$/,'')||'index';
       }
-      const map={
-        'index':'額度計算機','payroll':'薪資計算機','care-info':'長照相關資訊',
-        'news':'最新公告','contact':'聯繫方式','about':'關於我們'
-      };
+      const map={ 'index':'額度計算機','payroll':'薪資計算機','care-info':'長照相關資訊',
+                  'news':'最新公告','contact':'聯繫方式','about':'關於我們' };
       const s=slug();
       document.querySelectorAll('.nav-links a[href]').forEach(a=>{
         const t=(a.getAttribute('href')||'').replace(/\.html?$/,'').toLowerCase()||'index';
@@ -194,7 +156,7 @@
     })();
   </script>
 
-  <!-- 基本防拷（可保留或移除） -->
+  <!-- 基本防拷（保留） -->
   <script>
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('keydown', e => {
@@ -205,12 +167,15 @@
     document.addEventListener('copy', e => e.preventDefault());
   </script>
 
-  <!-- 隱藏占位：提供舊腳本可能會查找的ID，避免報錯；不會顯示在畫面 -->
+  <!-- 隱藏占位（保留，避免舊腳本報錯） -->
   <div id="addonPlaceholders" aria-hidden="true">
     <span id="addonHint"></span>
     <button id="btnSaveAddons" type="button"></button>
     <div id="addonRows"></div>
     <div id="caregiverSalary"></div>
   </div>
+
+  <!-- 載入共用 header/footer 腳本 -->
+  <script src="include.js" defer></script>
 </body>
 </html>
