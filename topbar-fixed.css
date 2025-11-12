@@ -1,7 +1,4 @@
-/* 頂欄固定與導覽顯示「保護層」：
-   - 確保 .topbar / .nav-links / .brand 一定可見
-   - 不改你原先的色票與卡片風格（若變數缺失，提供安全預設）
-*/
+/* 只處理頂欄顯示與不擋點擊；全部加上 .topbar 作用域，避免影響其他區塊 */
 :root{
   --topbar-h: 56px;
   --inner-max: 1160px;
@@ -18,48 +15,57 @@
   background: var(--card, #fff);
   border-bottom: 1px solid var(--line, #e6dca8);
 }
+
 .topbar .inner{
   max-width: var(--inner-max, 1160px);
   margin: 0 auto;
-  height: var(--topbar-h, 56px);
+  min-height: var(--topbar-h, 56px); /* 避免固定高度造成擠壓 */
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   padding: 8px 12px;
 }
 
-.brand{ display:flex; align-items:center; gap:10px; min-width:0; }
-.brand .logo-link{ display:inline-flex; align-items:center; }
-.brand img{ display:block; width:32px; height:32px; object-fit:contain; }
-.site-title{ font-weight:700; color:var(--ink,#2f2f20); white-space:nowrap; }
+/* 品牌區 */
+.topbar .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+.topbar .brand .logo-link{ display:inline-flex; align-items:center; }
+.topbar .brand img{ display:block; width:32px; height:32px; object-fit:contain; }
+.topbar .site-title{ font-weight:700; color:var(--ink,#2f2f20); white-space:nowrap; }
 
-.nav-wrap{ display:block !important; }
-.nav-links{
+/* 導覽區：授權可換行但預設一行顯示 */
+.topbar .nav-wrap{ display:block !important; flex:1 1 auto; min-width:0; }
+.topbar .nav-links{
   display:flex !important;
   flex-wrap:wrap;
   align-items:center;
   gap:12px;
+  overflow:auto; /* 避免字太多把右側按鈕擠掉 */
 }
-.nav-links a{
+.topbar .nav-links a{
   display:inline-block;
   padding:6px 10px;
   border-bottom:2px solid transparent;
   text-decoration:none;
   color:var(--ink,#2f2f20);
+  white-space:nowrap;
 }
-.nav-links a.active{
+.topbar .nav-links a.active{
   border-bottom-color:var(--orange,#f59e0b);
   color:var(--orange,#f59e0b);
 }
 
-.actions{ display:flex; align-items:center; gap:8px; }
+/* 右側按鈕區：避免折行、保持靠右 */
+.topbar .actions{
+  display:flex; align-items:center; gap:8px;
+  flex:0 0 auto;
+  white-space:nowrap;
+}
 
-/* 水印層不要擋到頂欄 */
+/* 水印不要擋 header 點擊 */
 .watermark{ pointer-events:none !important; z-index:100 !important; }
 
-/* 小螢幕收斂間距（不動你的排版，只做安全邊界） */
+/* 小螢幕微調 */
 @media (max-width: 640px){
   .topbar .inner{ gap:8px; padding:6px 10px; }
-  .nav-links{ gap:8px; }
+  .topbar .nav-links{ gap:8px; }
 }
