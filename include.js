@@ -1,9 +1,9 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/include.js b/include.js
-index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..8b5d650703c1fb3d850c1c6688160af9c706b260 100644
+index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..fd1d54c336b098616fb2fc8912c82347a3e9d173 100644
 --- a/include.js
 +++ b/include.js
-@@ -1,189 +1,244 @@
+@@ -1,189 +1,249 @@
 -<script>
  /*!
   * include.js (robust+timeout fallback)
@@ -71,9 +71,14 @@ index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..8b5d650703c1fb3d850c1c6688160af9
 -    <div class="brand">
 -      <a href="index.html" class="logo-link" aria-label="回首頁">
 -        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
--      </a>
++  <div class="inner" style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:12px 20px;">
++    <div class="brand" style="display:flex;align-items:center;gap:16px;min-width:max-content;">
++      <a href="index.html" class="logo-link" aria-label="回首頁" style="display:inline-flex;align-items:center;">
++        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" style="height:52px;width:auto;display:block;" />
+       </a>
 -      <span class="site-title" id="siteTitle">額度計算機</span>
--    </div>
++      <span class="site-title" id="siteTitle" style="font-size:20px;font-weight:700;white-space:nowrap;">額度計算機</span>
+     </div>
 -    <div class="nav-wrap">
 -      <nav class="nav-links" aria-label="主選單">
 -        <a href="index.html">額度計算機</a>
@@ -82,38 +87,31 @@ index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..8b5d650703c1fb3d850c1c6688160af9
 -        <a href="news.html">最新公告</a>
 -        <a href="contact.html">聯繫方式</a>
 -        <a href="about.html">關於我們</a>
--      </nav>
++    <div class="nav-wrap" style="grid-column:2;overflow-x:auto;">
++      <nav class="nav-links" aria-label="主選單" style="display:flex;justify-content:center;align-items:center;gap:32px;white-space:nowrap;">
++        <a href="index.html" style="text-decoration:none;color:#333;font-weight:600;">額度計算機</a>
++        <a href="payroll.html" style="text-decoration:none;color:#333;font-weight:600;">薪資計算機</a>
++        <a href="care-info.html" style="text-decoration:none;color:#333;font-weight:600;">長照相關資訊</a>
++        <a href="news.html" style="text-decoration:none;color:#333;font-weight:600;">最新公告</a>
++        <a href="contact.html" style="text-decoration:none;color:#333;font-weight:600;">聯繫方式</a>
++        <a href="about.html" style="text-decoration:none;color:#333;font-weight:600;">關於我們</a>
+       </nav>
 -    </div>
 -    <div class="actions">
--      <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="A">A單位</button>
--      <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
--      <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
--    </div>
-+  <div class="brand">
-+    <a href="index.html" class="logo-link" aria-label="回首頁">
-+      <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-+    </a>
-+    <span class="site-title" id="siteTitle">額度計算機</span>
-+  </div>
-+  <nav class="nav-links" aria-label="主選單">
-+    <a href="index.html">額度計算機</a>
-+    <a href="payroll.html">薪資計算機</a>
-+    <a href="care-info.html">長照相關資訊</a>
-+    <a href="news.html">最新公告</a>
-+    <a href="contact.html">聯繫方式</a>
-+    <a href="about.html">關於我們</a>
-+  </nav>`;
++    </div>`;
 +    if(mode==="lite"){
 +      return `${common}
-+  <div class="actions actions-ghost"></div>
++    <div class="actions actions-ghost"></div>
++  </div>
 +</header>
 +<div class="divider"></div>`;
 +    }
 +    return `${common}
-+  <div class="actions">
-+    <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="A">A單位</button>
-+    <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
-+    <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
++    <div class="actions" style="display:flex;align-items:center;gap:10px;justify-self:end;">
+       <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="A">A單位</button>
+       <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
+       <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
+     </div>
    </div>
  </header>
  <div class="divider"></div>`;
