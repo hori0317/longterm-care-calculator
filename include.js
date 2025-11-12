@@ -1,6 +1,6 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/include.js b/include.js
-index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..fd1d54c336b098616fb2fc8912c82347a3e9d173 100644
+index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..d3c5411af510387c84fafa91e8a202d31e285786 100644
 --- a/include.js
 +++ b/include.js
 @@ -1,189 +1,249 @@
@@ -64,14 +64,15 @@ index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..fd1d54c336b098616fb2fc8912c82347
    /** 後備 Header */
 -  function fallbackHeader(){
 -    return `
-+  function fallbackHeader(mode="full"){
-+    const common = `
- <header class="topbar" style="position:sticky;top:0;z-index:1000;">
+-<header class="topbar" style="position:sticky;top:0;z-index:1000;">
 -  <div class="inner">
 -    <div class="brand">
 -      <a href="index.html" class="logo-link" aria-label="回首頁">
 -        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-+  <div class="inner" style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:12px 20px;">
++  function fallbackHeader(mode="full"){
++    const common = `
++<header class="topbar" style="position:sticky;top:0;z-index:1000;background:rgba(255,253,245,.9);border-bottom:1px solid var(--line,#e6dca8);backdrop-filter:blur(6px);">
++  <div class="inner" style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;width:100%;max-width:1160px;margin:0 auto;padding:10px 18px;gap:16px;box-sizing:border-box;">
 +    <div class="brand" style="display:flex;align-items:center;gap:16px;min-width:max-content;">
 +      <a href="index.html" class="logo-link" aria-label="回首頁" style="display:inline-flex;align-items:center;">
 +        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" style="height:52px;width:auto;display:block;" />
@@ -87,27 +88,27 @@ index d80b0dec7d2d97e75dc5d6720ba2a9b0f091313a..fd1d54c336b098616fb2fc8912c82347
 -        <a href="news.html">最新公告</a>
 -        <a href="contact.html">聯繫方式</a>
 -        <a href="about.html">關於我們</a>
-+    <div class="nav-wrap" style="grid-column:2;overflow-x:auto;">
-+      <nav class="nav-links" aria-label="主選單" style="display:flex;justify-content:center;align-items:center;gap:32px;white-space:nowrap;">
-+        <a href="index.html" style="text-decoration:none;color:#333;font-weight:600;">額度計算機</a>
-+        <a href="payroll.html" style="text-decoration:none;color:#333;font-weight:600;">薪資計算機</a>
-+        <a href="care-info.html" style="text-decoration:none;color:#333;font-weight:600;">長照相關資訊</a>
-+        <a href="news.html" style="text-decoration:none;color:#333;font-weight:600;">最新公告</a>
-+        <a href="contact.html" style="text-decoration:none;color:#333;font-weight:600;">聯繫方式</a>
-+        <a href="about.html" style="text-decoration:none;color:#333;font-weight:600;">關於我們</a>
++    <div class="nav-wrap" style="grid-column:2;overflow-x:auto;-webkit-overflow-scrolling:touch;">
++      <nav class="nav-links" aria-label="主選單" style="display:flex;justify-content:center;align-items:center;gap:28px;white-space:nowrap;padding:0 8px;">
++        <a href="index.html" style="text-decoration:none;color:#333;font-weight:600;padding:8px 6px 10px;display:inline-flex;align-items:center;border-bottom:2px solid transparent;">額度計算機</a>
++        <a href="payroll.html" style="text-decoration:none;color:#333;font-weight:600;padding:8px 6px 10px;display:inline-flex;align-items:center;border-bottom:2px solid transparent;">薪資計算機</a>
++        <a href="care-info.html" style="text-decoration:none;color:#333;font-weight:600;padding:8px 6px 10px;display:inline-flex;align-items:center;border-bottom:2px solid transparent;">長照相關資訊</a>
++        <a href="news.html" style="text-decoration:none;color:#333;font-weight:600;padding:8px 6px 10px;display:inline-flex;align-items:center;border-bottom:2px solid transparent;">最新公告</a>
++        <a href="contact.html" style="text-decoration:none;color:#333;font-weight:600;padding:8px 6px 10px;display:inline-flex;align-items:center;border-bottom:2px solid transparent;">聯繫方式</a>
++        <a href="about.html" style="text-decoration:none;color:#333;font-weight:600;padding:8px 6px 10px;display:inline-flex;align-items:center;border-bottom:2px solid transparent;">關於我們</a>
        </nav>
 -    </div>
 -    <div class="actions">
 +    </div>`;
 +    if(mode==="lite"){
 +      return `${common}
-+    <div class="actions actions-ghost"></div>
++    <div class="actions actions-ghost" style="min-width:200px;height:1px;"></div>
 +  </div>
 +</header>
 +<div class="divider"></div>`;
 +    }
 +    return `${common}
-+    <div class="actions" style="display:flex;align-items:center;gap:10px;justify-self:end;">
++    <div class="actions" style="display:flex;align-items:center;gap:10px;justify-self:end;white-space:nowrap;">
        <button class="btn pill btn-orange" id="btnUnitToggle" type="button" data-unit="A">A單位</button>
        <button class="btn pill btn-gray"   id="btnPrint"       type="button">列印</button>
        <button class="btn pill btn-green"  id="btnReset"       type="button">清空</button>
