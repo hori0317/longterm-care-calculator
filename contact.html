@@ -6,6 +6,9 @@
   <title>薪資計算機(舊版)</title>
   <meta name="description" content="上傳 PDF，自動統計 BA/AA/GA/SC 支數。AA 依金額÷單價換算（量化為 0.5 倍數）；若為掃描影像自動啟用 OCR（chi_tra+eng）。">
 
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="topbar-fixed.css" />
+
   <style>
     :root{--bg:#f6f8fb;--panel:#fff;--text:#0b1220;--muted:#5b6b81;--accent:#2667ff;--br:16px}
     html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -83,9 +86,25 @@
     }
   </script>
 </head>
-<body>
-  <!-- 共用頂欄注入 -->
-  <div id="__header"></div>
+<body data-page="contact">
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" class="logo-link" aria-label="回首頁">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title" data-sync-title>聯繫方式</span>
+    </div>
+    <nav class="nav-links" aria-label="主選單">
+      <a href="index.html">額度計算機</a>
+      <a href="payroll.html">薪資計算機</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+    <div class="actions actions-ghost" aria-hidden="true"></div>
+  </header>
+  <div class="divider"></div>
 
   <div class="wrap">
     <h1>PDF 支數自動統計（AA 金額換算）</h1>

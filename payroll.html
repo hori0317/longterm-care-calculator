@@ -59,7 +59,7 @@
     .ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
   </style>
 </head>
-<body>
+<body data-page="payroll">
   <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
@@ -85,7 +85,7 @@
       <a href="index.html" class="logo-link" aria-label="回首頁">
         <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       </a>
-      <span class="site-title" id="siteTitle">薪資計算機</span>
+      <span class="site-title" id="siteTitle" data-sync-title>薪資計算機</span>
     </div>
     <nav class="nav-links" aria-label="主選單">
       <a href="index.html">額度計算機</a>
@@ -586,31 +586,6 @@ function findGradeBySalary(sal){
       restore();
       wire();
       updateAll();
-
-      // 導覽高亮
-      (function(){
-        function norm(href){
-          try{
-            const u=new URL(href, location.origin);
-            let p=u.pathname.trim();
-            if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
-            p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
-            return p.split('/').pop().toLowerCase();
-          }catch(e){return '';}
-        }
-        const here = norm(location.href);
-        document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-          const target = norm(a.getAttribute('href'));
-          if (target && target === here) a.classList.add('active');
-        });
-        // 同步頁面標題
-        const map = { index:'額度計算機', payroll:'薪資計算機', 'care-info':'長照相關資訊', news:'最新公告', contact:'聯繫方式', about:'關於我們' };
-        const slug = here || 'payroll';
-        const pageName = map[slug] || '薪資計算機';
-        const st = document.getElementById('siteTitle');
-        if (st) st.textContent = pageName;
-        document.title = `${pageName}｜長照工具`;
-      })();
 
       // 防拷
       document.addEventListener('contextmenu', e => e.preventDefault());
