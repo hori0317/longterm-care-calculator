@@ -1,0 +1,123 @@
+/* ===== 共用：頂欄固定版面，所有頁面載入這一份 =====
+   原則：
+   1) 只處理「結構/對齊/寬度/底線(::after)」；不重設全站色票，避免與 style.css 打架
+   2) 底線用 ::after 畫「單一真相」，common.css 不畫底線只負責上浮/顏色
+*/
+
+:root{
+  --inner-max: 1160px;   /* 內層寬度，所有頁一致 */
+  --nav-width: 720px;    /* 導覽列固定寬度，確保位置不變 */
+}
+
+/* 基線 */
+*{ box-sizing: border-box; }
+html,body{ height: 100%; }
+body{
+  margin: 0;
+  color: var(--ink);         /* 使用全站主題變數（由 style.css 定義） */
+  background: var(--bg);     /* 避免與 style.css 衝突 */
+}
+
+/* 頂欄外層（黏上方） */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+/* 內層：寬度固定，置中 */
+.topbar .inner{
+  max-width: var(--inner-max);
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* 品牌區 */
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 220px;
+}
+.logo-link img{ height: 38px; width: auto; display: block; }
+.site-title{ font-weight: 800; letter-spacing: .05em; white-space: nowrap; }
+
+/* 中間導覽列：固定寬度 + 六等分（位置穩定） */
+.nav-wrap{
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  overflow-x: auto;                 /* 窄寬時可橫向捲動 */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.nav-links{
+  width: var(--nav-width);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  place-items: center;
+  gap: 0;
+}
+.nav-links a{
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 700;
+  padding: 8px 0;
+  position: relative;
+  white-space: nowrap;
+}
+
+/* 目前頁：顏色由 common.css 處理，上底線由本檔 ::after 負責（單一真相） */
+.nav-links a.active{ color: var(--orange); }
+
+/* 單一底線（避免雙線）：使用 ::after 畫，並抑制 border-bottom 版本 */
+.nav-links a.active::after{
+  content: "";
+  position: absolute;
+  left: 12%; right: 12%;
+  bottom: -6px;
+  height: 2.5px;
+  background: var(--orange);
+  border-radius: 3px;
+}
+/* 若其他檔案曾用 border-bottom 畫線，統一關掉避免重疊 */
+.nav-links a.active{
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+/* 右側動作區：為了對齊，寬度固定，避免每頁按鈕不同而擠壓 */
+.actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 220px;
+}
+.btn{ border: 0; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; background: #eee; }
+.pill{ border-radius: 999px; }
+.btn-orange{ background: var(--orange); color: #fff; }
+.btn-green{ background: #2e7d32; color: #fff; }
+.btn-gray{ background: #9ca3af; color: #fff; }
+
+/* 分隔線（頂欄下方） */
+.divider{ height: 8px; }
+
+/* 內容容器（版心同寬） */
+.container{
+  max-width: var(--inner-max);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* 響應式微調：小螢幕減少擁擠 */
+@media (max-width: 860px){
+  .topbar .inner{ padding: 10px 12px; }
+  .nav-links{ width: max(560px, var(--nav-width)); } /* 最小寬度保字不擠 */
+}
