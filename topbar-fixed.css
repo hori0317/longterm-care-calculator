@@ -1,175 +1,73 @@
-<<<<<<< codex/fix-navigation-missing-and-button-functionality
-/* 只處理頂欄顯示與不擋點擊；全部加上 .topbar 作用域，避免影響其他區塊 */
+/* ===== 共用：頂欄固定版面，所有頁面載入這一份 ===== */
 :root{
-  --topbar-h: 56px;
-  --inner-max: 1160px;
-  --card: #fff;
-  --line: #e6dca8;
-  --ink: #2f2f20;
-  --orange: #f59e0b;
+  --inner-max: 1160px;      /* 內層寬度，所有頁面一致 */
+  --nav-width: 720px;        /* 導覽列固定寬度，確保位置不變 */
+  --ink:#2f2f20; --orange:#f59e0b; --line:#e6dca8; --bg:#fff6d5;
 }
 
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0; color:var(--ink); background:#fffaf0;}
+
+/* 頂欄外層（黏上方） */
 .topbar{
-  position: sticky;
-  top: 0;
-  z-index: 10010;
-  background: var(--card, #fff);
-  border-bottom: 1px solid var(--line, #e6dca8);
+  position:sticky; top:0; z-index:1000;
+  background:#fffaf0; border-bottom:1px solid var(--line);
 }
 
+/* 內層：寬度固定，置中 */
 .topbar .inner{
-  max-width: var(--inner-max, 1160px);
-  margin: 0 auto;
-  min-height: var(--topbar-h, 56px);
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 18px;
-  box-sizing: border-box;
+  max-width:var(--inner-max);
+  margin:0 auto;
+  padding:10px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px;
 }
 
 /* 品牌區 */
-.topbar .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
-.topbar .brand .logo-link{ display:inline-flex; align-items:center; }
-.topbar .brand img{ display:block; width:32px; height:32px; object-fit:contain; }
-.topbar .site-title{ font-weight:700; color:var(--ink,#2f2f20); white-space:nowrap; }
+.brand{display:flex; align-items:center; gap:10px; min-width:220px;}
+.logo-link img{height:38px; width:auto; display:block}
+.site-title{font-weight:800; letter-spacing:.05em}
 
-/* 導覽區：授權可換行但預設一行顯示 */
-.topbar .nav-wrap{
-  display:block !important;
-  grid-column:2;
-  min-width:0;
-  overflow:auto;
+/* 中間導覽列：寬度固定 + 6 等分網格（位置就不會漂） */
+.nav-wrap{display:flex; justify-content:center; flex:1;}
+.nav-links{
+  width:var(--nav-width);            /* 固定寬度，所有頁一致 */
+  display:grid; grid-template-columns:repeat(6,1fr);
+  place-items:center; gap:0;         /* 六等分置中 */
 }
-.topbar .nav-links{
-  display:flex !important;
-  justify-content:center;
-  align-items:center;
-  gap:24px;
-  padding:0 8px;
-  white-space:nowrap;
+.nav-links a{
+  text-decoration:none; color:var(--ink);
+  font-weight:700; padding:8px 0; position:relative;
 }
-.topbar .nav-links a{
-  display:inline-block;
-  padding:6px 10px;
-  border-bottom:2px solid transparent;
-  text-decoration:none;
-  color:var(--ink,#2f2f20);
-  white-space:nowrap;
-}
-.topbar .nav-links a.active{
-  border-bottom-color:var(--orange,#f59e0b);
-  color:var(--orange,#f59e0b);
+.nav-links a.active{color:var(--orange)}
+/* 修正版：只畫一條底線 */
+.nav-links a.active::after{
+  content:""; 
+  position:absolute; 
+  left:12%; right:12%; bottom:-6px;
+  height:2.5px; 
+  background:var(--orange); 
+  border-radius:3px;
 }
 
-/* 右側按鈕區：避免折行、保持靠右 */
-.topbar .actions{
-  display:flex; align-items:center; gap:8px;
-  flex:0 0 auto;
-  white-space:nowrap;
+/* 移除舊版重疊底線（如果 style.css 內也有 active 下劃線樣式，可強制關閉） */
+.nav-links a.active{
+  text-decoration:none !important;
+  border-bottom:none !important;
 }
 
-/* 水印不要擋 header 點擊 */
-.watermark{ pointer-events:none !important; z-index:100 !important; }
 
-/* 小螢幕微調 */
-@media (max-width: 640px){
-  .topbar .inner{ gap:8px; padding:6px 10px; }
-  .topbar .nav-links{ gap:8px; }
-}
-=======
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/topbar-fixed.css b/topbar-fixed.css
-index 80b49dae998a4796474851de2af316d35e2a765b..fe6849ee76806543e66ebf6db8205441f60d2114 100644
---- a/topbar-fixed.css
-+++ b/topbar-fixed.css
-@@ -1,67 +1,76 @@
- /* 只處理頂欄顯示與不擋點擊；全部加上 .topbar 作用域，避免影響其他區塊 */
- :root{
-   --topbar-h: 56px;
-   --inner-max: 1160px;
-   --card: #fff;
-   --line: #e6dca8;
-   --ink: #2f2f20;
-   --orange: #f59e0b;
- }
- 
- .topbar{
-   position: sticky;
-   top: 0;
-   z-index: 10010;
-   background: var(--card, #fff);
-   border-bottom: 1px solid var(--line, #e6dca8);
- }
- 
- .topbar .inner{
-   max-width: var(--inner-max, 1160px);
-   margin: 0 auto;
--  min-height: var(--topbar-h, 56px); /* 避免固定高度造成擠壓 */
--  display: flex;
-+  min-height: var(--topbar-h, 56px);
-+  width: 100%;
-+  display: grid;
-+  grid-template-columns: auto 1fr auto;
-   align-items: center;
-   gap: 16px;
--  padding: 8px 12px;
-+  padding: 10px 18px;
-+  box-sizing: border-box;
- }
- 
- /* 品牌區 */
- .topbar .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
- .topbar .brand .logo-link{ display:inline-flex; align-items:center; }
- .topbar .brand img{ display:block; width:32px; height:32px; object-fit:contain; }
- .topbar .site-title{ font-weight:700; color:var(--ink,#2f2f20); white-space:nowrap; }
- 
- /* 導覽區：授權可換行但預設一行顯示 */
--.topbar .nav-wrap{ display:block !important; flex:1 1 auto; min-width:0; }
-+.topbar .nav-wrap{
-+  display:block !important;
-+  grid-column:2;
-+  min-width:0;
-+  overflow:auto;
-+}
- .topbar .nav-links{
-   display:flex !important;
--  flex-wrap:wrap;
-+  justify-content:center;
-   align-items:center;
--  gap:12px;
--  overflow:auto; /* 避免字太多把右側按鈕擠掉 */
-+  gap:24px;
-+  padding:0 8px;
-+  white-space:nowrap;
- }
- .topbar .nav-links a{
-   display:inline-block;
-   padding:6px 10px;
-   border-bottom:2px solid transparent;
-   text-decoration:none;
-   color:var(--ink,#2f2f20);
-   white-space:nowrap;
- }
- .topbar .nav-links a.active{
-   border-bottom-color:var(--orange,#f59e0b);
-   color:var(--orange,#f59e0b);
- }
- 
- /* 右側按鈕區：避免折行、保持靠右 */
- .topbar .actions{
-   display:flex; align-items:center; gap:8px;
-   flex:0 0 auto;
-   white-space:nowrap;
- }
- 
- /* 水印不要擋 header 點擊 */
- .watermark{ pointer-events:none !important; z-index:100 !important; }
- 
- /* 小螢幕微調 */
- 
-EOF
-)
->>>>>>> main
+/* 右側動作區：為了對齊，寬度固定，避免每頁按鈕不同而擠壓 */
+.actions{display:flex; gap:10px; align-items:center; justify-content:flex-end; min-width:220px;}
+.btn{border:0; padding:8px 14px; border-radius:8px; font-weight:700; cursor:pointer; background:#eee}
+.pill{border-radius:999px}
+.btn-orange{background:#f59e0b; color:#fff}
+.btn-green{background:#2e7d32; color:#fff}
+.btn-gray{background:#9ca3af; color:#fff}
+
+/* 分隔線（頂欄下方） */
+.divider{height:8px}
+
+/* 版心容器（主內容也統一寬度） */
+.container{max-width:var(--inner-max); margin:0 auto; padding:16px}
