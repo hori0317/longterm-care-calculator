@@ -1,11 +1,10 @@
-/**********************
- * script.js（額度計算機：週→月→總；總可改，改週即重置同步）
- * 版本：2025-11-12（修正版）
- * - 服務列 DOM 產生，每欄獨立 <td>（避免「沐浴0」黏在一起）
- * - 各列 tr.dataset.code = item.code；C 組 tr.dataset.cmode = "1"
+/********************** 
+ * script.js（週→月→總；總可改，但改週即重置同步）
+ * 重點修正：服務列改用 DOM 建構，每欄獨立 <td>，避免「沐浴0」黏在一起
+ * 本版新增：
+ * - 產表時每列加入 tr.dataset.code = item.code
+ * - C 組 tr.dataset.cmode = "1"（供統計排 C 用）
  * - applyUnitEffects()：B 單位隱藏並歸零 BA09/BA09a 與整個 BD 組；A 單位恢復
- * - 與 include.js 整合：監聽 unit:toggle 事件；同時支援本頁直接按鈕綁定
- * - ✅ 修正：與 common.js 統一使用 localStorage('app-unit')，且本檔恢復綁定 click
  **********************/
 
 /* 公用 */
@@ -19,11 +18,10 @@ function toInt(v){
   return m?parseInt(m[0],10):0;
 }
 const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
 const WEEKS_PER_MONTH = 4.5;
 
 /* AA 區（只顯示項目＋次數；計算用） */
-const AA_PRICE = { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50, AA07:760 };
+const AA_PRICE = { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 };
 const ADDONS = Object.keys(AA_PRICE).map(code=>({code}));
 
 /* 服務清單 */
@@ -33,7 +31,7 @@ const serviceData = {
     { code:"BA02", name:"基本日常照顧", price:195 },
     { code:"BA03", name:"測量生命徵象", price:35 },
     { code:"BA04", name:"協助進食或管灌", price:130 },
-    { code:"BA05", name:"餐食照顧（含 BA05-1）", price:310 },
+    { code:"BA05", name:"餐食照顧", price:310 },
     { code:"BA07", name:"協助沐浴及洗頭", price:325 },
     { code:"BA08", name:"足部照護", price:500 },
     { code:"BA09", name:"到宅沐浴-1", price:2200 },
@@ -43,10 +41,8 @@ const serviceData = {
     { code:"BA12", name:"協助上下樓梯", price:130 },
     { code:"BA13", name:"陪同外出", price:195 },
     { code:"BA14", name:"陪同就醫", price:685 },
-    { code:"BA15-1", name:"家務協助-1", price:195 },
-    { code:"BA15-2", name:"家務協助-2", price:195 },
-    { code:"BA16-1", name:"代購-1", price:130 },
-    { code:"BA16-2", name:"代購-2", price:130 },
+    { code:"BA15", name:"家務協助", price:195 },
+    { code:"BA16", name:"代購", price:130 },
     { code:"BA17a", name:"人工氣道管抽吸", price:75 },
     { code:"BA17b", name:"口腔內抽吸", price:65 },
     { code:"BA17c", name:"管路清潔", price:50 },
@@ -77,34 +73,21 @@ const serviceData = {
   SC: [{ code:"SC09", name:"短照 2 小時/支", price:770 }],
 };
 
-/* 額度（BA 給付上限 + 留用；GA/SC 專屬池） */
+/* 額度 */
 const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180 };
 const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/* ==== 狀態（統一用 app-unit，與 common.js 同步） ==== */
-const STORE_KEY = "app-unit";
-const getUnit = () => {
-  try{ const v = localStorage.getItem(STORE_KEY); return (v==="A"||v==="B")?v:"B"; }
-  catch(_){ return "B"; }
-};
-const setUnit = (u) => {
-  const v = (u==="A") ? "A" : "B";
-  try{ localStorage.setItem(STORE_KEY, v); }catch(_){}
-  return v;
-};
-let currentUnit = getUnit();
+/* 狀態 */
+let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
 const lastCalc = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
 /* 初始化 */
 document.addEventListener('DOMContentLoaded', () => {
-  // 只在額度頁才執行
-  if (!document.getElementById("tables")) return;
-
   renderAddons();
   renderTables();
   bindHeaderInputs();
-  bindUnitToggle();           // ✅ 本頁恢復綁定 click
+  bindUnitToggle();
   applyUnitEffects();
   updateSCAvailability();
   updateResults();
@@ -127,16 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const topbar = document.querySelector('.topbar');
   if(window.ResizeObserver && topbar){
     new ResizeObserver(()=>adjustTopbarPadding()).observe(topbar);
-  }
-});
-
-/* 也監聽 include.js 廣播的單位切換事件（同步所有頁狀態） */
-window.addEventListener("unit:toggle", (e)=>{
-  const next = ((e?.detail?.unit) || getUnit()).toUpperCase();
-  if (next === "A" || next === "B"){
-    currentUnit = setUnit(next);
-    applyUnitEffects();
-    updateResults();
   }
 });
 
@@ -323,7 +296,7 @@ function updateOneRow(code, idx){
 
 /* 條件輸入 */
 function bindHeaderInputs(){
-  $$("input[name='idty'], input[name='cms'], input[name='foreign']")
+  document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
     .forEach(el=>el.addEventListener("change", ()=>{
       updateSCAvailability();
       updateResults();
@@ -461,27 +434,13 @@ function updateCaregiverSalary(){
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* ✅ A/B 切換（本頁直接綁定 click，並對外廣播 unit:toggle） */
+/* A/B 切換：B 隱藏 C、BD、BA09/BA09a；薪資不含 C */
 function bindUnitToggle(){
-  const btn = $("#btnUnitToggle");
+  const btn=$("#btnUnitToggle");
   if(!btn) return;
-
-  // 初始化目前單位與按鈕外觀
-  currentUnit = getUnit();
-  btn.textContent = `${currentUnit}單位`;
-  btn.dataset.unit = currentUnit;
-  btn.classList.remove("btn-green","btn-orange");
-  btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
-
-  // 綁定點擊
   btn.addEventListener("click", ()=>{
-    const next = (currentUnit === "A") ? "B" : "A";
-    currentUnit = setUnit(next);
-
-    // 對所有頁面（含本頁）廣播狀態
-    window.dispatchEvent(new CustomEvent("unit:toggle", { detail: { unit: currentUnit }}));
-
-    // 本頁即時套用
+    currentUnit = (currentUnit==="A") ? "B" : "A";
+    localStorage.setItem("unit", currentUnit);
     applyUnitEffects();
     updateResults();
   });
@@ -489,10 +448,7 @@ function bindUnitToggle(){
 
 /* ★ 單位效果（本版重寫） */
 function applyUnitEffects(){
-  // ✅ 以儲存狀態為準，確保與 common.js/其他頁同步
-  currentUnit = getUnit();
-
-  // 更新按鈕外觀（避免不同步）
+  // 按鈕外觀與文字
   const btn = $("#btnUnitToggle");
   if (btn){
     btn.textContent = `${currentUnit}單位`;
@@ -501,28 +457,22 @@ function applyUnitEffects(){
     btn.classList.add(currentUnit === "A" ? "btn-green" : "btn-orange");
   }
 
-  // C 組：B 隱藏、A 顯示（B 時清零）
+  // C 組：B 隱藏、A 顯示
   const cBox = document.querySelector('[data-group="C"]');
   if (cBox){
     currentUnit === "B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden");
-    if (currentUnit === "B"){
-      cBox.querySelectorAll("tbody tr").forEach(tr=>{
-        tr.dataset.use = "0";
-        tr.querySelectorAll("input").forEach(inp=>{ inp.value=0; });
-        const cell = tr.querySelector(".cell-amount");
-        if (cell) cell.textContent = "0";
-      });
-    }
   }
 
-  // BD 組：B 隱藏並歸零鎖定；A 顯示並解鎖
+  // ★ BD 組：B 隱藏並歸零；A 顯示並解鎖
   const bdBox = document.querySelector('[data-group="BD"]');
   if (bdBox){
     if (currentUnit === "B"){
       bdBox.classList.add("hidden");
       bdBox.querySelectorAll("tbody tr").forEach(tr=>{
         tr.dataset.use = "0";
-        tr.querySelectorAll("input").forEach(inp=>{ inp.value=0; inp.disabled = true; });
+        tr.querySelectorAll("input").forEach(inp=>{
+          inp.value = 0; inp.disabled = true;
+        });
         const cell = tr.querySelector(".cell-amount");
         if (cell) cell.textContent = "0";
       });
@@ -532,7 +482,7 @@ function applyUnitEffects(){
     }
   }
 
-  // BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
+  // ★ BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
   const baTable = document.querySelector('[data-group="BA"] table');
   if (baTable){
     const rows = baTable.tBodies[0]?.rows || [];
@@ -571,7 +521,6 @@ function toggle(sel, show){
 }
 function resetAll(){
   localStorage.removeItem("addons");
-  // 不清 unit，保留當前單位
   location.reload();
 }
 
@@ -590,40 +539,51 @@ function adjustTopbarPadding(){
 }
 
 /* ---- 導覽：依當前網址自動高亮（支援多頁 + 錨點） ---- */
-/* 若 include.js 已處理，這段可視為保險，不會互斥 */
 (function(){
   function normPath(pathname){
+    // 移除結尾斜線 → 把 / 或 /index.html 視為 /index → 去掉 .html
     let p = String(pathname || '/').trim();
     if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
     p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
     const seg = p.split('/').pop() || 'index';
     return seg.toLowerCase();
   }
+
   function setActiveNav(){
     const herePath = normPath(location.pathname);
     const hereHash = (location.hash || '').toLowerCase();
+
+    // 先清除舊的 active
     document.querySelectorAll('.nav-links a.active').forEach(a=>a.classList.remove('active'));
+
     document.querySelectorAll('.nav-links a[href]').forEach(a=>{
       const raw = (a.getAttribute('href') || '').trim();
       if (!raw) return;
+
       let active = false;
+
       if (raw.startsWith('#')){
+        // 單頁錨點：僅當前 hash 完全相同才亮（避免全部 # 錨點同時亮）
         active = (raw.toLowerCase() === hereHash && hereHash !== '');
       } else {
+        // 多頁：以檔名比對（/page、/page.html、/ 皆可）
         try{
           const url = new URL(raw, location.origin);
           const targetPath = normPath(url.pathname);
           active = (targetPath === herePath) ||
                    (targetPath === 'index' && (herePath === '' || herePath === 'index'));
         }catch(e){
+          // 相對連結 fallback
           const hrefClean = raw.replace(/^\.\//,'').replace(/\.html?$/i,'').replace(/\/$/,'') || 'index';
           active = (hrefClean.toLowerCase() === herePath);
         }
       }
+
       if (active) a.classList.add('active');
     });
   }
-  document.addEventListener('DOMContentLoaded', setActiveNav);
+
+  window.addEventListener('DOMContentLoaded', setActiveNav);
   window.addEventListener('hashchange', setActiveNav);
-  window.addEventListener('popstate', setActiveNav);
+  window.addEventListener('popstate', setActiveNav); // 處理前進/後退
 })();
