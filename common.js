@@ -1,13 +1,15 @@
-/********************** 
- * script.js（週→月→總；總可改，但改週即重置同步）
- * 重點修正：服務列改用 DOM 建構，每欄獨立 <td>，避免「沐浴0」黏在一起
- * 本版新增：
- * - 產表時每列加入 tr.dataset.code = item.code
+/* common.js（整合版）
+ * 週→月→總；總可改，但改週即重置同步
+ * 新增：
+ * - 產表每列 tr.dataset.code = item.code
  * - C 組 tr.dataset.cmode = "1"（供統計排 C 用）
  * - applyUnitEffects()：B 單位隱藏並歸零 BA09/BA09a 與整個 BD 組；A 單位恢復
- **********************/
+ * - 單位狀態統一使用 localStorage('app-unit')；支援 include.js 廣播的 unit:toggle
+ * - 提供 window.applyUnitEffects() 供動態建表後再套一次
+ * 2025-11-12
+ */
 
-/* 公用 */
+/* ====== 小工具 ====== */
 function toInt(v){
   if (typeof v === "number") return Number.isFinite(v) ? Math.trunc(v) : 0;
   if (v === null || v === undefined) return 0;
@@ -18,13 +20,15 @@ function toInt(v){
   return m?parseInt(m[0],10):0;
 }
 const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const N = v => (isFinite(+v) ? +v : 0);
 const WEEKS_PER_MONTH = 4.5;
 
-/* AA 區（只顯示項目＋次數；計算用） */
+/* ====== AA 區（只顯示項目＋次數；計算用） ====== */
 const AA_PRICE = { AA05:200, AA06:200, AA08:385, AA09:770, AA11:50 };
 const ADDONS = Object.keys(AA_PRICE).map(code=>({code}));
 
-/* 服務清單 */
+/* ====== 服務清單 ====== */
 const serviceData = {
   BA: [
     { code:"BA01", name:"基本身體清潔", price:260 },
@@ -73,22 +77,36 @@ const serviceData = {
   SC: [{ code:"SC09", name:"短照 2 小時/支", price:770 }],
 };
 
-/* 額度 */
+/* ====== 額度 ====== */
 const cmsQuota = { 2:10020, 3:15460, 4:18580, 5:24100, 6:28070, 7:32090, 8:36180 };
 const GA_CAP = { 2:32340, 3:32340, 4:32340, 5:32340, 6:32340, 7:48510, 8:48510 };
 const SC_CAP = { 2:87780, 3:87780, 4:87780, 5:87780, 6:87780, 7:71610, 8:71610 };
 
-/* 狀態 */
-let currentUnit = localStorage.getItem("unit") || ($("#btnUnitToggle")?.dataset.unit || "B");
+/* ====== 單位狀態（整合） ====== */
+const STORE_KEY = "app-unit"; // 'A' or 'B'
+function getUnit(){
+  try{
+    const v = localStorage.getItem(STORE_KEY);
+    return (v === "A" || v === "B") ? v : "B";
+  }catch(_){ return "B"; }
+}
+function setUnit(u){
+  const v = (u === "A" ? "A" : "B");
+  try{ localStorage.setItem(STORE_KEY, v); }catch(_){}
+  return v;
+}
+let currentUnit = getUnit();
+
+/* ====== 計算暫存 ====== */
 const lastCalc = { gov_inc:0, self_inc:0, gov_exC:0, self_exC:0 };
 
-/* 初始化 */
+/* ====== 初始化 ====== */
 document.addEventListener('DOMContentLoaded', () => {
   renderAddons();
   renderTables();
   bindHeaderInputs();
-  bindUnitToggle();
-  applyUnitEffects();
+  bindUnitToggle();           // 本頁按鈕
+  applyUnitEffects();         // 先套一次（避免第一次沒生效）
   updateSCAvailability();
   updateResults();
 
@@ -113,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* AA 區 */
+/* ====== AA 區 ====== */
 function renderAddons(){
   const saved = JSON.parse(localStorage.getItem("addons")||"{}");
   const host = $("#addonRows");
@@ -144,7 +162,7 @@ function saveAddons(){
   }
 }
 
-/* 產表（C 與其餘邏輯不同） */
+/* ====== 產表（C 與其餘邏輯不同） ====== */
 function renderTables(){
   const container = $("#tables");
   if(!container) return;
@@ -278,10 +296,11 @@ function renderTables(){
     container.appendChild(groupBox);
   });
 
-  applyUnitEffects(); // B 單位隱藏 C / BD / BA09/BA09a
+  // 動態建表完成 → 立刻套一次單位規則（若 header 比較晚載入，外面也可再呼一次）
+  applyUnitEffects();
 }
 
-/* 單列金額（只讀 data-use） */
+/* ====== 單列金額（只讀 data-use） ====== */
 function updateOneRow(code, idx){
   const tIndex = Object.keys(serviceData).indexOf(code);
   const table = document.querySelectorAll("#tables table")[tIndex];
@@ -294,7 +313,7 @@ function updateOneRow(code, idx){
   if(cell) cell.textContent = (price * use).toLocaleString();
 }
 
-/* 條件輸入 */
+/* ====== 條件輸入 ====== */
 function bindHeaderInputs(){
   document.querySelectorAll("input[name='idty'], input[name='cms'], input[name='foreign']")
     .forEach(el=>el.addEventListener("change", ()=>{
@@ -304,7 +323,7 @@ function bindHeaderInputs(){
   $("#keepQuota")?.addEventListener("input", updateResults);
 }
 
-/* SC 只能外籍看護用 */
+/* ====== SC 只能外籍看護用 ====== */
 function updateSCAvailability(){
   const scBox = document.querySelector('[data-group="SC"]');
   if(!scBox) return;
@@ -317,7 +336,7 @@ function updateSCAvailability(){
   if(warn){ !hasForeign ? warn.classList.remove("hidden") : warn.classList.add("hidden"); }
 }
 
-/* 統計（含 C / 排 C 兩組；不主動覆寫使用者的 total） */
+/* ====== 統計（含 C / 排 C 兩組；不主動覆寫使用者的 total） ====== */
 function updateResults(){
   let sumBA=0, sumGA=0, sumSC=0, sumC=0;
   const tables = document.querySelectorAll("#tables table");
@@ -420,7 +439,7 @@ function updateResults(){
   updateCaregiverSalary();
 }
 
-/* 居服薪資(6/4) = (AA總 + 補助 + 自付) × 0.6 */
+/* ====== 居服薪資(6/4) = (AA總 + 補助 + 自付) × 0.6 ====== */
 function updateCaregiverSalary(){
   const saved=JSON.parse(localStorage.getItem("addons")||"{}");
   let aaTotal=0;
@@ -434,20 +453,26 @@ function updateCaregiverSalary(){
   if(target) target.textContent=`居服員薪資合計：${total.toLocaleString()} 元`;
 }
 
-/* A/B 切換：B 隱藏 C、BD、BA09/BA09a；薪資不含 C */
+/* ====== A/B 切換（本頁按鈕） ====== */
 function bindUnitToggle(){
   const btn=$("#btnUnitToggle");
   if(!btn) return;
   btn.addEventListener("click", ()=>{
-    currentUnit = (currentUnit==="A") ? "B" : "A";
-    localStorage.setItem("unit", currentUnit);
+    const next = (currentUnit==="A") ? "B" : "A";
+    currentUnit = setUnit(next);
+    // 讓其他頁（或本頁）也能聽到
+    window.dispatchEvent(new CustomEvent("unit:toggle", { detail: { unit: currentUnit }}));
+    // 本頁立即套用
     applyUnitEffects();
     updateResults();
   });
 }
 
-/* ★ 單位效果（本版重寫） */
+/* ====== 單位效果（整合後最終版本） ====== */
 function applyUnitEffects(){
+  // 以儲存狀態為準（避免跨檔案不同步）
+  currentUnit = getUnit();
+
   // 按鈕外觀與文字
   const btn = $("#btnUnitToggle");
   if (btn){
@@ -463,7 +488,7 @@ function applyUnitEffects(){
     currentUnit === "B" ? cBox.classList.add("hidden") : cBox.classList.remove("hidden");
   }
 
-  // ★ BD 組：B 隱藏並歸零；A 顯示並解鎖
+  // BD 組：B 隱藏並歸零；A 顯示並解鎖
   const bdBox = document.querySelector('[data-group="BD"]');
   if (bdBox){
     if (currentUnit === "B"){
@@ -482,7 +507,7 @@ function applyUnitEffects(){
     }
   }
 
-  // ★ BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
+  // BA09 / BA09a：僅 A 單位可用；B 單位隱藏並歸零鎖定
   const baTable = document.querySelector('[data-group="BA"] table');
   if (baTable){
     const rows = baTable.tBodies[0]?.rows || [];
@@ -508,9 +533,18 @@ function applyUnitEffects(){
       }
     });
   }
+
+  // 也讓 CSS 能依單位寫樣式（若有需要）
+  document.body.classList.toggle("unit-A", currentUnit === "A");
+  document.body.classList.toggle("unit-B", currentUnit === "B");
 }
 
-/* 小工具 */
+// 提供外部呼叫（例如動態建表後再次套用）
+window.applyUnitEffects = function(){
+  applyUnitEffects();
+};
+
+/* ====== 小工具 ====== */
 function setText(sel, num){
   const el=$(sel); if(!el) return;
   el.textContent = Number(num).toLocaleString();
@@ -524,7 +558,7 @@ function resetAll(){
   location.reload();
 }
 
-/* 避位 */
+/* ====== 避位 ====== */
 function adjustDockPadding(){
   const dock = document.getElementById('bottomDock');
   if(!dock) return;
@@ -538,7 +572,7 @@ function adjustTopbarPadding(){
   document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
 
-/* ---- 導覽：依當前網址自動高亮（支援多頁 + 錨點） ---- */
+/* ====== 導覽：依當前網址自動高亮（支援多頁 + 錨點） ====== */
 (function(){
   function normPath(pathname){
     // 移除結尾斜線 → 把 / 或 /index.html 視為 /index → 去掉 .html
@@ -563,7 +597,7 @@ function adjustTopbarPadding(){
       let active = false;
 
       if (raw.startsWith('#')){
-        // 單頁錨點：僅當前 hash 完全相同才亮（避免全部 # 錨點同時亮）
+        // 單頁錨點：僅當前 hash 完全相同才亮
         active = (raw.toLowerCase() === hereHash && hereHash !== '');
       } else {
         // 多頁：以檔名比對（/page、/page.html、/ 皆可）
@@ -587,3 +621,19 @@ function adjustTopbarPadding(){
   window.addEventListener('hashchange', setActiveNav);
   window.addEventListener('popstate', setActiveNav); // 處理前進/後退
 })();
+
+/* ====== 與 include.js 的事件橋接 ======
+ * - 其他頁或共用 header 觸發的 unit:toggle，也要讓本頁同步
+ * - include:ready 時再套一次（header 晚載時，確保按鈕文字同步）
+ */
+window.addEventListener("unit:toggle", (ev)=>{
+  const next = (ev.detail && ev.detail.unit) || getUnit();
+  currentUnit = setUnit(next);
+  applyUnitEffects();
+  updateResults();
+});
+window.addEventListener("include:ready", ()=>{
+  // header/btn 載入完成後，同步按鈕狀態與單位規則
+  applyUnitEffects();
+  updateResults();
+});
