@@ -1,28 +1,28 @@
 <header class="topbar">
-  <div class="inner"><!-- ★ 新增：使 topbar-fixed.css 的置中對齊生效 -->
+  <div class="inner">
     <div class="brand">
-      <a href="index.html" class="logo-link">
+      <a href="index.html" class="logo-link" aria-label="回首頁">
         <img src="org-logo.png" alt="機構標誌">
       </a>
       <span class="site-title">長照相關資訊</span>
     </div>
 
-    <nav class="nav-links">
-      <a href="index.html">額度計算機</a>
-      <a href="payroll.html">薪資計算機</a>
-      <a href="care-info.html">長照相關資訊</a>
-      <a href="news.html">最新公告</a>
-      <a href="contact.html">聯繫方式</a>
-      <a href="about.html">關於我們</a>
-    </nav>
+    <div class="nav-wrap">
+      <nav class="nav-links" aria-label="主選單">
+        <a href="index.html">額度計算機</a>
+        <a href="payroll.html">薪資計算機</a>
+        <a href="care-info.html">長照相關資訊</a>
+        <a href="news.html">最新公告</a>
+        <a href="contact.html">聯繫方式</a>
+        <a href="about.html">關於我們</a>
+      </nav>
+    </div>
 
     <div class="actions">
-      <!-- A/B 單位切換 -->
       <button id="btnUnitToggle" class="btn pill btn-orange" type="button" data-unit="B">B單位</button>
-      <!-- 呼叫 resetAll() -->
       <button id="btnReset" class="btn pill btn-green" type="button">重置</button>
       <button class="btn pill btn-gray" type="button" onclick="window.print()">列印</button>
     </div>
-  </div><!-- /.inner -->
+  </div>
 </header>
 <div class="divider"></div>
