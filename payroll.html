@@ -6,40 +6,33 @@
   <title>薪資計算機｜長照工具</title>
   <meta name="description" content="輸入本月 AA / BA / GA / SC 的支數，計總額並依比例拆薪；可從 PDF 自動統計並選擇是否同步，右側即時比對勞健保扣款，得出實領。">
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
-  <!-- 共用樣式（請保持與站上其他頁一致） -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="topbar-fixed.css" />
-
-  <!-- 本頁需要的小範圍樣式（維持你原本的版面與視覺） -->
   <style>
     :root{
-      --wm-text:"@hori版權所有";
-      --wm-size:36px;
-      --wm-angle:-25deg;
-      --wm-alpha:.05;
-      --wm-shift:120px;
+      --wm-text:"@hori版權所有"; --wm-size:36px; --wm-angle:-25deg; --wm-alpha:.05; --wm-shift:120px;
     }
     .watermark{position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden;}
-    .wm-item{
-      position:absolute; font-weight:700; font-size:var(--wm-size);
-      color:rgba(0,0,0,var(--wm-alpha)); transform:rotate(var(--wm-angle));
-      white-space:nowrap; user-select:none; animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;
-    }
-    @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));} 100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
+    .wm-item{position:absolute; font-weight:700; font-size:var(--wm-size); color:rgba(0,0,0,var(--wm-alpha));
+      transform:rotate(var(--wm-angle)); white-space:nowrap; user-select:none;
+      animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
+    @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));}
+      100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
     @media print{.watermark{opacity:.08}}
 
-    /* 本頁 KPI/tables（承襲你之前的設定） */
+    /* 本頁小元件 */
     .kpi{display:flex; gap:16px; flex-wrap:wrap;}
-    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
+    .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
+      display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
     .kpi .box .lbl{color:#7a7557; font-weight:700;}
     .kpi .box .num{font-size:24px; font-weight:900; color:#2e7d32;}
-    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
+      border-radius:12px; overflow:hidden;}
     .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
-    .right{text-align:right;}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+    .right{text-align:right;} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
@@ -64,26 +57,18 @@
     .ps-table tbody tr:hover{background:#f5f8ff}
     .ps-right{text-align:right}
     .ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
-
-    /* 行動裝置表格橫向滾動（與 style.css 一致） */
-    @media (max-width:860px){
-      #tables{overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:calc(var(--dock-h) + 14px); display:block;}
-      #tables table{min-width:780px; table-layout:fixed; width:max-content;}
-      #tables th,#tables td{padding:10px 12px; font-size:14px; line-height:1.2; white-space:nowrap;}
-      #tables input[type="number"]{width:58px; height:32px; font-size:14px;}
-    }
   </style>
 </head>
 <body>
   <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
-    <span class="wm-item" style="top:5%; left:5%; --dur:9s;">@hori版權所有</span>
+    <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:65%; --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:10%; --dur:13s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:40%; --dur:12s;">@hori版權所有</span>
     <span class="wm-item" style="top:25%; left:70%; --dur:14s;">@hori版權所有</span>
-    <span class="wm-item" style="top:50%; left:5%; --dur:10s;">@hori版權所有</span>
+    <span class="wm-item" style="top:50%; left:5%;  --dur:10s;">@hori版權所有</span>
     <span class="wm-item" style="top:50%; left:35%; --dur:11s;">@hori版權所有</span>
     <span class="wm-item" style="top:50%; left:65%; --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:75%; left:10%; --dur:13s;">@hori版權所有</span>
@@ -94,15 +79,34 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 🔹 共用 Header 插槽（由 include.js 載入 header.html / header-lite.html） -->
-  <div id="__header"></div>
+  <!-- 頂部導覽 -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" class="logo-link" aria-label="回首頁">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title" id="siteTitle">薪資計算機</span>
+    </div>
+    <nav class="nav-links" aria-label="主選單">
+      <a href="index.html">額度計算機</a>
+      <a href="payroll.html">薪資計算機</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+    <div class="actions">
+      <button class="btn pill btn-gray" id="btnPrint" type="button">列印</button>
+      <button class="btn pill btn-green" id="btnResetAll" type="button">全部清空</button>
+    </div>
+  </header>
+  <div class="divider"></div>
 
   <main class="container">
-    <!-- KPI 區 -->
+    <!-- KPI -->
     <section class="card" style="margin-bottom:16px;">
       <h1 class="card-title" style="font-size:22px;">本月薪資總覽</h1>
       <p class="hint">輸入各碼別本月支數 → 計總額 → 依比例拆薪；右側即時比對勞健保扣款，算出「實領」。</p>
-
       <div class="kpi" style="margin-top:10px;">
         <div class="box"><div class="lbl">AA 小計</div><div class="num" id="kpiAA">0</div></div>
         <div class="box"><div class="lbl">BA 小計</div><div class="num" id="kpiBA">0</div></div>
@@ -134,10 +138,7 @@
     <!-- PDF 支數自動統計 -->
     <section class="card ps-card" id="ps-widget">
       <h2 class="card-title">PDF 支數自動統計（帶入表單）</h2>
-      <p class="ps-muted">
-        上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。
-        AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5），AA 單價固定。
-      </p>
+      <p class="ps-muted">上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5），AA 單價固定。</p>
 
       <label class="ps-drop" id="ps-drop">
         <input type="file" id="ps-file" accept="application/pdf" />
@@ -171,7 +172,6 @@
         <div class="ps-progress"><div id="ps-bar" class="ps-bar"></div></div>
         <div id="ps-status" class="ps-small ps-muted" style="margin-top:6px">待上傳</div>
       </div>
-
       <pre id="ps-debug" class="ps-box ps-small" style="white-space:pre-wrap">偵錯訊息：</pre>
 
       <div style="display:grid;gap:12px;margin-top:10px;">
@@ -182,7 +182,6 @@
             <tbody></tbody>
           </table>
         </div>
-
         <div class="ps-box">
           <h3 class="ps-h3">AA 統計</h3>
           <table id="ps-t-AA" class="ps-table">
@@ -190,7 +189,6 @@
             <tbody></tbody>
           </table>
         </div>
-
         <div class="ps-box">
           <h3 class="ps-h3">GA 統計</h3>
           <table id="ps-t-GA" class="ps-table">
@@ -198,7 +196,6 @@
             <tbody></tbody>
           </table>
         </div>
-
         <div class="ps-box">
           <h3 class="ps-h3">SC 統計</h3>
           <table id="ps-t-SC" class="ps-table">
@@ -254,7 +251,6 @@
     <section class="card">
       <h2 class="card-title">⑥ 薪資結果 & 勞健保扣款</h2>
       <div class="grid-2" style="margin-top:8px;">
-
         <div class="card" style="padding:14px;">
           <table class="tbl">
             <tbody>
@@ -269,7 +265,6 @@
             </tbody>
           </table>
         </div>
-
         <div class="card" style="padding:14px;">
           <div class="row-mid" style="margin-bottom:10px;">
             <span class="pill-note">自動依「拆薪後薪資」抓 ≥ 薪資的最大投保級距</span>
@@ -298,18 +293,20 @@
               </tr>
             </tbody>
           </table>
-
           <div class="row-mid" style="margin-top:12px;">
             <div class="pill-note">實領（拆薪後薪資－勞健保合計）：<b class="mono" id="netPay">0</b></div>
           </div>
         </div>
-
       </div>
     </section>
   </main>
 
-  <!-- 🔹 共用 Footer 插槽（由 include.js 載入 footer.html） -->
-  <div id="__footer"></div>
+  <!-- 底部資訊條 -->
+  <footer id="bottomDock" class="footerbar">
+    <div class="foot">
+      <span class="ok">※ 每年 <b>2 月</b> 和 <b>8 月</b> 調整投保級距，並於次月 <b>1 號</b> 生效。</span>
+    </div>
+  </footer>
 
   <!-- 主邏輯（輸入/計算/勞健保/儲存） -->
   <script>
@@ -319,7 +316,7 @@
       const N = v => (isFinite(+v) ? +v : 0);
       const F = v => new Intl.NumberFormat('zh-Hant-TW', { maximumFractionDigits: 0 }).format(v);
 
-      /* 單價（固定，含 AA07；BA15-1/15-2 分列；GA09/SC09=770） */
+      /* 單價（固定，含 AA07=760；BA15-1/15-2 分列；GA09/SC09=770） */
       const PRICE = {
         AA: { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 },
         BA: [
@@ -355,62 +352,36 @@
 
       /* 勞健保級距表（員工自付） */
       const INS_TABLE = [
-        { grade:11100, labor:277, health:443 },
-        { grade:12540, labor:313, health:443 },
-        { grade:13500, labor:338, health:443 },
-        { grade:15840, labor:396, health:443 },
-        { grade:16500, labor:413, health:443 },
-        { grade:17280, labor:432, health:443 },
-        { grade:19047, labor:476, health:443 },
-        { grade:20008, labor:505, health:443 },
-        { grade:21009, labor:525, health:443 },
-        { grade:22000, labor:550, health:443 },
-        { grade:23100, labor:577, health:443 },
-        { grade:24000, labor:600, health:443 },
-        { grade:25250, labor:632, health:443 },
-        { grade:26400, labor:660, health:443 },
-        { grade:27600, labor:690, health:443 },
-        { grade:28590, labor:715, health:443 },
-        { grade:28800, labor:720, health:447 },
-        { grade:30300, labor:758, health:472 },
-        { grade:31800, labor:795, health:493 },
-        { grade:33300, labor:833, health:516 },
-        { grade:34800, labor:870, health:540 },
-        { grade:36300, labor:908, health:563 },
-        { grade:38200, labor:955, health:592 },
-        { grade:40100, labor:1002, health:622 },
-        { grade:41900, labor:1045, health:651 },
-        { grade:43900, labor:1098, health:681 },
-        { grade:45800, labor:1145, health:710 },
-        { grade:50600, labor:1145, health:785 },
-        { grade:53000, labor:1145, health:822 },
-        { grade:55400, labor:1145, health:859 },
-        { grade:57800, labor:1145, health:896 },
-        { grade:60800, labor:1145, health:943 },
-        { grade:63800, labor:1145, health:990 },
-        { grade:66800, labor:1145, health:1036 },
-        { grade:69800, labor:1145, health:1083 },
-        { grade:72800, labor:1145, health:1129 },
-        { grade:76500, labor:1145, health:1187 },
-        { grade:80200, labor:1145, health:1244 },
-        { grade:83900, labor:1145, health:1301 },
-        { grade:87600, labor:1145, health:1359 },
-        { grade:92100, labor:1145, health:1428 },
-        { grade:96600, labor:1145, health:1498 },
-        { grade:101100, labor:1145, health:1568 },
-        { grade:105600, labor:1145, health:1638 },
-        { grade:110100, labor:1145, health:1708 },
-        { grade:115500, labor:1145, health:1791 },
-        { grade:120900, labor:1145, health:1875 },
-        { grade:126300, labor:1145, health:1959 },
-        { grade:131700, labor:1145, health:2043 },
-        { grade:137100, labor:1145, health:2126 },
-        { grade:142500, labor:1145, health:2210 },
-        { grade:147900, labor:1145, health:2294 },
+        { grade:11100, labor:277, health:443 }, { grade:12540, labor:313, health:443 },
+        { grade:13500, labor:338, health:443 }, { grade:15840, labor:396, health:443 },
+        { grade:16500, labor:413, health:443 }, { grade:17280, labor:432, health:443 },
+        { grade:19047, labor:476, health:443 }, { grade:20008, labor:505, health:443 },
+        { grade:21009, labor:525, health:443 }, { grade:22000, labor:550, health:443 },
+        { grade:23100, labor:577, health:443 }, { grade:24000, labor:600, health:443 },
+        { grade:25250, labor:632, health:443 }, { grade:26400, labor:660, health:443 },
+        { grade:27600, labor:690, health:443 }, { grade:28590, labor:715, health:443 },
+        { grade:28800, labor:720, health:447 }, { grade:30300, labor:758, health:472 },
+        { grade:31800, labor:795, health:493 }, { grade:33300, labor:833, health:516 },
+        { grade:34800, labor:870, health:540 }, { grade:36300, labor:908, health:563 },
+        { grade:38200, labor:955, health:592 }, { grade:40100, labor:1002, health:622 },
+        { grade:41900, labor:1045, health:651 }, { grade:43900, labor:1098, health:681 },
+        { grade:45800, labor:1145, health:710 }, { grade:50600, labor:1145, health:785 },
+        { grade:53000, labor:1145, health:822 }, { grade:55400, labor:1145, health:859 },
+        { grade:57800, labor:1145, health:896 }, { grade:60800, labor:1145, health:943 },
+        { grade:63800, labor:1145, health:990 }, { grade:66800, labor:1145, health:1036 },
+        { grade:69800, labor:1145, health:1083 }, { grade:72800, labor:1145, health:1129 },
+        { grade:76500, labor:1145, health:1187 }, { grade:80200, labor:1145, health:1244 },
+        { grade:83900, labor:1145, health:1301 }, { grade:87600, labor:1145, health:1359 },
+        { grade:92100, labor:1145, health:1428 }, { grade:96600, labor:1145, health:1498 },
+        { grade:101100, labor:1145, health:1568 }, { grade:105600, labor:1145, health:1638 },
+        { grade:110100, labor:1145, health:1708 }, { grade:115500, labor:1145, health:1791 },
+        { grade:120900, labor:1145, health:1875 }, { grade:126300, labor:1145, health:1959 },
+        { grade:131700, labor:1145, health:2043 }, { grade:137100, labor:1145, health:2126 },
+        { grade:142500, labor:1145, health:2210 }, { grade:147900, labor:1145, health:2294 },
         { grade:150000, labor:1145, health:2327 }
       ];
 
-      /* === 建表（輸入） === */
+      /* 建表（輸入） */
       function buildAA(){
         const host = document.querySelector('#tblAA tbody');
         host.innerHTML = '';
@@ -427,7 +398,6 @@
           host.appendChild(tr);
         });
       }
-
       function buildGroup(tableId, key, savedKey){
         const host = document.querySelector(`#${tableId} tbody`);
         host.innerHTML = '';
@@ -445,7 +415,7 @@
         });
       }
 
-      /* === 計算 === */
+      /* 計算 */
       function calcAA(){
         let total = 0;
         Object.keys(PRICE.AA).forEach(code=>{
@@ -459,7 +429,6 @@
         document.querySelector('#resAA').textContent = F(total);
         return total;
       }
-
       function calcGroup(key, sumId, kpiId, resId){
         let total = 0;
         const k = key.toLowerCase();
@@ -474,33 +443,27 @@
         document.querySelector(resId).textContent = F(total);
         return total;
       }
-
       function updateAll(){
         const sumAA = calcAA();
         const sumBA = calcGroup('BA', '#sumBA', '#kpiBA', '#resBA');
         const sumGA = calcGroup('GA', '#sumGA', '#kpiGA', '#resGA');
         const sumSC = calcGroup('SC', '#sumSC', '#kpiSC', '#resSC');
-
         const total = sumAA + sumBA + sumGA + sumSC;
         $('#kpiTotal').textContent = F(total);
         $('#resTotal').textContent = F(total);
-
         const ratioPct = N($('#ratioPct').value) || 0;
         const ratio = ratioPct / 100;
         $('#resRatio').textContent = ratioPct;
-
         const salary = Math.round(total * ratio);
         $('#kpiSalary').textContent = F(salary);
         $('#resSalary').textContent = F(salary);
-
         syncInsuranceBySalary(salary);
         saveAll();
       }
 
-      /* === 勞健保 === */
+      /* 勞健保 */
       function buildInsOptions(){
-        const sel = $('#insGrade');
-        sel.innerHTML = '';
+        const sel = $('#insGrade'); sel.innerHTML = '';
         INS_TABLE.forEach(row=>{
           const opt = document.createElement('option');
           opt.value = row.grade;
@@ -508,12 +471,16 @@
           sel.appendChild(opt);
         });
       }
-      function findGradeBySalary(sal){
-        const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
-        for (const v of list){ if (sal <= v) return v; }
-        return list[list.length-1];
+function findGradeBySalary(sal){
+  const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
+  for (const v of list){
+    if (sal <= v) return v;  // 找到第一個「大於等於薪資」的級距
+  }
+  return list[list.length-1]; // 超過最高級距時用最後一級
+}
+      function getRow(grade){
+        return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0];
       }
-      function getRow(grade){ return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0]; }
       function syncInsuranceBySalary(salary){
         const auto = $('#insAuto').checked;
         const sel = $('#insGrade');
@@ -533,7 +500,7 @@
         $('#resNet').textContent = F(net);
       }
 
-      /* === 儲存／還原 === */
+      /* 儲存／還原 */
       function saveAll(){
         const aa = {};
         Object.keys(PRICE.AA).forEach(code=> aa[code]=+(document.querySelector(`input[data-aa="${code}"]`).value||0));
@@ -554,9 +521,7 @@
         };
         localStorage.setItem('pl-params', JSON.stringify(params));
       }
-      function loadLS(key, fb){
-        try{ return JSON.parse(localStorage.getItem(key)||'') || fb; }catch(e){ return fb; }
-      }
+      function loadLS(key, fb){ try{ return JSON.parse(localStorage.getItem(key)||'') || fb; }catch(e){ return fb; } }
       function restore(){
         const p = loadLS('pl-params', null);
         if (p){
@@ -569,7 +534,7 @@
         }
       }
 
-      /* === 事件 === */
+      /* 事件 */
       function wire(){
         ['#tblAA','#tblBA','#tblGA','#tblSC'].forEach(id=>{
           document.querySelectorAll(`${id} input[type="number"]`).forEach(inp=>{
@@ -604,19 +569,15 @@
           saveAll();
         });
 
-        // 右上角按鈕：列印/全部清空（按鈕由 header 注入，這裡只負責功能）
-        document.addEventListener('click', (e)=>{
-          const t = e.target;
-          if (!(t instanceof HTMLElement)) return;
-          if (t.id === 'btnPrint') window.print();
-          if (t.id === 'btnResetAll'){
-            ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params'].forEach(k=>localStorage.removeItem(k));
-            location.reload();
-          }
+        // 右上角按鈕
+        $('#btnPrint').addEventListener('click', ()=>window.print());
+        $('#btnResetAll').addEventListener('click', ()=>{
+          ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params'].forEach(k=>localStorage.removeItem(k));
+          location.reload();
         });
       }
 
-      /* === 啟動 === */
+      /* 啟動 */
       buildAA();
       buildGroup('tblBA','BA','pl-ba');
       buildGroup('tblGA','GA','pl-ga');
@@ -626,7 +587,32 @@
       wire();
       updateAll();
 
-      // 基礎的防拷（可保留或移除）
+      // 導覽高亮
+      (function(){
+        function norm(href){
+          try{
+            const u=new URL(href, location.origin);
+            let p=u.pathname.trim();
+            if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+            p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
+            return p.split('/').pop().toLowerCase();
+          }catch(e){return '';}
+        }
+        const here = norm(location.href);
+        document.querySelectorAll('.nav-links a[href]').forEach(a=>{
+          const target = norm(a.getAttribute('href'));
+          if (target && target === here) a.classList.add('active');
+        });
+        // 同步頁面標題
+        const map = { index:'額度計算機', payroll:'薪資計算機', 'care-info':'長照相關資訊', news:'最新公告', contact:'聯繫方式', about:'關於我們' };
+        const slug = here || 'payroll';
+        const pageName = map[slug] || '薪資計算機';
+        const st = document.getElementById('siteTitle');
+        if (st) st.textContent = pageName;
+        document.title = `${pageName}｜長照工具`;
+      })();
+
+      // 防拷
       document.addEventListener('contextmenu', e => e.preventDefault());
       document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
@@ -637,7 +623,7 @@
     })();
   </script>
 
-  <!-- PDF 解析 + 帶入表單（含 OCR 後援；同步前清空；AA 0.5 進位；別名合併 BA05-1→BA05、BA16-1/-2→BA16） -->
+  <!-- PDF 解析 + 帶入表單（含 OCR 後援；同步前清空；AA 0.5 進位；BA05-1=BA05；BA16-1/-2=BA16） -->
   <script>
     (() => {
       const $ = s => document.querySelector(s);
@@ -647,7 +633,10 @@
       const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
 
       // 代碼別名（同碼合併）
-      const CODE_ALIAS = { 'BA05-1': 'BA05', 'BA05-2': 'BA05', 'BA16-1': 'BA16', 'BA16-2': 'BA16' };
+      const CODE_ALIAS = {
+        'BA05-1': 'BA05', 'BA05-2': 'BA05',
+        'BA16-1': 'BA16', 'BA16-2': 'BA16'
+      };
       const toCanon = c => CODE_ALIAS[c] || c;
 
       // 動態載入 pdf.js
@@ -665,8 +654,7 @@
                 pdfjsLib.GlobalWorkerOptions.workerSrc=`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.worker.min.js`;
                 await pdfjsLib.getDocument({data:new Uint8Array([0x25,0x50,0x44,0x46])}).promise.catch(()=>null);
               }catch{
-                pdfjsLib.GlobalWorkerOptions.workerSrc="";
-                pdfjsLib.GlobalWorkerOptions.workerPort=null;
+                pdfjsLib.GlobalWorkerOptions.workerSrc=""; pdfjsLib.GlobalWorkerOptions.workerPort=null;
               }
               return;
             }catch{}
@@ -704,7 +692,8 @@
               const page=await pdf.getPage(i);
               const c=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false});
               const s=c.items.map(it=>it.str||'').join(' ');
-              texts.push(s); total+=s.length; setBar(100*i/pdf.numPages);
+              texts.push(s); total+=s.length;
+              setBar(100*i/pdf.numPages);
               if(statusEl) statusEl.textContent=`PDF 解析中 (${i}/${pdf.numPages}) · ${pdfVer||'pdf.js'}/${w.k}`;
             }
             URL.revokeObjectURL(url);
@@ -727,7 +716,8 @@
           await p.render({canvasContext:ctx,viewport:v}).promise;
           if(statusEl) statusEl.textContent=`OCR 執行中（${i}/${pdf.numPages}）`;
           const r=await worker.recognize(cvs);
-          all.push(r.data.text||''); setBar(100*i/pdf.numPages);
+          all.push(r.data.text||'');
+          setBar(100*i/pdf.numPages);
         }
         await worker.terminate();
         const t=all.join('\n');
@@ -744,23 +734,28 @@
           const codes=[...line.matchAll(codeRe)]; if(!codes.length) continue;
           for (const m of codes){
             const fullRaw=m[0];
-            const canon = toCanon(fullRaw); // 正規化
+            const canon = toCanon(fullRaw); // 先轉正規碼
             const head = canon.slice(0,2);
-
             if (head==='AA'){
               const after=line.slice(m.index+fullRaw.length, m.index+fullRaw.length+40);
               let amt=null, m1=after.match(/\$\s*([0-9][0-9,]*)/);
               if (m1) amt=parseInt(m1[1].replace(/,/g,''),10);
-              else { const m2=after.match(/\b([0-9]{2,6})\b/); if(m2) amt=parseInt(m2[1],10); }
+              else {
+                const m2=after.match(/\b([0-9]{2,6})\b/);
+                if(m2) amt=parseInt(m2[1],10);
+              }
               const unit=units[canon]??units[canon.slice(0,4)];
               const zhi = (unit && amt) ? toHalf(amt/unit) : 0;
-              const rec=fam.AA[canon]||{occ:0,sum:0}; rec.occ++; rec.sum+=zhi; fam.AA[canon]=rec;
-
+              const rec=fam.AA[canon]||{occ:0,sum:0};
+              rec.occ++; rec.sum+=zhi;
+              fam.AA[canon]=rec;
             }else{
               const ctx=line.slice(Math.max(0,m.index-40), Math.min(line.length,m.index+fullRaw.length+40));
               const c=ctx.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
               const zhi = c ? Math.max(0, Math.min(20, parseInt(c[1],10))) : 0;
-              const rec=(fam[head][canon]||{occ:0,sum:0}); rec.occ++; rec.sum+=zhi; fam[head][canon]=rec;
+              const rec=(fam[head][canon]||{occ:0,sum:0});
+              rec.occ++; rec.sum+=zhi;
+              fam[head][canon]=rec;
             }
           }
         }
@@ -771,10 +766,11 @@
       // 渲染 & 匯出
       const tb={BA:$('#ps-t-BA tbody'),AA:$('#ps-t-AA tbody'),GA:$('#ps-t-GA tbody'),SC:$('#ps-t-SC tbody')};
       function renderRows(tbody, rows){
-        if(!tbody) return; tbody.innerHTML='';
+        if(!tbody) return;
+        tbody.innerHTML='';
         for(const r of rows){
           const tr=document.createElement('tr');
-          tr.innerHTML= `
+          tr.innerHTML=`
             <td><span class="ps-pill">${r.code}</span></td>
             <td class="ps-right">${r.occ}</td>
             <td class="ps-right">${r.sum.toFixed(1)}</td>
@@ -799,7 +795,10 @@
       // 同步到表單（先清空 → 再寫入；AA 用 0.5 step；BA/GA/SC 取整）
       function resetPayrollInputs(){
         document.querySelectorAll('#tblAA input[type="number"][data-aa], #tblBA input[type="number"][data-ba], #tblGA input[type="number"][data-ga], #tblSC input[type="number"][data-sc]')
-          .forEach(inp=>{ inp.value = '0'; inp.dispatchEvent(new Event('input',{bubbles:true})); });
+          .forEach(inp=>{
+            inp.value = '0';
+            inp.dispatchEvent(new Event('input',{bubbles:true}));
+          });
       }
       const fwMap = {'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','－':'-','　':' '};
       function normalize(code){ return String(code||'').trim().replace(/[０-９－　]/g, ch=>fwMap[ch] ?? ch); }
@@ -817,11 +816,23 @@
         resetPayrollInputs();
         const miss = [];
         // AA：0.5 進位
-        res.AA.forEach(r=>{ const ok = setInputByCode('aa', r.code, r.sum, '0.5'); if (!ok) miss.push(`AA：${normalize(r.code)}`); });
+        res.AA.forEach(r=>{
+          const ok = setInputByCode('aa', r.code, r.sum, '0.5');
+          if (!ok) miss.push(`AA：${normalize(r.code)}`);
+        });
         // BA / GA / SC：整數
-        res.BA.forEach(r=>{ const ok = setInputByCode('ba', r.code, Math.round(r.sum)); if (!ok) miss.push(`BA：${normalize(r.code)}`); });
-        res.GA.forEach(r=>{ const ok = setInputByCode('ga', r.code, Math.round(r.sum)); if (!ok) miss.push(`GA：${normalize(r.code)}`); });
-        res.SC.forEach(r=>{ const ok = setInputByCode('sc', r.code, Math.round(r.sum)); if (!ok) miss.push(`SC：${normalize(r.code)}`); });
+        res.BA.forEach(r=>{
+          const ok = setInputByCode('ba', r.code, Math.round(r.sum));
+          if (!ok) miss.push(`BA：${normalize(r.code)}`);
+        });
+        res.GA.forEach(r=>{
+          const ok = setInputByCode('ga', r.code, Math.round(r.sum));
+          if (!ok) miss.push(`GA：${normalize(r.code)}`);
+        });
+        res.SC.forEach(r=>{
+          const ok = setInputByCode('sc', r.code, Math.round(r.sum));
+          if (!ok) miss.push(`SC：${normalize(r.code)}`);
+        });
 
         let warn = document.getElementById('ps-miss');
         const host = document.querySelector('#ps-widget');
@@ -855,11 +866,9 @@
       // 綁定
       let last=null;
       async function handleFile(f){
-        if(!debug) return;
-        debug.textContent='偵錯訊息：\n'; setBar(0);
-        if(statusEl) statusEl.textContent='準備解析…';
+        if(!debug) return; debug.textContent='偵錯訊息：\n';
+        setBar(0); if(statusEl) statusEl.textContent='準備解析…';
         let pdfRes=null, text='';
-
         try{ pdfRes=await extractPdfText(f); }catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
         if(pdfRes && pdfRes.charCount>0){
           text=pdfRes.text; setBar(100);
@@ -872,15 +881,13 @@
             if(statusEl) statusEl.textContent='OCR 完成';
           }catch(e){ log('OCR 也失敗：'+why(e)); alert('此 PDF 無法解析，可能是加密或損壞。'); return; }
         }
-
         const res=analyze(text);
-        renderAll(res); last=res;
+        renderAll(res);
+        last=res;
         document.getElementById('ps-apply').disabled=false;
         document.getElementById('ps-csv').disabled=false;
         document.getElementById('ps-json').disabled=false;
-
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); }
-        else { showSyncBar(true); }
+        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
       }
 
       const fileInput=$('#ps-file'), drop=$('#ps-drop');
@@ -893,8 +900,6 @@
       document.getElementById('ps-csv').addEventListener('click',()=>last&&exportCSV(last));
       document.getElementById('ps-json').addEventListener('click',()=>last&&exportJSON(last));
       document.getElementById('ps-apply').addEventListener('click',()=> last && applyToPayroll(last));
-
-      // 示範資料
       document.getElementById('ps-demo').addEventListener('click',()=>{
         const d=`嚴X雯 賴X女 2025/09/01 AA05 補助 $100
 嚴X雯 賴X女 2025/09/02 AA05 補助 $200
@@ -916,13 +921,9 @@
         document.getElementById('ps-apply').disabled=false;
         document.getElementById('ps-csv').disabled=false;
         document.getElementById('ps-json').disabled=false;
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); }
-        else { showSyncBar(true); }
+        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
       });
     })();
   </script>
-
-  <!-- 共用載入（header/footer + 導覽高亮 + 頁面按鈕注入） -->
-  <script src="include.js" defer></script>
 </body>
 </html>
