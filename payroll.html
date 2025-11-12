@@ -3,24 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- <title> 交給下方腳本動態設定；先給預設避免閃爍 -->
   <title>薪資計算機｜長照工具</title>
   <meta name="description" content="輸入本月 AA / BA / GA / SC 的支數，計總額並依比例拆薪；可從 PDF 自動統計並選擇是否同步，右側即時比對勞健保扣款，得出實領。">
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
-
-  <!-- 樣式：common → style → topbar（避免覆蓋衝突） -->
-  <link rel="stylesheet" href="common.css?v=20251112-a1" />
-  <link rel="stylesheet" href="style.css?v=20251112-a1" />
-  <link rel="stylesheet" href="topbar-fixed.css?v=20251112-a1" />
-
-  <!-- 本頁小元件樣式（保留你自訂的表格與 PDF 小工具外觀） -->
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="topbar-fixed.css" />
   <style>
+    :root{
+      --wm-text:"@hori版權所有"; --wm-size:36px; --wm-angle:-25deg; --wm-alpha:.05; --wm-shift:120px;
+    }
+    .watermark{position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden;}
+    .wm-item{position:absolute; font-weight:700; font-size:var(--wm-size); color:rgba(0,0,0,var(--wm-alpha));
+      transform:rotate(var(--wm-angle)); white-space:nowrap; user-select:none;
+      animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;}
+    @keyframes wm-sway{0%{transform:translateX(0) rotate(var(--wm-angle));}
+      100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));}}
+    @media print{.watermark{opacity:.08}}
+
+    /* 本頁小元件 */
     .kpi{display:flex; gap:16px; flex-wrap:wrap;}
     .kpi .box{flex:1 1 240px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
       display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
     .kpi .box .lbl{color:#7a7557; font-weight:700;}
     .kpi .box .num{font-size:24px; font-weight:900; color:#2e7d32;}
-
     .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
       border-radius:12px; overflow:hidden;}
     .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
@@ -28,10 +33,8 @@
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
     .right{text-align:right;} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
-
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
-
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
 
@@ -56,10 +59,8 @@
     .ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
   </style>
 </head>
-
-<!-- 這頁不需要右上按鈕，使用 header-lite -->
-<body data-header="lite">
-  <!-- 浮水印（用全站 style.css 的樣式） -->
+<body>
+  <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
     <span class="wm-item" style="top:5%; left:35%; --dur:11s;">@hori版權所有</span>
@@ -78,8 +79,27 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- ✅ 共用頂欄（精簡版，不顯示右上按鈕） -->
-  <div id="__header"></div>
+  <!-- 頂部導覽 -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" class="logo-link" aria-label="回首頁">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title" id="siteTitle">薪資計算機</span>
+    </div>
+    <nav class="nav-links" aria-label="主選單">
+      <a href="index.html">額度計算機</a>
+      <a href="payroll.html">薪資計算機</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+    <div class="actions">
+      <button class="btn pill btn-gray" id="btnPrint" type="button">列印</button>
+      <button class="btn pill btn-green" id="btnResetAll" type="button">全部清空</button>
+    </div>
+  </header>
   <div class="divider"></div>
 
   <main class="container">
@@ -97,15 +117,9 @@
         <div class="box"><div class="lbl">勞健保合計</div><div class="num" id="kpiIns">0</div></div>
         <div class="box"><div class="lbl">實領</div><div class="num" id="kpiNet">0</div></div>
       </div>
-
-      <!-- 原本右上功能改放在頁面內：列印 / 全部清空 -->
-      <div class="row-mid" style="margin-top:10px;">
-        <button class="btn pill btn-gray" id="btnPrint" type="button">列印</button>
-        <button class="btn pill btn-green" id="btnResetAll" type="button">全部清空</button>
-      </div>
     </section>
 
-    <!-- ① 拆薪比例 -->
+    <!-- 拆薪比例 -->
     <section class="card">
       <h2 class="card-title">① 拆薪比例</h2>
       <div class="grid-2" style="margin-top:8px;">
@@ -121,7 +135,7 @@
       </div>
     </section>
 
-    <!-- PDF 支數自動統計（帶入表單） -->
+    <!-- PDF 支數自動統計 -->
     <section class="card ps-card" id="ps-widget">
       <h2 class="card-title">PDF 支數自動統計（帶入表單）</h2>
       <p class="ps-muted">上傳每月 PDF，統計 <span class="ps-pill">BA</span> / <span class="ps-pill">AA</span> / <span class="ps-pill">GA</span> / <span class="ps-pill">SC</span>。AA 以「金額 ÷ 單價」換算（四捨五入到最接近 0.5），AA 單價固定。</p>
@@ -192,7 +206,7 @@
       </div>
     </section>
 
-    <!-- ② AA -->
+    <!-- AA -->
     <section class="card">
       <h2 class="card-title">② AA 本月支數</h2>
       <table class="tbl" id="tblAA">
@@ -203,7 +217,7 @@
       <p class="hint" style="margin-top:8px;">單價固定：AA05 200、AA06 200、AA07 760、AA08 385、AA09 770、AA11 50。</p>
     </section>
 
-    <!-- ③ BA -->
+    <!-- BA -->
     <section class="card">
       <h2 class="card-title">③ BA 本月支數</h2>
       <table class="tbl" id="tblBA">
@@ -213,7 +227,7 @@
       </table>
     </section>
 
-    <!-- ④ GA -->
+    <!-- GA -->
     <section class="card">
       <h2 class="card-title">④ GA 本月支數</h2>
       <table class="tbl" id="tblGA">
@@ -223,7 +237,7 @@
       </table>
     </section>
 
-    <!-- ⑤ SC -->
+    <!-- SC -->
     <section class="card">
       <h2 class="card-title">⑤ SC 本月支數</h2>
       <table class="tbl" id="tblSC">
@@ -233,7 +247,7 @@
       </table>
     </section>
 
-    <!-- ⑥ 結果＋勞健保 -->
+    <!-- 結果＋勞健保 -->
     <section class="card">
       <h2 class="card-title">⑥ 薪資結果 & 勞健保扣款</h2>
       <div class="grid-2" style="margin-top:8px;">
@@ -287,44 +301,12 @@
     </section>
   </main>
 
-  <!-- ✅ 共用底欄 -->
-  <div id="__footer"></div>
-
-  <!-- ✅ 先注入 header/footer，再跑共用與本頁邏輯 -->
-  <script src="include.js?v=20251112-a1" defer></script>
-  <script src="common.js?v=20251112-a1" defer></script>
-
-  <!-- 導覽高亮與 <title>：等 header 注入完成再跑一次，避免非同步錯過 -->
-  <script>
-    (function(){
-      function slug(){
-        const p=(location.pathname.split('/').pop()||'payroll.html').toLowerCase();
-        return p.replace(/\.html?$/,'') || 'payroll';
-      }
-      function setActiveAndTitle(){
-        const s = slug();
-        document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-          const t=(a.getAttribute('href')||'').replace(/\.html?$/,'').toLowerCase()||'index';
-          if(t===s) a.classList.add('active');
-        });
-        const map={
-          index:'額度計算機',
-          payroll:'薪資計算機',
-          'care-info':'長照相關資訊',
-          news:'最新公告',
-          contact:'聯繫方式',
-          about:'關於我們'
-        };
-        const titleTxt = map[s] || '薪資計算機';
-        document.title = titleTxt + '｜長照工具';
-        const st = document.querySelector('.site-title');
-        if (st) st.textContent = titleTxt;
-      }
-      document.addEventListener('DOMContentLoaded', setActiveAndTitle);
-      window.addEventListener('load', setActiveAndTitle);
-      window.addEventListener('hashchange', setActiveAndTitle);
-    })();
-  </script>
+  <!-- 底部資訊條 -->
+  <footer id="bottomDock" class="footerbar">
+    <div class="foot">
+      <span class="ok">※ 每年 <b>2 月</b> 和 <b>8 月</b> 調整投保級距，並於次月 <b>1 號</b> 生效。</span>
+    </div>
+  </footer>
 
   <!-- 主邏輯（輸入/計算/勞健保/儲存） -->
   <script>
@@ -489,11 +471,13 @@
           sel.appendChild(opt);
         });
       }
-      function findGradeBySalary(sal){
-        const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
-        for (const v of list){ if (sal <= v) return v; }
-        return list[list.length-1];
-      }
+function findGradeBySalary(sal){
+  const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
+  for (const v of list){
+    if (sal <= v) return v;  // 找到第一個「大於等於薪資」的級距
+  }
+  return list[list.length-1]; // 超過最高級距時用最後一級
+}
       function getRow(grade){
         return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0];
       }
@@ -585,7 +569,7 @@
           saveAll();
         });
 
-        // 頁面內的列印 / 清空
+        // 右上角按鈕
         $('#btnPrint').addEventListener('click', ()=>window.print());
         $('#btnResetAll').addEventListener('click', ()=>{
           ['pl-aa','pl-ba','pl-ga','pl-sc','pl-params'].forEach(k=>localStorage.removeItem(k));
@@ -603,318 +587,6 @@
       wire();
       updateAll();
 
-      // 基本防拷（可保留或移除）
-      document.addEventListener('contextmenu', e => e.preventDefault());
-      document.addEventListener('keydown', e => {
-        if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
-        if (e.key === 'F12') e.preventDefault();
-      });
-      document.addEventListener('selectstart', e => e.preventDefault());
-      document.addEventListener('copy', e => e.preventDefault());
-    })();
-  </script>
-
-  <!-- PDF 解析 + 帶入表單（含 OCR 後援；同步前清空；AA 0.5 進位；BA05-1=BA05；BA16-1/-2=BA16） -->
-  <script>
-    (() => {
-      const $ = s => document.querySelector(s);
-      const debug = $('#ps-debug'), bar = $('#ps-bar'), statusEl = $('#ps-status');
-      const log = s => { if(!debug) return; debug.textContent += (typeof s==='string'?s:JSON.stringify(s,null,2))+'\n'; };
-      const why = e => (e&&(e.message||e.reason||e.type||e.name))||String(e);
-      const setBar = p => { if(bar) bar.style.width = Math.max(0,Math.min(100,p))+'%'; };
-
-      // 代碼別名（同碼合併）
-      const CODE_ALIAS = {
-        'BA05-1': 'BA05', 'BA05-2': 'BA05',
-        'BA16-1': 'BA16', 'BA16-2': 'BA16'
-      };
-      const toCanon = c => CODE_ALIAS[c] || c;
-
-      // 動態載入 pdf.js
-      let pdfReady=null, pdfVer=null;
-      const loadScript = src => new Promise((res,rej)=>{const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s);});
-      async function ensurePdfjs(){
-        if (window.pdfjsLib) return;
-        if (pdfReady){ await pdfReady; return; }
-        pdfReady = (async ()=>{
-          for (const v of ["4.2.67","3.11.174","2.16.105"]){
-            try{
-              await loadScript(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.min.js`);
-              pdfVer=v;
-              try{
-                pdfjsLib.GlobalWorkerOptions.workerSrc=`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.worker.min.js`;
-                await pdfjsLib.getDocument({data:new Uint8Array([0x25,0x50,0x44,0x46])}).promise.catch(()=>null);
-              }catch{
-                pdfjsLib.GlobalWorkerOptions.workerSrc=""; pdfjsLib.GlobalWorkerOptions.workerPort=null;
-              }
-              return;
-            }catch{}
-          }
-          throw new Error('pdf.js load failed');
-        })();
-        await pdfReady;
-      }
-
-      // Tesseract（OCR）
-      let ocrReady=null;
-      async function ensureTesseract(){
-        if (window.Tesseract) return;
-        if (ocrReady){ await ocrReady; return; }
-        ocrReady = (async ()=>{
-          await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js');
-          Tesseract.setLogging(false);
-        })();
-        await ocrReady;
-      }
-
-      // AA 單價（含 AA07）
-      function getAAUnit(){ return { AA05:200, AA06:200, AA07:760, AA08:385, AA09:770, AA11:50 }; }
-
-      // 讀 PDF → 文字
-      async function extractPdfText(file){
-        await ensurePdfjs();
-        const ab=await file.arrayBuffer();
-        const blob=new Blob([ab],{type:'application/pdf'}), url=URL.createObjectURL(blob);
-        for (const w of [{k:'data',o:{data:ab}}, {k:'url',o:{url}}]){
-          try{
-            const pdf=await pdfjsLib.getDocument(w.o).promise;
-            let texts=[],total=0;
-            for(let i=1;i<=pdf.numPages;i++){
-              const page=await pdf.getPage(i);
-              const c=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false});
-              const s=c.items.map(it=>it.str||'').join(' ');
-              texts.push(s); total+=s.length;
-              setBar(100*i/pdf.numPages);
-              if(statusEl) statusEl.textContent=`PDF 解析中 (${i}/${pdf.numPages}) · ${pdfVer||'pdf.js'}/${w.k}`;
-            }
-            URL.revokeObjectURL(url);
-            log(`PDF.js 成功：頁=${texts.length} 字=${total}`);
-            return {text:texts.join('\n'), pdf, charCount:total};
-          }catch(e){ log(`PDF.js 失敗(${w.k})：`+why(e)); }
-        }
-        throw new Error('pdf.js failed');
-      }
-
-      // OCR 回退
-      async function ocrPdfToText(pdf){
-        await ensureTesseract();
-        const worker=await Tesseract.createWorker('chi_tra+eng');
-        let all=[];
-        for(let i=1;i<=pdf.numPages;i++){
-          const p=await pdf.getPage(i), v=p.getViewport({scale:2});
-          const cvs=document.createElement('canvas'), ctx=cvs.getContext('2d',{willReadFrequently:true});
-          cvs.width=v.width; cvs.height=v.height;
-          await p.render({canvasContext:ctx,viewport:v}).promise;
-          if(statusEl) statusEl.textContent=`OCR 執行中（${i}/${pdf.numPages}）`;
-          const r=await worker.recognize(cvs);
-          all.push(r.data.text||'');
-          setBar(100*i/pdf.numPages);
-        }
-        await worker.terminate();
-        const t=all.join('\n');
-        log(`OCR 完成：字=${t.length}`);
-        return t;
-      }
-
-      // 解析（支援 -1/-2；AA 以金額/單價→0.5；含別名合併）
-      function analyze(text){
-        const units=getAAUnit(), fam={BA:{},AA:{},GA:{},SC:{}};
-        const codeRe=/\b(BA|AA|GA|SC)\d{2}(?:-\d+)?\b/g, toHalf=v=>Math.round(v*2)/2;
-        for (const raw of text.split(/\r?\n/)){
-          const line=raw.trim(); if(!line) continue;
-          const codes=[...line.matchAll(codeRe)]; if(!codes.length) continue;
-          for (const m of codes){
-            const fullRaw=m[0];
-            const canon = toCanon(fullRaw);
-            const head = canon.slice(0,2);
-            if (head==='AA'){
-              const after=line.slice(m.index+fullRaw.length, m.index+fullRaw.length+40);
-              let amt=null, m1=after.match(/\$\s*([0-9][0-9,]*)/);
-              if (m1) amt=parseInt(m1[1].replace(/,/g,''),10);
-              else {
-                const m2=after.match(/\b([0-9]{2,6})\b/);
-                if(m2) amt=parseInt(m2[1],10);
-              }
-              const unit=units[canon]??units[canon.slice(0,4)];
-              const zhi = (unit && amt) ? toHalf(amt/unit) : 0;
-              const rec=fam.AA[canon]||{occ:0,sum:0};
-              rec.occ++; rec.sum+=zhi;
-              fam.AA[canon]=rec;
-            }else{
-              const ctx=line.slice(Math.max(0,m.index-40), Math.min(line.length,m.index+fullRaw.length+40));
-              const c=ctx.match(/(?:補\s*助|自\s*費)[^0-9]{0,6}([0-9]{1,2})\b/);
-              const zhi = c ? Math.max(0, Math.min(20, parseInt(c[1],10))) : 0;
-              const rec=(fam[head][canon]||{occ:0,sum:0});
-              rec.occ++; rec.sum+=zhi;
-              fam[head][canon]=rec;
-            }
-          }
-        }
-        const rows=obj=>Object.entries(obj).map(([code,{occ,sum}])=>({code,occ,sum})).sort((a,b)=>a.code.localeCompare(b.code));
-        return {BA:rows(fam.BA),AA:rows(fam.AA),GA:rows(fam.GA),SC:rows(fam.SC)};
-      }
-
-      // 渲染 & 匯出
-      const tb={BA:$('#ps-t-BA tbody'),AA:$('#ps-t-AA tbody'),GA:$('#ps-t-GA tbody'),SC:$('#ps-t-SC tbody')};
-      function renderRows(tbody, rows){
-        if(!tbody) return;
-        tbody.innerHTML='';
-        for(const r of rows){
-          const tr=document.createElement('tr');
-          tr.innerHTML=`
-            <td><span class="ps-pill">${r.code}</span></td>
-            <td class="ps-right">${r.occ}</td>
-            <td class="ps-right">${r.sum.toFixed(1)}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-      }
-      function renderAll(res){ renderRows(tb.BA,res.BA); renderRows(tb.AA,res.AA); renderRows(tb.GA,res.GA); renderRows(tb.SC,res.SC); }
-      function exportCSV(res){
-        const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(1)}`).join('\n')+'\n\n';
-        const csv=blk('【BA】',res.BA)+blk('【AA】',res.AA)+blk('【GA】',res.GA)+blk('【SC】',res.SC);
-        const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url; a.download='pdf-stat.csv'; a.click(); URL.revokeObjectURL(url);
-      }
-      function exportJSON(res){
-        const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:Number(r.sum.toFixed(1))}));
-        const payload={BA:pick(res.BA),AA:pick(res.AA),GA:pick(res.GA),SC:pick(res.SC),meta:{generatedAt:new Date().toISOString()}};
-        const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}), url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url; a.download='pdf-stat.json'; a.click(); URL.revokeObjectURL(url);
-      }
-
-      // 同步到表單（先清空 → 再寫入；AA 用 0.5 step；BA/GA/SC 取整）
-      function resetPayrollInputs(){
-        document.querySelectorAll('#tblAA input[type="number"][data-aa], #tblBA input[type="number"][data-ba], #tblGA input[type="number"][data-ga], #tblSC input[type="number"][data-sc]')
-          .forEach(inp=>{
-            inp.value = '0';
-            inp.dispatchEvent(new Event('input',{bubbles:true}));
-          });
-      }
-      const fwMap = {'０':'0','１':'1','２':'2','３':'3','４':'4','５':'5','６':'6','７':'7','８':'8','９':'9','－':'-','　':' '};
-      function normalize(code){ return String(code||'').trim().replace(/[０-９－　]/g, ch=>fwMap[ch] ?? ch); }
-      function setInputByCode(kind, code, val, step){
-        const norm = normalize(code);
-        const canon = toCanon(norm);
-        const sel = document.querySelector(`input[data-${kind}="${canon}"]`);
-        if (!sel) return false;
-        if (step) sel.setAttribute('step', step);
-        sel.value = String(val);
-        sel.dispatchEvent(new Event('input',{bubbles:true}));
-        return true;
-      }
-      function applyToPayroll(res){
-        resetPayrollInputs();
-        const miss = [];
-        // AA：0.5 進位
-        res.AA.forEach(r=>{
-          const ok = setInputByCode('aa', r.code, r.sum, '0.5');
-          if (!ok) miss.push(`AA：${normalize(r.code)}`);
-        });
-        // BA / GA / SC：整數
-        res.BA.forEach(r=>{
-          const ok = setInputByCode('ba', r.code, Math.round(r.sum));
-          if (!ok) miss.push(`BA：${normalize(r.code)}`);
-        });
-        res.GA.forEach(r=>{
-          const ok = setInputByCode('ga', r.code, Math.round(r.sum));
-          if (!ok) miss.push(`GA：${normalize(r.code)}`);
-        });
-        res.SC.forEach(r=>{
-          const ok = setInputByCode('sc', r.code, Math.round(r.sum));
-          if (!ok) miss.push(`SC：${normalize(r.code)}`);
-        });
-
-        let warn = document.getElementById('ps-miss');
-        const host = document.querySelector('#ps-widget');
-        if (miss.length){
-          if (!warn){
-            warn = document.createElement('div');
-            warn.id = 'ps-miss';
-            warn.style.cssText = 'margin-top:8px;border:1px dashed #f0b429;background:#fff8e6;border-radius:8px;padding:8px 10px';
-            warn.className = 'ps-small';
-            host.appendChild(warn);
-          }
-          warn.innerHTML = `<b>未同步的碼別（薪資表中沒有）：</b><br>${miss.map(m=>'• '+m).join('<br>')}`;
-        }else if (warn){ warn.remove(); }
-
-        document.getElementById('tblAA')?.scrollIntoView({behavior:'smooth', block:'start'});
-      }
-
-      // 自動/確認同步
-      const autoSyncEl = document.getElementById('ps-auto-sync');
-      const syncBar = document.getElementById('ps-syncbar');
-      const syncYesBtn = document.getElementById('ps-sync-yes');
-      const syncNoBtn = document.getElementById('ps-sync-no');
-      const AUTO_KEY = 'ps-auto-sync';
-      function loadAutoSync(){ try{ return localStorage.getItem(AUTO_KEY)==='1'; }catch(e){ return false; } }
-      function saveAutoSync(v){ try{ localStorage.setItem(AUTO_KEY, v?'1':'0'); }catch(e){} }
-      function showSyncBar(on){ if(syncBar) syncBar.style.display = on ? 'flex' : 'none'; }
-      if (autoSyncEl){ autoSyncEl.checked = loadAutoSync(); autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked)); }
-      if (syncYesBtn){ syncYesBtn.addEventListener('click', ()=>{ if (last){ applyToPayroll(last); } showSyncBar(false); }); }
-      if (syncNoBtn){ syncNoBtn.addEventListener('click', ()=> showSyncBar(false)); }
-
-      // 綁定
-      let last=null;
-      async function handleFile(f){
-        if(!debug) return; debug.textContent='偵錯訊息：\n';
-        setBar(0); if(statusEl) statusEl.textContent='準備解析…';
-        let pdfRes=null, text='';
-        try{ pdfRes=await extractPdfText(f); }catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
-        if(pdfRes && pdfRes.charCount>0){
-          text=pdfRes.text; setBar(100);
-          if(statusEl) statusEl.textContent='PDF 文字擷取完成';
-        } else {
-          try{
-            const pdf= pdfRes?.pdf || await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
-            if(statusEl) statusEl.textContent='啟用 OCR…'; setBar(1);
-            text=await ocrPdfToText(pdf); setBar(100);
-            if(statusEl) statusEl.textContent='OCR 完成';
-          }catch(e){ log('OCR 也失敗：'+why(e)); alert('此 PDF 無法解析，可能是加密或損壞。'); return; }
-        }
-        const res=analyze(text);
-        renderAll(res);
-        last=res;
-        document.getElementById('ps-apply').disabled=false;
-        document.getElementById('ps-csv').disabled=false;
-        document.getElementById('ps-json').disabled=false;
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
-      }
-
-      const fileInput=$('#ps-file'), drop=$('#ps-drop');
-      if(fileInput){ fileInput.addEventListener('change',e=>{const f=e.target.files?.[0]; if(f) handleFile(f);}); }
-      if(drop){
-        ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#eef4ff';}));
-        ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#f9fbff';}));
-        drop.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files?.[0]; if(f) handleFile(f);});
-      }
-      document.getElementById('ps-csv').addEventListener('click',()=>last&&exportCSV(last));
-      document.getElementById('ps-json').addEventListener('click',()=>last&&exportJSON(last));
-      document.getElementById('ps-apply').addEventListener('click',()=> last && applyToPayroll(last));
-      document.getElementById('ps-demo').addEventListener('click',()=>{
-        const d=`嚴X雯 賴X女 2025/09/01 AA05 補助 $100
-嚴X雯 賴X女 2025/09/02 AA05 補助 $200
-嚴X雯 張X進 2025/09/02 AA06 自費 $200
-嚴X雯 王X明 2025/09/03 AA07 補助 $760
-嚴X雯 OO先生 2025/09/03 AA08 自費 $385
-嚴X雯 賴X女 2025/09/06 AA09 補助 $770
-嚴X雯 江X輝 2025/09/01 AA11 補助 $50
-嚴X雯 范X殷 2025-09-05 BA01 補助 1 $260
-嚴X雯 江X輝 2025-09-01 BA07 補助 1 $325
-嚴X雯 張X進 2025-09-02 BA11 自費 2 $195
-嚴X雯 王X美 2025-09-10 BA15-1 補助 1 $195
-嚴X雯 王X美 2025-09-11 BA05-1 補助 2 $310
-嚴X雯 王X美 2025-09-12 BA15-2 補助 1 $195
-嚴X雯 李OO 2025-09-03 GA09 補助 3
-嚴X雯 王OO 2025-09-04 SC09 自費 1`;
-        const r=analyze(d); renderAll(r); last=r; setBar(100);
-        if(statusEl) statusEl.textContent='示範資料已載入';
-        document.getElementById('ps-apply').disabled=false;
-        document.getElementById('ps-csv').disabled=false;
-        document.getElementById('ps-json').disabled=false;
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
-      });
-    })();
-  </script>
-</body>
-</html>
+      // 導覽高亮
+      (function(){
+        fun
