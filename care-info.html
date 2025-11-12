@@ -6,12 +6,9 @@
   <title>長照相關資訊｜補助額度速覽＋服務碼別說明</title>
   <meta name="description" content="長照服務額度試算機，快速查詢CMS等級補助額度、計算自付金額與居服薪資。由 hori 製作。">
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
-
-  <!-- 共用樣式 -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="topbar-fixed.css" />
-
-  <!-- 你的主程式（提供 cmsQuota/GA_CAP/SC_CAP 等常數） -->
+  <!-- 加版本參數避免快取抓舊檔 -->
   <script src="script.js?v=20251104-b2" defer></script>
 
   <style>
@@ -34,17 +31,15 @@
     }
 
     /* ====== 浮水印 ====== */
-    .watermark{ position:fixed; inset:0; pointer-events:none; z-index:999; overflow:hidden; }
+    .watermark{ position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden; }
     .wm-item{
       position:absolute; font-weight:700; font-size:var(--wm-size);
       color:rgba(0,0,0,var(--wm-alpha)); transform:rotate(var(--wm-angle));
       white-space:nowrap; user-select:none; will-change:transform;
       animation:wm-sway var(--dur,12s) ease-in-out infinite alternate;
     }
-    @keyframes wm-sway{
-      0%{ transform:translateX(0) rotate(var(--wm-angle)); }
-      100%{ transform:translateX(var(--wm-shift)) rotate(var(--wm-angle)); }
-    }
+    @keyframes wm-sway{ 0%{transform:translateX(0) rotate(var(--wm-angle));}
+      100%{transform:translateX(var(--wm-shift)) rotate(var(--wm-angle));} }
     @media print{ .watermark{ opacity:.08 } }
 
     /* ====== 本頁元件 ====== */
@@ -53,10 +48,7 @@
       background:var(--card); border:1px solid var(--line);
       border-radius:12px; overflow:hidden; text-align:center; margin-top:10px;
     }
-    .info-table th{
-      background:#f6f1d9; color:#5b5534; padding:10px;
-      font-weight:800; border-bottom:1px solid var(--line);
-    }
+    .info-table th{ background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line); }
     .info-table td{ padding:10px; border-top:1px solid var(--line); font-weight:600; }
     .info-table tbody tr:nth-child(even){ background:#fffef9; }
 
@@ -83,7 +75,6 @@
     .acc-body .subttl{ font-weight:800; color:#5b5534; margin-top:10px; }
     .acc-body ul{ margin:6px 0 10px 1.2em; padding:0; }
     .acc-body li{ margin:4px 0; }
-
     .acc-note{ color:var(--muted); font-size:13px; margin-top:8px; }
 
     @media (max-width:700px){
@@ -92,8 +83,7 @@
   </style>
 </head>
 
-<!-- data-header="lite" 會讓 include.js 載入 header-lite.html（無按鈕版） -->
-<body data-header="lite">
+<body>
   <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
@@ -113,8 +103,32 @@
     <span class="wm-item" style="top:90%; left:75%; --dur:12s;">@hori版權所有</span>
   </div>
 
-  <!-- 由 include.js 動態載入：header-lite.html / footer.html -->
-  <div id="__header"></div>
+  <!-- 統一版型：頂部導覽列（本頁不放功能鍵，用隱形占位維持三欄對齊） -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" class="logo-link" aria-label="回首頁">
+        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
+      </a>
+      <span class="site-title" id="siteTitle">長照相關資訊</span>
+    </div>
+
+    <nav class="nav-links" aria-label="主選單">
+      <a href="index.html">額度計算機</a>
+      <a href="payroll.html">薪資計算機</a>
+      <a href="care-info.html">長照相關資訊</a>
+      <a href="news.html">最新公告</a>
+      <a href="contact.html">聯繫方式</a>
+      <a href="about.html">關於我們</a>
+    </nav>
+
+    <div class="actions actions-ghost" aria-hidden="true">
+      <button class="btn pill btn-orange" type="button" disabled>—</button>
+      <button class="btn pill btn-green"  type="button" disabled>—</button>
+      <button class="btn pill btn-gray"   type="button" disabled>—</button>
+    </div>
+  </header>
+
+  <div class="divider"></div>
 
   <main class="container">
     <!-- 頁首區 -->
@@ -302,7 +316,6 @@
         });
       }
 
-      // 等 script.js 載入常數後再渲染
       let tries=0;
       const timer = setInterval(()=>{
         if (ok() || tries>=1000){
@@ -315,9 +328,50 @@
     });
   </script>
 
-  <!-- 動態載入 header-lite / footer，與全站導覽高亮、<title> 同步 -->
-  <div id="__footer"></div>
-  <script src="include.js?v=20251111-b2"></script>
-  <script src="common.js?v=20251111-b2"></script>
+  <!-- 導覽高亮＋依檔名切換標題（全站一致邏輯） -->
+  <script>
+    (function(){
+      function normalize(href){
+        try{
+          const u=new URL(href, location.origin);
+          let p=u.pathname.trim();
+          if (p.length>1 && p.endsWith('/')) p=p.slice(0,-1);
+          p=p.replace(/\/(index\.html?)?$/i,'/index').replace(/\.html?$/i,'');
+          const parts=p.split('/');
+          return (parts[parts.length-1]||'').toLowerCase();
+        }catch(e){ return ''; }
+      }
+      const here = normalize(location.href);
+
+      // nav 高亮
+      document.querySelectorAll('.nav-links a[href]').forEach(a=>{
+        const target = normalize(a.getAttribute('href'));
+        if (target && target === here) a.classList.add('active');
+      });
+
+      // 依檔名切換站內標題與 <title>
+      const map = {
+        index:'額度計算機',
+        payroll:'薪資計算機',
+        'care-info':'長照相關資訊',
+        news:'最新公告',
+        contact:'聯繫方式',
+        about:'關於我們'
+      };
+      const pageName = map[here] || '長照相關資訊';
+      const st = document.getElementById('siteTitle');
+      if (st) st.textContent = pageName;
+      document.title = `${pageName}｜長照工具`;
+    })();
+
+    // 防拷（可移除）
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
+      if (e.key === 'F12') e.preventDefault();
+    });
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+  </script>
 </body>
 </html>
