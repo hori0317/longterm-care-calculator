@@ -1,12 +1,14 @@
 <header class="topbar">
   <div class="inner">
+    <!-- 品牌（靠左且放大） -->
     <div class="brand">
       <a href="index.html" class="logo-link" aria-label="回首頁">
-        <img src="org-logo.png" alt="logo">
+        <img src="org-logo.png" alt="機構標誌" />
       </a>
       <span class="site-title">長照相關資訊</span>
     </div>
 
+    <!-- 導覽（可水平滑動） -->
     <div class="nav-wrap">
       <nav class="nav-links" aria-label="主選單">
         <a href="index.html">額度計算機</a>
@@ -18,8 +20,11 @@
       </nav>
     </div>
 
-    <!-- 以空容器保寬，確保中間導覽置中；不顯示任何按鈕 -->
-    <div class="actions actions-ghost" aria-hidden="true" style="visibility:hidden"></div>
+    <!-- 佔位容器：固定寬度，保持版位不晃動 -->
+    <div class="actions-ghost" aria-hidden="true">
+      <!-- 空的，但占 240px 欄寬（與 .actions 相同） -->
+      <button class="btn pill btn-gray" type="button" style="opacity:0">占位</button>
+    </div>
   </div>
 </header>
 <div class="divider"></div>
