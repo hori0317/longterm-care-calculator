@@ -32,7 +32,7 @@
     .tbl th.ps-right{ text-align:right; }
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
-    .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
+    .tbl input[type="number"]{width:72px; height:34px; text-align:right;}
     @media (max-width:860px){
       .tbl{display:block; font-size:15px; border:0; background:none; overflow:visible;}
       .tbl thead{display:none;}
@@ -51,9 +51,10 @@
       .tbl td.right{justify-content:space-between;}
       .tbl input[type="number"]{
         width:auto;
-        min-width:calc(3ch + 20px);
-        max-width:110px;
-        height:34px;
+        min-width:calc(2ch + 16px);
+        max-width:96px;
+        height:32px;
+        text-align:right;
       }
       .tbl select{width:100%; max-width:none; height:38px;}
       .tbl td[data-label="設定"]{flex-direction:column; align-items:flex-start; gap:6px;}
