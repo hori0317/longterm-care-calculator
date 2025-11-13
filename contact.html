@@ -1,17 +1,22 @@
+      <!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>聯繫方式｜長照工具</title>
-  <meta name="description" content="機構聯絡方式與服務窗口資訊。" />
+  <meta name="description" content="單位的各式聯繫方法。">
   <link rel="icon" type="image/x-icon" href="YORU.ico" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="topbar-fixed.css" />
-
-<body data-page="contact">
+  <script src="nav.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body data-page="news">
   <header class="topbar">
     <div class="brand">
-      <a href="index.html" class="logo-link" aria-label="回首頁">
-        <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
-      </a>
-      <span class="site-title" data-sync-title>聯繫方式</span>
-
+      <a href="index.html" class="logo-link"><img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" /></a>
+      <span class="site-title" id="siteTitle" data-sync-title>聯繫方式</span>
+    </div>
     <nav class="nav-links" aria-label="主選單">
       <a href="index.html">額度計算機</a>
       <a href="payroll.html">薪資計算機</a>
@@ -27,11 +32,12 @@
   <main class="container">
     <section class="card">
       <h1 class="card-title">聯繫方式</h1>
-      <p>本頁待補上詳細聯絡資訊、地址與服務窗口。</p>
+      <p class="hint">單位的各式聯繫方法</p>
     </section>
   </main>
 
   <footer id="bottomDock" class="footerbar">
-    <div class="foot">
-      <span class="ok">© 長照工具平台</span>
-
+    <div class="foot"><span class="ok">© hori</span></div>
+  </footer>
+</body>
+</html>
