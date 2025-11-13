@@ -32,7 +32,7 @@
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
-    @media (max-width:640px){
+    @media (max-width:860px){
       .tbl{font-size:15px;}
       .tbl thead{display:none;}
       .tbl tbody{display:block;}
@@ -46,7 +46,9 @@
       .tbl td[data-label="代碼＋名稱"]::before,
       .tbl td[data-label="代碼"]::before{margin-bottom:2px;}
       .tbl td.right{justify-content:space-between;}
-      .tbl input[type="number"]{width:100%; max-width:130px; height:34px;}
+      .tbl input[type="number"],
+      .tbl select{width:100%; max-width:180px; height:34px;}
+      .tbl td[data-label="設定"]{flex-direction:column; align-items:flex-start; gap:6px;}
       .tbl tfoot{display:block;}
       .tbl tfoot tr{display:flex; justify-content:space-between; align-items:center; gap:12px;
         padding:10px 12px; border-top:2px solid var(--line);}
@@ -302,11 +304,11 @@
             </thead>
             <tbody>
               <tr>
-                <td><select id="insGrade" style="height:34px;min-width:140px;"></select></td>
-                <td class="right"><input id="insLabor" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
-                <td class="right"><input id="insHealth" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
-                <td class="right mono" id="insSum">0</td>
-                <td>
+                <td data-label="投保級距"><select id="insGrade" style="height:34px;min-width:140px;"></select></td>
+                <td class="right" data-label="勞保（員工）"><input id="insLabor" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
+                <td class="right" data-label="健保（員工）"><input id="insHealth" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
+                <td class="right mono" id="insSum" data-label="合計">0</td>
+                <td data-label="設定">
                   <label class="chip" style="cursor:pointer;">
                     <input id="insAuto" type="checkbox" checked> 自動帶入金額
                   </label>
