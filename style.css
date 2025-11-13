@@ -424,14 +424,14 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables td{
     display:flex;
     flex-direction:column;
-    align-items:flex-end;
+    align-items:flex-start;
     gap:4px;
     padding:12px 8px;
     border:none;
     font-size:15px;
     line-height:1.45;
     white-space:normal;
-    text-align:right;
+    text-align:left;
     min-height:48px;
   }
   #tables td[data-label]::before{
@@ -448,12 +448,12 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables td[data-label*="碼"] .svc-code,
   #tables td[data-label="服務項目"] .svc-code{
     margin-bottom:2px;
-    text-align:right;
+    text-align:left;
     width:100%;
   }
   #tables td[data-label*="碼"] .svc-name,
   #tables td[data-label="服務項目"] .svc-name{
-    text-align:right;
+    text-align:left;
     width:100%;
   }
   #tables .svc-code{ display:block; font-weight:800; color:#5b5534; }
@@ -477,6 +477,8 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     font-weight:800;
     color:#2e7d32;
     padding-right:0;
+    text-align:right;
+    align-items:flex-end;
   }
   #tables td:last-child{ padding-right:4px; }
   .foot{ gap:12px; font-size:14px; }
