@@ -372,10 +372,16 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   display:block;
 }
 
+#tables .svc-text{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+}
+
 #tables .svc-code{
   font-weight:800;
   color:#5b5534;
-  margin-right:6px;
 }
 
 #tables .svc-name{
@@ -447,31 +453,35 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   }
   #tables td[data-label="服務項目"],
   #tables td[data-label*="碼"]{
-    flex-direction:column;
+    flex-direction:row;
     align-items:flex-start;
     justify-content:flex-start;
     text-align:left;
-    gap:2px;
+    gap:12px;
+    flex-wrap:wrap;
     width:100%;
   }
   #tables td[data-label="服務項目"]::before,
   #tables td[data-label*="碼"]::before{
-    margin-bottom:4px;
-    flex-basis:var(--mobile-label-width);
+    margin-bottom:0;
+    align-self:flex-start;
   }
+  #tables td[data-label="服務項目"] .svc-text,
+  #tables td[data-label*="碼"] .svc-text{
+    flex:1 1 auto;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:2px;
+  }
+  #tables td[data-label="服務項目"] .svc-code,
   #tables td[data-label*="碼"] .svc-code,
-  #tables td[data-label="服務項目"] .svc-code{
-    margin-bottom:2px;
+  #tables td[data-label="服務項目"] .svc-name,
+  #tables td[data-label*="碼"] .svc-name{
     text-align:left;
     width:100%;
   }
-  #tables td[data-label*="碼"] .svc-name,
-  #tables td[data-label="服務項目"] .svc-name{
-    text-align:left;
-    width:100%;
-  }
-  #tables .svc-code{ display:block; font-weight:800; color:#5b5534; }
-  #tables .svc-name{ display:block; font-weight:600; }
   #tables td input[type="number"]{
     width:auto;
     min-width:calc(2ch + 12px);
