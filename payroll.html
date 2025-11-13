@@ -66,15 +66,18 @@
     .month-col{text-align:center;}
     @media (min-width:861px){
       :is(#tblAA,#tblBA,#tblGA,#tblSC){table-layout:fixed;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price{width:130px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month{width:170px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:160px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price,
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month,
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:18%;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{text-align:center;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin:0 auto; text-align:center;}
     }
     @media (max-width:860px){
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{align-items:center;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{flex:0 0 auto;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{
+        flex:0 0 auto;
+        margin-right:auto;
+      }
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{
         display:block;
         margin-left:auto;
@@ -83,6 +86,10 @@
         height:28px;
         font-size:12px;
         padding:0 4px;
+        text-align:right;
+      }
+      .tbl td[data-label] input[type="number"]{
+        margin-left:auto;
         text-align:right;
       }
     }
