@@ -422,37 +422,42 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables tbody tr:nth-child(even){ background:#fff; }
   #tables tbody tr.hidden{ display:none !important; }
   #tables td{
-    display:block;
-    position:relative;
-    padding:10px 0 10px 134px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:4px;
+    padding:12px 8px;
     border:none;
     font-size:15px;
     line-height:1.45;
     white-space:normal;
     text-align:right;
-    min-height:38px;
+    min-height:48px;
   }
   #tables td[data-label]::before{
     content:attr(data-label);
-    position:absolute;
-    left:0;
-    top:10px;
-    width:120px;
     font-weight:700;
     color:#5b5534;
     text-align:left;
+    align-self:flex-start;
   }
   #tables td[data-label="服務項目"],
   #tables td[data-label*="碼"]{
-    text-align:left;
-    padding-top:38px;
+    width:100%;
   }
-  #tables td[data-label="服務項目"]::before,
-  #tables td[data-label*="碼"]::before{
-    top:8px;
+  #tables td[data-label*="碼"] .svc-code,
+  #tables td[data-label="服務項目"] .svc-code{
+    margin-bottom:2px;
+    text-align:right;
+    width:100%;
   }
-  #tables td[data-label*="碼"] .svc-code{ margin-bottom:2px; }
-  #tables .svc-code{ display:block; margin-bottom:2px; }
+  #tables td[data-label*="碼"] .svc-name,
+  #tables td[data-label="服務項目"] .svc-name{
+    text-align:right;
+    width:100%;
+  }
+  #tables .svc-code{ display:block; font-weight:800; color:#5b5534; }
+  #tables .svc-name{ display:block; font-weight:600; }
   #tables td input[type="number"]{
     width:auto;
     min-width:calc(4ch + 20px);
@@ -461,7 +466,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     font-size:15px;
     text-align:right;
     margin-left:auto;
-    margin-right:2px;
+    margin-right:0;
     display:block;
   }
   #tables td input[readonly]{
@@ -471,11 +476,9 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables td.cell-amount{
     font-weight:800;
     color:#2e7d32;
-    padding-right:2px;
+    padding-right:0;
   }
-  #tables td{
-    padding-right:4px;
-  }
+  #tables td:last-child{ padding-right:4px; }
   .foot{ gap:12px; font-size:14px; }
 }
 
