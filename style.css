@@ -662,7 +662,7 @@ body[data-page="payroll"] table td:first-child{
 /* 第二欄：出現筆數（GA/SC）或其他數字欄 → 靠右 */
 body[data-page="payroll"] table th:nth-child(2),
 body[data-page="payroll"] table td:nth-child(2){
-  text-align:right !重要;
+  text-align:right !important;
   padding-left:14px !important;
   padding-right:14px !important;
   font-variant-numeric:tabular-nums !important;
@@ -720,6 +720,48 @@ body[data-page="payroll"] #tables thead th:nth-child(n+3){
     margin-left:auto !important;
     margin-right:0 !important;
     text-align:right !important;
+  }
+}
+
+/* =========================================================
+   payroll：BA 本月支數卡片 — 兩欄式排版
+========================================================= */
+body[data-page="payroll"] .service-card .kv-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding:4px 0;
+  font-size:15px;
+}
+body[data-page="payroll"] .service-card .kv-row > *:first-child{
+  font-weight:600;
+  color:#2f2f20;
+}
+body[data-page="payroll"] .service-card .kv-row > *:last-child{
+  min-width:60px;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+body[data-page="payroll"] .service-card .kv-row input[type="number"]{
+  width:64px;
+  height:32px;
+  padding:0 6px;
+  margin-left:auto;
+  margin-right:0;
+  text-align:right;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#fffdf6;
+  font-size:14px;
+  min-width:0;
+}
+@media (max-width:860px){
+  body[data-page="payroll"] .service-card .kv-row input[type="number"]{
+    width:52px;
+    height:28px;
+    font-size:12px;
+    padding:0 4px;
   }
 }
 
