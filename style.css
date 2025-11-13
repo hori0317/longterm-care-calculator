@@ -465,6 +465,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     justify-self:end;
     text-align:right;
     font-variant-numeric:tabular-nums;
+    padding-right:8px;
   }
   #tables td[data-label="服務項目"],
   #tables td[data-label*="碼"]{
@@ -503,15 +504,10 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     font-size:15px;
     text-align:right !important;
     font-variant-numeric:tabular-nums;
-    padding:0 4px 0 0;
+    padding:0 8px 0 0;
     margin:0;
+    margin-right:0;
     justify-self:end;
-  }
-  #tables td .cell-value{
-    padding-right:6px;
-  }
-  #tables td input[type="number"]{
-    margin-right:6px;
   }
   #tables td[data-label$="次數"],
   #tables td[data-label="單價"],
