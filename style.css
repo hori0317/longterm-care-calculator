@@ -373,7 +373,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
 }
 
 /* =====================
-   手機／平板優化（通用，桌機仍維持表格）
+   手機／平板優化（通用）
 ===================== */
 @media (max-width:860px){
   .grid-3{ grid-template-columns:1fr; gap:14px; }
@@ -464,7 +464,7 @@ img,a img{
 }
 
 /* =========================================================
-   ▼▼▼ 卡片文字樣式：版本2 風格（append-only）
+   卡片文字樣式
 ========================================================= */
 .card-title{
   font-size:18px;
@@ -514,8 +514,7 @@ img,a img{
 .orange{ color:var(--orange); }
 
 /* =========================================================
-   手機版 index.html 專用：
-   卡片式服務列排版
+   手機版 index.html：卡片式服務列排版
 ========================================================= */
 @media (max-width:860px){
   body[data-page="index"] #tables{
@@ -605,9 +604,7 @@ img,a img{
   }
 }
 
-/* =========================================================
-   index 手機版：服務表單輸入框再縮小一點
-========================================================= */
+/* index 手機版：輸入框再縮小一點 */
 @media (max-width:860px){
   body[data-page="index"] #tables tbody td:nth-child(3) input[type="number"],
   body[data-page="index"] #tables tbody td:nth-child(4) input[type="number"],
@@ -639,29 +636,32 @@ body[data-page="payroll"] .kv .kv-row b{
 
 /* =========================================================
    payroll：表格欄位對齊
-   1 欄：代碼 → 左
-   2 欄：代碼＋名稱 → 左
-   3 欄以後：出現筆數、Σ支數、本月支數等 → 右
+   1 欄：碼別／代碼 → 左
+   2 欄：出現筆數（或其他數字）→ 右
+   3 欄以後：Σ支數、本月支數、金額… → 右
 ========================================================= */
 body[data-page="payroll"] table th,
 body[data-page="payroll"] table td{
   vertical-align:middle;
 }
 
-/* 代碼欄 */
+/* 第一欄：碼別／代碼 */
 body[data-page="payroll"] table th:first-child,
 body[data-page="payroll"] table td:first-child{
   text-align:left !important;
   padding-left:18px !important;
 }
 
-/* 代碼＋名稱欄 */
+/* 第二欄：出現筆數（GA/SC）、或其他數字欄 */
 body[data-page="payroll"] table th:nth-child(2),
 body[data-page="payroll"] table td:nth-child(2){
-  text-align:left !important;
+  text-align:right !important;
+  padding-right:14px !important;
+  font-variant-numeric:tabular-nums !important;
+  min-width:3.5ch;
 }
 
-/* 數字欄（含 Σ支數、出現筆數、本月支數、金額⋯） */
+/* 第三欄之後：Σ支數、本月支數、金額等 */
 body[data-page="payroll"] table th:nth-child(n+3),
 body[data-page="payroll"] table td:nth-child(n+3){
   text-align:right !important;
@@ -670,23 +670,33 @@ body[data-page="payroll"] table td:nth-child(n+3){
   min-width:3.5ch;
 }
 
+/* 讓數字輸入框本身也貼齊右邊（本月支數欄位） */
+body[data-page="payroll"] table td:nth-child(n+2) input[type="number"]{
+  margin-left:auto !important;
+  margin-right:0 !important;
+  text-align:right !important;
+}
+
 /* 專門覆寫 #tables 的表頭置中設定，避免影響 payroll 對齊 */
-body[data-page="payroll"] #tables thead th:first-child,
-body[data-page="payroll"] #tables thead th:nth-child(2){
+body[data-page="payroll"] #tables thead th:first-child{
   text-align:left !important;
 }
+body[data-page="payroll"] #tables thead th:nth-child(2),
 body[data-page="payroll"] #tables thead th:nth-child(n+3){
   text-align:right !important;
 }
 
 /* =========================================================
-   payroll 手機版：本月支數等 number 欄位縮小
+   payroll 手機版：本月支數等 number 欄位縮小＋向右靠齊
 ========================================================= */
 @media (max-width:860px){
   body[data-page="payroll"] input[type="number"]{
-    max-width:70px;
-    height:30px;
-    font-size:13px;
+    max-width:64px;
+    height:28px;
+    font-size:12px;
     padding:0 4px;
+    margin-left:auto !important;
+    margin-right:0 !important;
+    text-align:right !important;
   }
 }
