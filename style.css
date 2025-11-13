@@ -437,9 +437,9 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     flex:1;
   }
   #tables td input[type="number"]{
-    width:100%;
-    max-width:160px;
-    min-width:96px;
+    width:auto;
+    min-width:calc(4ch + 20px);
+    max-width:calc(8ch + 26px);
     height:38px;
     font-size:15px;
     text-align:right;
