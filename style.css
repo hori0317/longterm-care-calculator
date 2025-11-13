@@ -427,7 +427,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     flex-direction:column;
     border:1px solid var(--line);
     border-radius:12px;
-    padding:12px 14px;
+    padding:12px 8px 12px 12px;
     background:#fff;
     box-shadow:0 1px 2px rgba(0,0,0,.05);
   }
@@ -508,6 +508,9 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     margin-right:0;
     display:block;
   }
+  #tables td[data-label$="次數"] input[type="number"]{
+    margin-right:-2px;
+  }
   #tables td[data-label$="次數"],
   #tables td[data-label="單價"],
   #tables td[data-label="單價(每組)"]{
@@ -522,7 +525,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     color:#2e7d32;
     padding-right:0;
   }
-  #tables td:last-child{ padding-right:4px; }
+  #tables td:last-child{ padding-right:2px; }
   #tables th:first-child,
   #tables td:first-child{
     min-width:0 !important;
