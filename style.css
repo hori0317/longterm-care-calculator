@@ -474,6 +474,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     flex-direction:column;
     align-items:flex-start;
     gap:2px;
+    margin-left:-6px;
   }
   #tables td[data-label="服務項目"] .svc-code,
   #tables td[data-label*="碼"] .svc-code,
