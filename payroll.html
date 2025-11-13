@@ -27,54 +27,202 @@
       display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
     .kpi .box .lbl{color:#7a7557; font-weight:700;}
     .kpi .box .num{font-size:24px; font-weight:900; color:#2e7d32;}
-    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
-      border-radius:12px; overflow:hidden;}
-    .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
-    .tbl th.month-col{text-align:center;}
-    .tbl td{padding:10px; border-top:1px solid var(--line);}
-    .tbl tbody tr:nth-child(even){background:#fffef9;}
-    .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
-    @media (max-width:860px){
-      .tbl{display:block; font-size:15px; border:0; background:none; overflow:visible;}
-      .tbl thead{display:none;}
-      .tbl tbody,.tbl tfoot{display:block; width:100%;}
-      .tbl tbody tr{display:block; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
-        margin-bottom:12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05);}
-      .tbl tbody tr:nth-child(even){background:#fff;}
-      .tbl td{display:flex; gap:12px; justify-content:space-between; align-items:center; padding:6px 0; line-height:1.45;
-        white-space:normal; border-top:none;}
-      .tbl td[data-label]{text-align:left;}
-      .tbl td[data-label]::before{content:attr(data-label); font-weight:700; color:#5b5534; flex:1; text-align:left;}
-      .tbl td[data-label="代碼＋名稱"],
-      .tbl td[data-label="代碼"]{flex-direction:column; align-items:flex-start;}
-      .tbl td[data-label="代碼＋名稱"]::before,
-      .tbl td[data-label="代碼"]::before{margin-bottom:2px;}
-      .tbl td.right{justify-content:space-between;}
-      .tbl input[type="number"],
-      .tbl select{width:100%; max-width:none; height:38px;}
-      .tbl td[data-label="設定"]{flex-direction:column; align-items:flex-start; gap:6px;}
-      .tbl tfoot{border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 12px;}
-      .tbl tfoot tr{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;}
-      .tbl tfoot th{flex:1 1 auto; background:none; border:none; padding:0; text-align:right;}
-      .tbl tfoot th:last-child{flex:0 0 auto; min-width:90px; font-size:18px;}
+
+    /* 共用表格樣式（payroll 專用） */
+    .tbl{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
     }
-    .right{text-align:right;} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+    .tbl th{
+      background:#f6f1d9;
+      color:#5b5534;
+      padding:10px 12px;
+      font-weight:800;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+    }
+    .tbl th.month-col{
+      text-align:center;
+    }
+    .tbl td{
+      padding:10px 12px;
+      border-top:1px solid var(--line);
+      vertical-align:middle;
+    }
+    .tbl tbody tr:nth-child(even){background:#fffef9;}
+    .tbl input[type="number"]{
+      width:90px;
+      height:34px;
+      text-align:right;
+    }
+
+    .right{text-align:right;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
+
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-    .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
-    .month-col{text-align:center;}
-    @media (min-width:861px){
-      :is(#tblAA,#tblBA,#tblGA,#tblSC){table-layout:fixed;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price{width:130px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month{width:170px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:160px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{text-align:center;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin:0 auto; text-align:center;}
+    .pill-note{
+      display:inline-block;
+      padding:2px 8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-weight:700;
+      color:#333;
     }
+    .month-col{text-align:center;}
+
+    /* 桌機時：AA / BA / GA / SC 表格欄位寬度與對齊（單價／本月支數／小計平均分配，單價靠右） */
+    @media (min-width:861px){
+      :is(#tblAA,#tblBA,#tblGA,#tblSC){
+        table-layout:fixed;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-code{
+        width:auto;
+      }
+      /* 單價／本月支數／小計 三欄給相近寬度，視窗縮放時比例穩定 */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price,
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month,
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{
+        width:140px;
+      }
+
+      /* 表頭對齊：代碼靠左、單價/小計靠右、本月支數置中 */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(1){
+        text-align:left;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(2),
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(4){
+        text-align:right;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(3){
+        text-align:center;
+      }
+
+      /* 內容列對齊：代碼靠左，其餘數字欄靠右，本月支數欄的輸入框置中 */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) tbody td:nth-child(1){
+        text-align:left;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) tbody td:nth-child(2),
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) tbody td:nth-child(4){
+        text-align:right;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) tbody td:nth-child(3){
+        text-align:center;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) tbody td:nth-child(3) input{
+        margin:0 auto;
+        text-align:center;
+      }
+    }
+
+    /* 手機版：卡片式表格 + 數字輸入框靠右（包含「本月支數」） */
     @media (max-width:860px){
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{align-items:center;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{flex:0 0 auto;}
+      .tbl{
+        display:block;
+        font-size:15px;
+        border:0;
+        background:none;
+        overflow:visible;
+      }
+      .tbl thead{display:none;}
+      .tbl tbody,
+      .tbl tfoot{
+        display:block;
+        width:100%;
+      }
+      .tbl tbody tr{
+        display:block;
+        border:1px solid var(--line);
+        border-radius:12px;
+        padding:10px 12px;
+        margin-bottom:12px;
+        background:#fff;
+        box-shadow:0 1px 2px rgba(0,0,0,.05);
+      }
+      .tbl tbody tr:nth-child(even){background:#fff;}
+      .tbl td{
+        display:flex;
+        gap:12px;
+        justify-content:space-between;
+        align-items:center;
+        padding:6px 0;
+        line-height:1.45;
+        white-space:normal;
+        border-top:none;
+      }
+      .tbl td[data-label]{
+        text-align:left;
+      }
+      .tbl td[data-label]::before{
+        content:attr(data-label);
+        font-weight:700;
+        color:#5b5534;
+        flex:1;
+        text-align:left;
+      }
+      .tbl td[data-label="代碼＋名稱"],
+      .tbl td[data-label="代碼"]{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .tbl td[data-label="代碼＋名稱"]::before,
+      .tbl td[data-label="代碼"]::before{
+        margin-bottom:2px;
+      }
+      .tbl td.right{
+        justify-content:space-between;
+      }
+      .tbl input[type="number"],
+      .tbl select{
+        width:100%;
+        max-width:none;
+        height:38px;
+      }
+      .tbl td[data-label="設定"]{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:6px;
+      }
+      .tbl tfoot{
+        border:1px solid var(--line);
+        border-radius:12px;
+        background:#fff;
+        padding:10px 12px;
+      }
+      .tbl tfoot tr{
+        display:flex;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+        gap:8px;
+      }
+      .tbl tfoot th{
+        flex:1 1 auto;
+        background:none;
+        border:none;
+        padding:0;
+        text-align:right;
+      }
+      .tbl tfoot th:last-child{
+        flex:0 0 auto;
+        min-width:90px;
+        font-size:18px;
+      }
+
+      /* 「本月支數」那欄：標籤在左，輸入框靠右縮小 */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{
+        align-items:center;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{
+        flex:0 0 auto;
+      }
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{
         display:block;
         margin-left:auto;
@@ -88,21 +236,66 @@
     }
 
     /* PDF 支數小工具（ps- 前綴） */
-    .ps-muted{color:#5b6b81}.ps-small{font-size:.86rem}.ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    .ps-muted{color:#5b6b81}
+    .ps-small{font-size:.86rem}
+    .ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
     .ps-pill{display:inline-block;padding:0 6px;border:1px solid #dbe6ff;background:#eef4ff;border-radius:999px}
-    .ps-grid{display:grid;gap:12px}@media(min-width:920px){.ps-grid{grid-template-columns:1.1fr .9fr}}
-    .ps-drop{border:2px dashed #c7d3ee;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#f9fbff;display:block}
+    .ps-grid{display:grid;gap:12px}
+    @media(min-width:920px){
+      .ps-grid{grid-template-columns:1.1fr .9fr}
+    }
+    .ps-drop{
+      border:2px dashed #c7d3ee;
+      border-radius:12px;
+      padding:18px;
+      text-align:center;
+      cursor:pointer;
+      background:#f9fbff;
+      display:block;
+    }
     .ps-drop:hover{background:#eef4ff}
     .ps-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .ps-btn{border:1px solid #c7d3ee;background:#f3f6ff;color:#102a56;padding:8px 12px;border-radius:10px;cursor:pointer}
+    .ps-btn{
+      border:1px solid #c7d3ee;
+      background:#f3f6ff;
+      color:#102a56;
+      padding:8px 12px;
+      border-radius:10px;
+      cursor:pointer;
+    }
     .ps-btn:disabled{opacity:.5;cursor:not-allowed}
-    .ps-box{background:#fff;border:1px solid #e1e6ef;border-radius:12px;padding:12px;margin-top:10px}
-    .ps-progress{height:10px;background:#eef3ff;border-radius:999px;overflow:hidden}
-    .ps-bar{height:100%;width:0;background:#2667ff;transition:width .2s}
+    .ps-box{
+      background:#fff;
+      border:1px solid #e1e6ef;
+      border-radius:12px;
+      padding:12px;
+      margin-top:10px;
+    }
+    .ps-progress{
+      height:10px;
+      background:#eef3ff;
+      border-radius:999px;
+      overflow:hidden;
+    }
+    .ps-bar{
+      height:100%;
+      width:0;
+      background:#2667ff;
+      transition:width .2s;
+    }
     .ps-h3{margin:.2rem 0 8px}
     .ps-table{width:100%;border-collapse:collapse}
-    .ps-table thead th{background:#eef3ff;color:#102a56;text-align:left;padding:8px;border-bottom:1px solid #d8e2ff}
-    .ps-table tbody td{padding:8px;border-bottom:1px solid #edf1f7}
+    .ps-table thead th{
+      background:#eef3ff;
+      color:#102a56;
+      text-align:left;
+      padding:8px;
+      border-bottom:1px solid #d8e2ff;
+    }
+    .ps-table tbody td{
+      padding:8px;
+      border-bottom:1px solid #edf1f7;
+    }
     .ps-table tbody tr:hover{background:#f5f8ff}
     .ps-right{text-align:right}
     .ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
@@ -265,7 +458,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:220px;">代碼</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:220px;">代碼</th>
+            <th class="right">單價</th>
+            <th class="month-col">本月支數</th>
+            <th class="right">小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">AA 小計</th><th class="right" id="sumAA">0</th></tr></tfoot>
       </table>
@@ -282,7 +482,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:260px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:260px;">代碼＋名稱</th>
+            <th class="right">單價</th>
+            <th class="month-col">本月支數</th>
+            <th class="right">小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">BA 小計</th><th class="right" id="sumBA">0</th></tr></tfoot>
       </table>
@@ -298,7 +505,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:220px;">代碼＋名稱</th>
+            <th class="right">單價</th>
+            <th class="month-col">本月支數</th>
+            <th class="right">小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">GA 小計</th><th class="right" id="sumGA">0</th></tr></tfoot>
       </table>
@@ -314,7 +528,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:220px;">代碼＋名稱</th>
+            <th class="right">單價</th>
+            <th class="month-col">本月支數</th>
+            <th class="right">小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">SC 小計</th><th class="right" id="sumSC">0</th></tr></tfoot>
       </table>
@@ -544,13 +765,13 @@
           sel.appendChild(opt);
         });
       }
-function findGradeBySalary(sal){
-  const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
-  for (const v of list){
-    if (sal <= v) return v;  // 找到第一個「大於等於薪資」的級距
-  }
-  return list[list.length-1]; // 超過最高級距時用最後一級
-}
+      function findGradeBySalary(sal){
+        const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
+        for (const v of list){
+          if (sal <= v) return v;  // 找到第一個「大於等於薪資」的級距
+        }
+        return list[list.length-1]; // 超過最高級距時用最後一級
+      }
       function getRow(grade){
         return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0];
       }
@@ -625,6 +846,8 @@ function findGradeBySalary(sal){
             $('#insHealth').value = row.health;
           }
           syncInsuranceBySalary(+($('#resSalary').textContent||'').replace(/,/g,''));
+
+`;;
           saveAll();
         });
         $('#insLabor').addEventListener('input', ()=>{
