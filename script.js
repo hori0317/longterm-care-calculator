@@ -203,7 +203,7 @@ function renderTables(){
         tdGrp.dataset.label = "每月組數";
         tdAmt.dataset.label = "總金額";
 
-        tdItem.textContent = `${item.code} ${item.name}`;
+        tdItem.innerHTML = `<span class="svc-code">${item.code}</span><span class="svc-name">${item.name}</span>`;
         tdPrice.className = "cell-price";
         tdPrice.textContent = (Number(item.price)||0).toLocaleString();
         tdAmt.className = "cell-amount";
@@ -242,7 +242,7 @@ function renderTables(){
         tdTot.dataset.label = "總次數";
         tdAmt.dataset.label = "總金額";
 
-        tdItem.textContent = `${item.code} ${item.name}`;
+        tdItem.innerHTML = `<span class="svc-code">${item.code}</span><span class="svc-name">${item.name}</span>`;
         tdPrice.className = "cell-price";
         tdPrice.textContent = (Number(item.price)||0).toLocaleString();
 

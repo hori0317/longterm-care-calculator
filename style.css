@@ -372,6 +372,17 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   display:block;
 }
 
+#tables .svc-code{
+  font-weight:800;
+  color:#5b5534;
+  margin-right:6px;
+}
+
+#tables .svc-name{
+  font-weight:600;
+  color:#2f2f20;
+}
+
 /* =====================
    手機／平板優化
 ===================== */
@@ -434,11 +445,14 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables td[data-label="服務項目"],
   #tables td[data-label*="碼"]{
     text-align:left;
+    padding-top:38px;
   }
   #tables td[data-label="服務項目"]::before,
   #tables td[data-label*="碼"]::before{
-    top:6px;
+    top:8px;
   }
+  #tables td[data-label*="碼"] .svc-code{ margin-bottom:2px; }
+  #tables .svc-code{ display:block; margin-bottom:2px; }
   #tables td input[type="number"]{
     width:auto;
     min-width:calc(4ch + 20px);
@@ -447,7 +461,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     font-size:15px;
     text-align:right;
     margin-left:auto;
-    margin-right:0;
+    margin-right:2px;
     display:block;
   }
   #tables td input[readonly]{
@@ -457,6 +471,10 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables td.cell-amount{
     font-weight:800;
     color:#2e7d32;
+    padding-right:2px;
+  }
+  #tables td{
+    padding-right:4px;
   }
   .foot{ gap:12px; font-size:14px; }
 }
