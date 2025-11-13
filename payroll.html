@@ -75,7 +75,15 @@
     @media (max-width:860px){
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{align-items:center;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{flex:0 0 auto;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin-left:auto; width:110px; max-width:45%;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{
+        margin-left:auto;
+        margin-right:0;
+        width:52px;
+        height:28px;
+        font-size:12px;
+        padding:0 4px;
+        text-align:right;
+      }
     }
 
     /* PDF 支數小工具（ps- 前綴） */
