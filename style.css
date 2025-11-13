@@ -509,7 +509,8 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     display:block;
   }
   #tables td[data-label$="次數"] input[type="number"]{
-    margin-right:-6px;
+    margin-right:-12px;
+    padding-right:0;
   }
   #tables td[data-label$="次數"],
   #tables td[data-label="單價"],
