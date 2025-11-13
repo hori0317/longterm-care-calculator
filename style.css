@@ -438,10 +438,12 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   }
   #tables td input[type="number"]{
     width:100%;
-    max-width:none;
+    max-width:160px;
+    min-width:96px;
     height:38px;
     font-size:15px;
     text-align:right;
+    margin-left:auto;
   }
   #tables td input[readonly]{
     background:#f9f7ee;
