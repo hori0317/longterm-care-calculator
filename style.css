@@ -127,8 +127,32 @@ a:hover{ text-decoration:underline; }
 .nav-links a.active{ color:var(--orange); }
 .nav-links a.active::after{
   content:"";
-  position:absolute; left:0; right:0; bottom:-6px;
+  position:absolute; left:0; right:0; bottom:0;
   height:3px; background:var(--orange); border-radius:3px;
+}
+
+body[data-page="index"] .nav-links a[href="index.html"],
+body[data-page="payroll"] .nav-links a[href="payroll.html"],
+body[data-page="care-info"] .nav-links a[href="care-info.html"],
+body[data-page="news"] .nav-links a[href="news.html"],
+body[data-page="contact"] .nav-links a[href="contact.html"],
+body[data-page="about"] .nav-links a[href="about.html"]{
+  color:var(--orange);
+  transform:translateY(-1px);
+}
+
+body[data-page="index"] .nav-links a[href="index.html"]::after,
+body[data-page="payroll"] .nav-links a[href="payroll.html"]::after,
+body[data-page="care-info"] .nav-links a[href="care-info.html"]::after,
+body[data-page="news"] .nav-links a[href="news.html"]::after,
+body[data-page="contact"] .nav-links a[href="contact.html"]::after,
+body[data-page="about"] .nav-links a[href="about.html"]::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height:3px;
+  background:var(--orange);
+  border-radius:3px;
 }
 
 /* 右側按鈕區 */
@@ -348,6 +372,28 @@ a:hover{ text-decoration:underline; }
   display:block;
 }
 
+#tables .svc-text{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+}
+
+#tables .cell-price{
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+
+#tables .svc-code{
+  font-weight:800;
+  color:#5b5534;
+}
+
+#tables .svc-name{
+  font-weight:600;
+  color:#2f2f20;
+}
+
 /* =====================
    手機／平板優化
 ===================== */
@@ -357,23 +403,131 @@ a:hover{ text-decoration:underline; }
   .topbar{ padding:14px 16px; }
   .footerbar{ padding-bottom:max(10px, env(safe-area-inset-bottom)); }
   #tables{
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
     padding-bottom:calc(var(--dock-h) + 14px);
-    display:block;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
   }
   #tables table{
-    min-width:780px;
-    table-layout:fixed;
-    width:max-content;
+    width:100%;
+    border:0;
+    border-radius:0;
+    background:none;
+    table-layout:auto;
+    display:block;
   }
-  #tables th,#tables td{
-    padding:10px 12px;
+  #tables thead{ display:none; }
+  #tables tbody{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  #tables tbody tr{
+    display:flex;
+    flex-direction:column;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:0;
+    background:#fff;
+    box-shadow:0 2px 6px rgba(74,64,16,.12);
+    overflow:hidden;
+  }
+  #tables tbody tr:nth-child(even){ background:#fff; }
+  #tables tbody tr.hidden{ display:none !important; }
+  #tables td{
+    display:grid;
+    grid-template-columns:var(--mobile-label-width) 1fr;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px;
+    border:none;
+    font-size:15px;
+    line-height:1.45;
+    white-space:normal;
+    text-align:left;
+    min-height:48px;
+    width:100%;
+  }
+  #tables tbody tr > td + td{
+    border-top:0;
+  }
+  #tables{ --mobile-label-width:96px; }
+  #tables td[data-label]::before{
+    content:attr(data-label);
+    font-weight:700;
+    color:#5b5534;
+    text-align:left;
+    display:block;
+    grid-column:1;
+  }
+  #tables td .cell-value{
+    grid-column:2;
+    justify-self:end;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  #tables td[data-label="服務項目"],
+  #tables td[data-label*="碼"]{
+    align-items:flex-start;
+    grid-auto-rows:auto;
+    padding-top:14px;
+    padding-bottom:10px;
+  }
+  #tables td[data-label="服務項目"]::before,
+  #tables td[data-label*="碼"]::before{
+    margin-bottom:6px;
+  }
+  #tables td[data-label="服務項目"] .svc-text,
+  #tables td[data-label*="碼"] .svc-text{
+    grid-column:1 / span 2;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:2px;
+  }
+  #tables td[data-label="服務項目"] .svc-code,
+  #tables td[data-label*="碼"] .svc-code{
+    font-size:15px;
+  }
+  #tables td[data-label="服務項目"] .svc-name,
+  #tables td[data-label*="碼"] .svc-name{
     font-size:14px;
-    line-height:1.2;
-    white-space:nowrap;
+    color:#4a4426;
   }
-  #tables input[type="number"]{ width:58px; height:32px; font-size:14px; }
+  #tables td input[type="number"]{
+    width:auto;
+    min-width:calc(2ch + 8px);
+    max-width:calc(4.5ch + 12px);
+    height:34px;
+    font-size:15px;
+    text-align:right !important;
+    font-variant-numeric:tabular-nums;
+    padding:0 2px 0 0;
+    margin:0;
+    justify-self:end;
+  }
+  #tables td[data-label$="次數"],
+  #tables td[data-label="單價"],
+  #tables td[data-label="單價(每組)"],
+  #tables td.cell-amount{
+    padding-right:4px;
+  }
+  #tables td input[readonly]{
+    background:#f9f7ee;
+    color:#5f5a41;
+  }
+  #tables td.cell-amount{
+    font-weight:800;
+    color:#2e7d32;
+    padding-right:0;
+  }
+  #tables td:last-child{ padding-right:2px; }
+  #tables th:first-child,
+  #tables td:first-child{
+    min-width:0 !important;
+  }
+  .service-card{ overflow:hidden; }
   .foot{ gap:12px; font-size:14px; }
 }
 
