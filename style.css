@@ -373,7 +373,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
 }
 
 /* =====================
-   手機／平板優化
+   手機／平板優化（通用，桌機仍維持表格）
 ===================== */
 @media (max-width:860px){
   .grid-3{ grid-template-columns:1fr; gap:14px; }
@@ -514,75 +514,101 @@ img,a img{
 .orange{ color:var(--orange); }
 
 /* =========================================================
-   手機版 index.html 專用：避免擠壓＋數字對齊
-   （只影響 data-page="index"；電腦版維持原樣）
+   手機版 index.html 專用：
+   將每列改成「一張卡片」排版，避免服務項目與單價擠在一起
+   僅影響 data-page="index"，桌機版維持原表格
 ========================================================= */
 @media (max-width:860px){
-
-  /* 1. 取消 index 的橫向捲動，寬度撐滿螢幕 */
+  /* 只改 index 頁面 */
   body[data-page="index"] #tables{
     overflow-x:visible !important;
     padding-bottom:14px !important;
-    display:block;
   }
   body[data-page="index"] #tables table{
-    min-width:100% !important;
     width:100% !important;
+    min-width:0 !important;
     table-layout:fixed;
+    border-collapse:separate;
+    border-spacing:0 10px; /* 每一列變成一張小卡片 */
   }
 
-  /* 2. 服務名稱允許換行，避免被擠到看不清楚 */
-  body[data-page="index"] #tables th:first-child,
-  body[data-page="index"] #tables td:first-child{
-    white-space:normal !important;
-    line-height:1.3;
+  /* 隱藏表頭，改由每個欄位自己顯示標籤 */
+  body[data-page="index"] #tables thead{
+    display:none;
   }
 
-  /* 3. 各欄位大致比例，讓欄寬比較均衡 */
-  body[data-page="index"] #tables colgroup col:nth-child(1){ width:34% !important; }
-  body[data-page="index"] #tables colgroup col:nth-child(2){ width:13% !important; }
-  body[data-page="index"] #tables colgroup col:nth-child(3),
-  body[data-page="index"] #tables colgroup col:nth-child(4),
-  body[data-page="index"] #tables colgroup col:nth-child(5){ width:13% !important; }
-  body[data-page="index"] #tables colgroup col:nth-child(6){ width:14% !important; }
-
-  /* 若沒有 colgroup，退而求其次用 th/td 調整 */
-  body[data-page="index"] #tables thead th:nth-child(1),
-  body[data-page="index"] #tables tbody td:nth-child(1){ width:34% !important; }
-  body[data-page="index"] #tables thead th:nth-child(2),
-  body[data-page="index"] #tables tbody td:nth-child(2){ width:13% !important; }
-  body[data-page="index"] #tables thead th:nth-child(3),
-  body[data-page="index"] #tables tbody td:nth-child(3),
-  body[data-page="index"] #tables thead th:nth-child(4),
-  body[data-page="index"] #tables tbody td:nth-child(4),
-  body[data-page="index"] #tables thead th:nth-child(5),
-  body[data-page="index"] #tables tbody td:nth-child(5){ width:13% !important; }
-  body[data-page="index"] #tables thead th:nth-child(6),
-  body[data-page="index"] #tables tbody td:nth-child(6){ width:14% !important; }
-
-  /* 4. 數字欄位對齊：單價＋總金額靠右，input 也向右貼齊 */
-  body[data-page="index"] #tables th:nth-child(2),
-  body[data-page="index"] #tables td:nth-child(2),
-  body[data-page="index"] #tables th:nth-child(6),
-  body[data-page="index"] #tables td:nth-child(6){
-    text-align:right !important;
-    padding-right:10px !important;
-    font-variant-numeric:tabular-nums !important;
+  body[data-page="index"] #tables tbody tr{
+    display:block;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:8px 10px 6px;
   }
 
-  body[data-page="index"] #tables td:nth-child(3) input[type="number"],
-  body[data-page="index"] #tables td:nth-child(4) input[type="number"],
-  body[data-page="index"] #tables td:nth-child(5) input[type="number"]{
+  body[data-page="index"] #tables tbody td{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:4px 0;
+    border-top:none;
+    white-space:normal;
+    font-size:13px;
+  }
+
+  /* 第一欄：服務項目，上方顯示「服務項目」標籤＋換行顯示 BA01／名稱 */
+  body[data-page="index"] #tables tbody td:first-child{
+    flex-direction:column;
+    align-items:flex-start;
+    padding-bottom:6px;
+    margin-bottom:4px;
+    border-bottom:1px dashed var(--line);
+    font-weight:700;
+  }
+  body[data-page="index"] #tables tbody td:first-child::before{
+    content:"服務項目";
+    font-size:12px;
+    color:var(--muted);
+    font-weight:500;
+    margin-bottom:2px;
+  }
+
+  /* 其餘欄位：左側是小標籤，右側是數字／輸入框 */
+  body[data-page="index"] #tables tbody td:nth-child(n+2){
+    text-align:right;
+    gap:8px;
+  }
+  body[data-page="index"] #tables tbody td:nth-child(n+2)::before{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:500;
+    margin-right:6px;
+  }
+  body[data-page="index"] #tables tbody td:nth-child(2)::before{ content:"單價"; }
+  body[data-page="index"] #tables tbody td:nth-child(3)::before{ content:"週次數"; }
+  body[data-page="index"] #tables tbody td:nth-child(4)::before{ content:"月次數"; }
+  body[data-page="index"] #tables tbody td:nth-child(5)::before{ content:"總次數"; }
+  body[data-page="index"] #tables tbody td:nth-child(6)::before{ content:"總金額"; }
+
+  /* 數字對齊：右側全部對齊 */
+  body[data-page="index"] #tables tbody td:nth-child(2),
+  body[data-page="index"] #tables tbody td:nth-child(6){
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* 手機上輸入框：靠右貼齊 */
+  body[data-page="index"] #tables tbody td:nth-child(3) input[type="number"],
+  body[data-page="index"] #tables tbody td:nth-child(4) input[type="number"],
+  body[data-page="index"] #tables tbody td:nth-child(5) input[type="number"]{
     margin-left:auto !important;
     margin-right:0 !important;
-    display:block !important;
     text-align:right !important;
+    width:64px;
+    height:32px;
+    font-size:13px;
   }
 
-  /* 5. 手機上再微調一下字級與 padding，減少擁擠感 */
-  body[data-page="index"] #tables th,
-  body[data-page="index"] #tables td{
-    padding:8px 6px !important;
-    font-size:13px !important;
+  /* 手機上整體字級微調，避免過度擁擠 */
+  body[data-page="index"] #tables tbody td{
+    font-size:13px;
   }
 }
