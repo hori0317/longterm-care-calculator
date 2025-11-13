@@ -30,6 +30,7 @@
     .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
       border-radius:12px; overflow:hidden;}
     .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
+    .tbl th.month-col{text-align:center;}
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
@@ -64,14 +65,17 @@
     .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
     .month-col{text-align:center;}
     @media (min-width:861px){
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) th.month-col{width:150px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{text-align:center; width:150px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC){table-layout:fixed;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price{width:130px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month{width:170px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:160px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{text-align:center;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin:0 auto; text-align:center;}
     }
     @media (max-width:860px){
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{align-items:center;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{flex:0 0 auto;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin-left:auto; width:130px; max-width:50%;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin-left:auto; width:110px; max-width:45%;}
     }
 
     /* PDF 支數小工具（ps- 前綴） */
@@ -246,7 +250,13 @@
     <section class="card">
       <h2 class="card-title">② AA 本月支數</h2>
       <table class="tbl" id="tblAA">
-        <thead><tr><th style="min-width:220px;">代碼</th><th class="right">單價</th><th class="right month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:220px;">代碼</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">AA 小計</th><th class="right" id="sumAA">0</th></tr></tfoot>
       </table>
@@ -257,7 +267,13 @@
     <section class="card">
       <h2 class="card-title">③ BA 本月支數</h2>
       <table class="tbl" id="tblBA">
-        <thead><tr><th style="min-width:260px;">代碼＋名稱</th><th class="right">單價</th><th class="right month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:260px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">BA 小計</th><th class="right" id="sumBA">0</th></tr></tfoot>
       </table>
@@ -267,7 +283,13 @@
     <section class="card">
       <h2 class="card-title">④ GA 本月支數</h2>
       <table class="tbl" id="tblGA">
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="right month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">GA 小計</th><th class="right" id="sumGA">0</th></tr></tfoot>
       </table>
@@ -277,7 +299,13 @@
     <section class="card">
       <h2 class="card-title">⑤ SC 本月支數</h2>
       <table class="tbl" id="tblSC">
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="right month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">SC 小計</th><th class="right" id="sumSC">0</th></tr></tfoot>
       </table>
@@ -428,7 +456,7 @@
           tr.innerHTML = `
             <td data-label="代碼">${code}</td>
             <td class="right mono" data-label="單價">${F(price)}</td>
-            <td class="right" data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
+            <td data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
             <td class="right mono" data-label="小計" data-aa-sum="${code}">0</td>
           `;
           host.appendChild(tr);
@@ -444,7 +472,7 @@
           tr.innerHTML = `
             <td data-label="代碼＋名稱">${item.code}${item.name ? ' ' + item.name : ''}</td>
             <td class="right mono" data-label="單價">${F(item.price)}</td>
-            <td class="right" data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
+            <td data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
             <td class="right mono" data-label="小計" data-${k}-sum="${item.code}">0</td>
           `;
           host.appendChild(tr);
