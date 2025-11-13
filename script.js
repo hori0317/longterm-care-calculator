@@ -205,9 +205,9 @@ function renderTables(){
 
         tdItem.innerHTML = `<div class="svc-text"><span class="svc-code">${item.code}</span><span class="svc-name">${item.name}</span></div>`;
         tdPrice.className = "cell-price";
-        tdPrice.textContent = (Number(item.price)||0).toLocaleString();
+        tdPrice.innerHTML = `<span class="cell-value">${(Number(item.price)||0).toLocaleString()}</span>`;
         tdAmt.className = "cell-amount";
-        tdAmt.textContent = "0";
+        tdAmt.innerHTML = '<span class="cell-value cell-amount-value">0</span>';
 
         const gInp = document.createElement("input");
         gInp.className = "inp-c-groups";
@@ -244,7 +244,7 @@ function renderTables(){
 
         tdItem.innerHTML = `<div class="svc-text"><span class="svc-code">${item.code}</span><span class="svc-name">${item.name}</span></div>`;
         tdPrice.className = "cell-price";
-        tdPrice.textContent = (Number(item.price)||0).toLocaleString();
+        tdPrice.innerHTML = `<span class="cell-value">${(Number(item.price)||0).toLocaleString()}</span>`;
 
         const week = document.createElement("input");
         const month = document.createElement("input");
@@ -278,7 +278,8 @@ function renderTables(){
         total.addEventListener("change", onTotalChange);
 
         tdWk.appendChild(week); tdMon.appendChild(month); tdTot.appendChild(total);
-        tdAmt.className="cell-amount"; tdAmt.textContent="0";
+        tdAmt.className="cell-amount";
+        tdAmt.innerHTML = '<span class="cell-value cell-amount-value">0</span>';
 
         tr.appendChild(tdItem); tr.appendChild(tdPrice); tr.appendChild(tdWk); tr.appendChild(tdMon); tr.appendChild(tdTot); tr.appendChild(tdAmt);
       }
@@ -302,7 +303,7 @@ function updateOneRow(code, idx){
   if(!tr) return;
   const price = Number(serviceData[code][idx].price) || 0;
   const use = toInt(tr.dataset.use);
-  const cell = tr.querySelector(".cell-amount");
+  const cell = tr.querySelector(".cell-amount-value") || tr.querySelector(".cell-amount");
   if(cell) cell.textContent = (price * use).toLocaleString();
 }
 
@@ -362,7 +363,7 @@ function updateResults(){
       else if (g==="SC")  sumSC += amt;
       else                sumBA += amt;
 
-      const cell=tr.querySelector(".cell-amount");
+      const cell=tr.querySelector(".cell-amount-value") || tr.querySelector(".cell-amount");
       if(cell) cell.textContent = amt.toLocaleString();
     });
   });
@@ -485,7 +486,7 @@ function applyUnitEffects(){
         tr.querySelectorAll("input").forEach(inp=>{
           inp.value = 0; inp.disabled = true;
         });
-        const cell = tr.querySelector(".cell-amount");
+        const cell = tr.querySelector(".cell-amount-value") || tr.querySelector(".cell-amount");
         if (cell) cell.textContent = "0";
       });
     }else{
@@ -512,7 +513,7 @@ function applyUnitEffects(){
         if (week)  { week.value = 0; week.disabled = true; }
         if (month) { month.value = 0; }
         if (total) { total.value = 0; total.disabled = true; }
-        const cell = tr.querySelector(".cell-amount");
+        const cell = tr.querySelector(".cell-amount-value") || tr.querySelector(".cell-amount");
         if (cell) cell.textContent = "0";
       }else{
         tr.classList.remove("hidden");
