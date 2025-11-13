@@ -194,7 +194,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
 .foot .warn{ color:var(--warn); }
 
 /* =====================
-   容器與卡片（縮小左右空白）
+   容器與卡片
 ===================== */
 .container{
   max-width:1360px;
@@ -426,7 +426,7 @@ img,a img{
 }
 
 /* =========================================================
-   ▼▼▼ 修補區
+   修補區
 ========================================================= */
 .topbar,.nav-links{
   overflow-x:auto !important;
@@ -514,7 +514,7 @@ img,a img{
 .orange{ color:var(--orange); }
 
 /* =========================================================
-   手機版 index.html：卡片式服務列排版
+   手機版 index：卡片式服務列排版
 ========================================================= */
 @media (max-width:860px){
   body[data-page="index"] #tables{
@@ -604,7 +604,7 @@ img,a img{
   }
 }
 
-/* index 手機版：輸入框再縮小一點 */
+/* index 手機版輸入框再縮小 */
 @media (max-width:860px){
   body[data-page="index"] #tables tbody td:nth-child(3) input[type="number"],
   body[data-page="index"] #tables tbody td:nth-child(4) input[type="number"],
@@ -635,24 +635,31 @@ body[data-page="payroll"] .kv .kv-row b{
 }
 
 /* =========================================================
-   payroll：表格欄位對齊
-   1 欄：碼別／代碼 → 左
-   2 欄：出現筆數（或其他數字）→ 右
-   3 欄以後：Σ支數、本月支數、金額… → 右
+   payroll：表格欄位對齊＋欄寬固定
 ========================================================= */
+
+/* 讓 payroll 主表欄寬固定，不會因為匯入資料跳來跳去 */
+body[data-page="payroll"] #tables table{
+  table-layout:fixed;
+}
+body[data-page="payroll"] #tables th,
+body[data-page="payroll"] #tables td{
+  white-space:nowrap;
+}
+
 body[data-page="payroll"] table th,
 body[data-page="payroll"] table td{
   vertical-align:middle;
 }
 
-/* 第一欄：碼別／代碼 */
+/* 第一欄：碼別／代碼靠左 */
 body[data-page="payroll"] table th:first-child,
 body[data-page="payroll"] table td:first-child{
   text-align:left !important;
   padding-left:18px !important;
 }
 
-/* 第二欄：出現筆數（GA/SC）、或其他數字欄 */
+/* 第二欄：出現筆數（GA/SC）或其他數字欄 → 靠右 */
 body[data-page="payroll"] table th:nth-child(2),
 body[data-page="payroll"] table td:nth-child(2){
   text-align:right !important;
@@ -661,7 +668,7 @@ body[data-page="payroll"] table td:nth-child(2){
   min-width:3.5ch;
 }
 
-/* 第三欄之後：Σ支數、本月支數、金額等 */
+/* 第三欄之後：Σ支數、本月支數、金額… → 預設靠右 */
 body[data-page="payroll"] table th:nth-child(n+3),
 body[data-page="payroll"] table td:nth-child(n+3){
   text-align:right !important;
@@ -670,24 +677,36 @@ body[data-page="payroll"] table td:nth-child(n+3){
   min-width:3.5ch;
 }
 
-/* 讓數字輸入框本身也貼齊右邊（本月支數欄位） */
+/* 「本月支數」欄（假定在第 4 欄）表頭＋輸入框置中對齊 */
+body[data-page="payroll"] table th:nth-child(4),
+body[data-page="payroll"] table td:nth-child(4){
+  text-align:center !important;
+}
+body[data-page="payroll"] table td:nth-child(4) input[type="number"]{
+  margin:0 auto !important;
+  text-align:center !important;
+}
+
+/* 數字輸入框（本月支數等）在桌機時預設貼齊欄位右側 */
 body[data-page="payroll"] table td:nth-child(n+2) input[type="number"]{
   margin-left:auto !important;
   margin-right:0 !important;
   text-align:right !important;
 }
 
-/* 專門覆寫 #tables 的表頭置中設定，避免影響 payroll 對齊 */
+/* 覆寫通用 thead 置中，避免干擾 payroll 的對齊 */
 body[data-page="payroll"] #tables thead th:first-child{
   text-align:left !important;
 }
-body[data-page="payroll"] #tables thead th:nth-child(2),
+body[data-page="payroll"] #tables thead th:nth-child(2){
+  text-align:right !important;
+}
 body[data-page="payroll"] #tables thead th:nth-child(n+3){
   text-align:right !important;
 }
 
 /* =========================================================
-   payroll 手機版：本月支數等 number 欄位縮小＋向右靠齊
+   payroll 手機版：本月支數輸入框縮小＋靠右
 ========================================================= */
 @media (max-width:860px){
   body[data-page="payroll"] input[type="number"]{
