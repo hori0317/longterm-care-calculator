@@ -380,7 +380,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
 }
 
 #tables .cell-price{
-  text-align:right;
+  text-align:center;
   font-variant-numeric:tabular-nums;
 }
 
@@ -579,7 +579,7 @@ img,a img{
 }
 #tables th:not(:first-child),
 #tables td:not(:first-child){
-  text-align:right !important;
+  text-align:center !important;
   font-variant-numeric:tabular-nums !important;
 }
 #tables input[type="number"]{
@@ -619,9 +619,9 @@ img,a img{
   color:var(--muted);
   font-size:13px;
 }
-#tables thead th{ text-align:right !important; }
+#tables thead th{ text-align:center !important; }
 #tables td,#tables th{
-  text-align:right;
+  text-align:center;
   vertical-align:middle;
   font-variant-numeric:tabular-nums;
 }
