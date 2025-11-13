@@ -515,8 +515,7 @@ img,a img{
 
 /* =========================================================
    手機版 index.html 專用：
-   將每列改成「一張卡片」排版，避免服務項目與單價擠在一起
-   僅影響 data-page="index"，桌機版維持原表格
+   卡片式服務列排版
 ========================================================= */
 @media (max-width:860px){
   /* 只改 index 頁面 */
@@ -529,10 +528,9 @@ img,a img{
     min-width:0 !important;
     table-layout:fixed;
     border-collapse:separate;
-    border-spacing:0 10px; /* 每一列變成一張小卡片 */
+    border-spacing:0 10px;
   }
 
-  /* 隱藏表頭，改由每個欄位自己顯示標籤 */
   body[data-page="index"] #tables thead{
     display:none;
   }
@@ -555,7 +553,6 @@ img,a img{
     font-size:13px;
   }
 
-  /* 第一欄：服務項目，上方顯示「服務項目」標籤＋換行顯示 BA01／名稱 */
   body[data-page="index"] #tables tbody td:first-child{
     flex-direction:column;
     align-items:flex-start;
@@ -572,7 +569,6 @@ img,a img{
     margin-bottom:2px;
   }
 
-  /* 其餘欄位：左側是小標籤，右側是數字／輸入框 */
   body[data-page="index"] #tables tbody td:nth-child(n+2){
     text-align:right;
     gap:8px;
@@ -589,13 +585,11 @@ img,a img{
   body[data-page="index"] #tables tbody td:nth-child(5)::before{ content:"總次數"; }
   body[data-page="index"] #tables tbody td:nth-child(6)::before{ content:"總金額"; }
 
-  /* 數字對齊：右側全部對齊 */
   body[data-page="index"] #tables tbody td:nth-child(2),
   body[data-page="index"] #tables tbody td:nth-child(6){
     font-variant-numeric:tabular-nums;
   }
 
-  /* 手機上輸入框：靠右貼齊（之後再縮小一點） */
   body[data-page="index"] #tables tbody td:nth-child(3) input[type="number"],
   body[data-page="index"] #tables tbody td:nth-child(4) input[type="number"],
   body[data-page="index"] #tables tbody td:nth-child(5) input[type="number"]{
@@ -607,7 +601,6 @@ img,a img{
     font-size:13px;
   }
 
-  /* 手機上整體字級微調，避免過度擁擠 */
   body[data-page="index"] #tables tbody td{
     font-size:13px;
   }
@@ -628,7 +621,7 @@ img,a img{
 }
 
 /* =========================================================
-   payroll：Σ支數、出現筆數與數字對齊，格式一致
+   payroll：上方 KV 區 Σ支數、出現筆數 字型與對齊
 ========================================================= */
 body[data-page="payroll"] .kv .kv-row{
   display:flex;
@@ -646,18 +639,49 @@ body[data-page="payroll"] .kv .kv-row b{
 }
 
 /* =========================================================
-   payroll：代碼 / 代碼+名稱 與內容對齊
+   payroll：所有表格欄位對齊
+   - 第 1 欄：代碼 → 靠左
+   - 第 2 欄：代碼＋名稱 或其他文字欄 → 靠左
+   - 第 3 欄以後多半是數字欄 → 靠右、使用等寬數字
 ========================================================= */
-body[data-page="payroll"] #tables th:nth-child(1),
-body[data-page="payroll"] #tables td:nth-child(1),
-body[data-page="payroll"] #tables th:nth-child(2),
-body[data-page="payroll"] #tables td:nth-child(2){
+body[data-page="payroll"] table th,
+body[data-page="payroll"] table td{
+  vertical-align:middle;
+}
+
+body[data-page="payroll"] table th:first-child,
+body[data-page="payroll"] table td:first-child{
   text-align:left !important;
   padding-left:18px !important;
 }
-body[data-page="payroll"] #tables th:nth-child(n+3),
-body[data-page="payroll"] #tables td:nth-child(n+3){
+
+body[data-page="payroll"] table th:nth-child(2),
+body[data-page="payroll"] table td:nth-child(2){
+  text-align:left !important;
+}
+
+/* 3 欄之後多半是數字：Σ支數、出現筆數、本月支數等 */
+body[data-page="payroll"] table th:nth-child(n+3),
+body[data-page="payroll"] table td:nth-child(n+3){
   text-align:right !important;
   padding-right:14px !important;
   font-variant-numeric:tabular-nums !important;
+}
+
+/* 若代碼／代碼+名稱也在 #tables 內，再加一道保險 */
+body[data-page="payroll"] #tables thead th:first-child,
+body[data-page="payroll"] #tables thead th:nth-child(2){
+  text-align:left !important;
+}
+
+/* =========================================================
+   payroll 手機版：本月支數等 number 欄位縮小
+========================================================= */
+@media (max-width:860px){
+  body[data-page="payroll"] input[type="number"]{
+    max-width:70px;
+    height:30px;
+    font-size:13px;
+    padding:0 4px;
+  }
 }
