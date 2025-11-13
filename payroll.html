@@ -1,3 +1,4 @@
+<!-- Part 1/2 : 從 DOCTYPE 到第一個 <script> 之前 -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -27,80 +28,158 @@
       display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05);}
     .kpi .box .lbl{color:#7a7557; font-weight:700;}
     .kpi .box .num{font-size:24px; font-weight:900; color:#2e7d32;}
-    .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
-      border-radius:12px; overflow:hidden;}
-    .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
+
+    .tbl{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    .tbl th{
+      background:#f6f1d9;
+      color:#5b5534;
+      padding:10px;
+      font-weight:800;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+    }
     .tbl th.month-col{text-align:center;}
-    .tbl td{padding:10px; border-top:1px solid var(--line);}
+    .tbl td{
+      padding:10px;
+      border-top:1px solid var(--line);
+    }
     .tbl tbody tr:nth-child(even){background:#fffef9;}
-    .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
-
-    /* 手機版：卡片式表格＋輸入框靠右 */
-    @media (max-width:860px){
-      .tbl{display:block; font-size:15px; border:0; background:none; overflow:visible;}
-      .tbl thead{display:none;}
-      .tbl tbody,.tbl tfoot{display:block; width:100%;}
-      .tbl tbody tr{display:block; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
-        margin-bottom:12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05);}
-      .tbl tbody tr:nth-child(even){background:#fff;}
-      .tbl td{display:flex; gap:12px; justify-content:space-between; align-items:center; padding:6px 0; line-height:1.45;
-        white-space:normal; border-top:none;}
-      .tbl td[data-label]{text-align:left;}
-      .tbl td[data-label]::before{content:attr(data-label); font-weight:700; color:#5b5534; flex:1; text-align:left;}
-      .tbl td[data-label="代碼＋名稱"],
-      .tbl td[data-label="代碼"]{flex-direction:column; align-items:flex-start;}
-      .tbl td[data-label="代碼＋名稱"]::before,
-      .tbl td[data-label="代碼"]::before{margin-bottom:2px;}
-      .tbl td.right{justify-content:space-between;}
-
-      /* 🔧 手機版：所有 .tbl 數字輸入與 select 都靠右的小框 */
-      .tbl input[type="number"],
-      .tbl select{
-        width:auto;
-        min-width:80px;
-        max-width:120px;
-        height:32px;
-        margin-left:auto;
-        margin-right:0;
-        text-align:right;
-      }
-
-      .tbl td[data-label="設定"]{flex-direction:column; align-items:flex-start; gap:6px;}
-      .tbl tfoot{border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 12px;}
-      .tbl tfoot tr{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;}
-      .tbl tfoot th{flex:1 1 auto; background:none; border:none; padding:0; text-align:right;}
-      .tbl tfoot th:last-child{flex:0 0 auto; min-width:90px; font-size:18px;}
+    .tbl input[type="number"]{
+      width:90px;
+      height:34px;
+      text-align:right;
     }
 
-    .right{text-align:right;} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
-    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
-    @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
-    .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-    .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
-    .month-col{text-align:center;}
-
-    /* 🔧 桌機版：AA / BA / GA / SC 表頭「單價／本月支數／小計」三欄等寬，單價右對齊 */
+    /* 桌機寬度：AA/BA/GA/SC 表欄寬＋表頭平均分配 */
     @media (min-width:861px){
-      :is(#tblAA,#tblBA,#tblGA,#tblSC){table-layout:fixed;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC){
+        table-layout:fixed;
+      }
+
+      /* 代碼欄 40%，後三欄各 20% */
       :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-code{width:40%;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price,
       :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month,
       :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:20%;}
 
-      /* 表頭對齊：單價右、本月支數中、小計右 */
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(2){text-align:right;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(3){text-align:center;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(4){text-align:right;}
+      /* 表頭：單價／本月支數／小計 置中，視覺間距平均 */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(2),
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(3),
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(4){
+        text-align:center;
+      }
 
-      /* 本月支數儲存格與輸入框置中 */
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{text-align:center;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin:0 auto; text-align:center;}
+      /* 桌機版：本月支數欄內的輸入框置中 */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{
+        text-align:center;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{
+        margin:0 auto;
+        text-align:center;
+      }
     }
 
-    /* 🔧 手機版：四張主表的「本月支數」欄，標籤在左、輸入框靠右小框 */
+    /* 手機／平板：卡片式表格＋本月支數輸入框靠右 */
     @media (max-width:860px){
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{align-items:center;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{flex:0 0 auto;}
+      .tbl{
+        display:block;
+        font-size:15px;
+        border:0;
+        background:none;
+        overflow:visible;
+      }
+      .tbl thead{display:none;}
+      .tbl tbody,
+      .tbl tfoot{display:block; width:100%;}
+      .tbl tbody tr{
+        display:block;
+        border:1px solid var(--line);
+        border-radius:12px;
+        padding:10px 12px;
+        margin-bottom:12px;
+        background:#fff;
+        box-shadow:0 1px 2px rgba(0,0,0,.05);
+      }
+      .tbl tbody tr:nth-child(even){background:#fff;}
+      .tbl td{
+        display:flex;
+        gap:12px;
+        justify-content:space-between;
+        align-items:center;
+        padding:6px 0;
+        line-height:1.45;
+        white-space:normal;
+        border-top:none;
+      }
+      .tbl td[data-label]{text-align:left;}
+      .tbl td[data-label]::before{
+        content:attr(data-label);
+        font-weight:700;
+        color:#5b5534;
+        flex:1;
+        text-align:left;
+      }
+      .tbl td[data-label="代碼＋名稱"],
+      .tbl td[data-label="代碼"]{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .tbl td[data-label="代碼＋名稱"]::before,
+      .tbl td[data-label="代碼"]::before{
+        margin-bottom:2px;
+      }
+      .tbl td.right{justify-content:space-between;}
+      .tbl input[type="number"],
+      .tbl select{
+        width:100%;
+        max-width:none;
+        height:38px;
+      }
+      .tbl td[data-label="設定"]{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:6px;
+      }
+      .tbl tfoot{
+        border:1px solid var(--line);
+        border-radius:12px;
+        background:#fff;
+        padding:10px 12px;
+      }
+      .tbl tfoot tr{
+        display:flex;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+        gap:8px;
+      }
+      .tbl tfoot th{
+        flex:1 1 auto;
+        background:none;
+        border:none;
+        padding:0;
+        text-align:right;
+      }
+      .tbl tfoot th:last-child{
+        flex:0 0 auto;
+        min-width:90px;
+        font-size:18px;
+      }
+
+      /* 手機版：本月支數輸入框靠右縮小（AA/BA/GA/SC） */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{
+        align-items:center;
+      }
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{
+        flex:0 0 auto;
+      }
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{
         display:block;
         margin-left:auto;
@@ -112,6 +191,14 @@
         text-align:right;
       }
     }
+
+    .right{text-align:right;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+    @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
+    .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+    .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
+    .month-col{text-align:center;}
 
     /* PDF 支數小工具（ps- 前綴） */
     .ps-muted{color:#5b6b81}.ps-small{font-size:.86rem}.ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
@@ -291,7 +378,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:220px;">代碼</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:220px;">代碼</th>
+            <th>單價</th>
+            <th class="month-col">本月支數</th>
+            <th>小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">AA 小計</th><th class="right" id="sumAA">0</th></tr></tfoot>
       </table>
@@ -308,7 +402,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:260px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:260px;">代碼＋名稱</th>
+            <th>單價</th>
+            <th class="month-col">本月支數</th>
+            <th>小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">BA 小計</th><th class="right" id="sumBA">0</th></tr></tfoot>
       </table>
@@ -324,7 +425,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:220px;">代碼＋名稱</th>
+            <th>單價</th>
+            <th class="month-col">本月支數</th>
+            <th>小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">GA 小計</th><th class="right" id="sumGA">0</th></tr></tfoot>
       </table>
@@ -340,7 +448,14 @@
           <col class="col-month">
           <col class="col-sum">
         </colgroup>
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="min-width:220px;">代碼＋名稱</th>
+            <th>單價</th>
+            <th class="month-col">本月支數</th>
+            <th>小計</th>
+          </tr>
+        </thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">SC 小計</th><th class="right" id="sumSC">0</th></tr></tfoot>
       </table>
@@ -407,7 +522,7 @@
     </div>
   </footer>
 
-  <!-- 主邏輯（輸入/計算/勞健保/儲存） -->
+    <!-- 主邏輯（輸入/計算/勞健保/儲存） -->
   <script>
     (function(){
       const $ = s => document.querySelector(s);
@@ -570,13 +685,13 @@
           sel.appendChild(opt);
         });
       }
-function findGradeBySalary(sal){
-  const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
-  for (const v of list){
-    if (sal <= v) return v;  // 找到第一個「大於等於薪資」的級距
-  }
-  return list[list.length-1]; // 超過最高級距時用最後一級
-}
+      function findGradeBySalary(sal){
+        const list = INS_TABLE.map(r=>r.grade).sort((a,b)=>a-b);
+        for (const v of list){
+          if (sal <= v) return v;  // 找到第一個「大於等於薪資」的級距
+        }
+        return list[list.length-1]; // 超過最高級距時用最後一級
+      }
       function getRow(grade){
         return INS_TABLE.find(r=>r.grade===grade) || INS_TABLE[0];
       }
@@ -715,7 +830,13 @@ function findGradeBySalary(sal){
 
       // 動態載入 pdf.js
       let pdfReady=null, pdfVer=null;
-      const loadScript = src => new Promise((res,rej)=>{const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s);});
+      const loadScript = src => new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src=src;
+        s.onload=res;
+        s.onerror=rej;
+        document.head.appendChild(s);
+      });
       async function ensurePdfjs(){
         if (window.pdfjsLib) return;
         if (pdfReady){ await pdfReady; return; }
@@ -937,69 +1058,4 @@ function findGradeBySalary(sal){
       function showSyncBar(on){ if(syncBar) syncBar.style.display = on ? 'flex' : 'none'; }
       if (autoSyncEl){ autoSyncEl.checked = loadAutoSync(); autoSyncEl.addEventListener('change', ()=>saveAutoSync(autoSyncEl.checked)); }
       if (syncYesBtn){ syncYesBtn.addEventListener('click', ()=>{ if (last){ applyToPayroll(last); } showSyncBar(false); }); }
-      if (syncNoBtn){ syncNoBtn.addEventListener('click', ()=> showSyncBar(false)); }
-
-      // 綁定
-      let last=null;
-      async function handleFile(f){
-        if(!debug) return; debug.textContent='偵錯訊息：\n';
-        setBar(0); if(statusEl) statusEl.textContent='準備解析…';
-        let pdfRes=null, text='';
-        try{ pdfRes=await extractPdfText(f); }catch(e){ log('PDF.js 解析失敗，改用 OCR：'+why(e)); }
-        if(pdfRes && pdfRes.charCount>0){
-          text=pdfRes.text; setBar(100);
-          if(statusEl) statusEl.textContent='PDF 文字擷取完成';
-        } else {
-          try{
-            const pdf= pdfRes?.pdf || await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
-            if(statusEl) statusEl.textContent='啟用 OCR…'; setBar(1);
-            text=await ocrPdfToText(pdf); setBar(100);
-            if(statusEl) statusEl.textContent='OCR 完成';
-          }catch(e){ log('OCR 也失敗：'+why(e)); alert('此 PDF 無法解析，可能是加密或損壞。'); return; }
-        }
-        const res=analyze(text);
-        renderAll(res);
-        last=res;
-        document.getElementById('ps-apply').disabled=false;
-        document.getElementById('ps-csv').disabled=false;
-        document.getElementById('ps-json').disabled=false;
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
-      }
-
-      const fileInput=$('#ps-file'), drop=$('#ps-drop');
-      if(fileInput){ fileInput.addEventListener('change',e=>{const f=e.target.files?.[0]; if(f) handleFile(f);}); }
-      if(drop){
-        ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#eef4ff';}));
-        ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.style.background='#f9fbff';}));
-        drop.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files?.[0]; if(f) handleFile(f);});
-      }
-      document.getElementById('ps-csv').addEventListener('click',()=>last&&exportCSV(last));
-      document.getElementById('ps-json').addEventListener('click',()=>last&&exportJSON(last));
-      document.getElementById('ps-apply').addEventListener('click',()=> last && applyToPayroll(last));
-      document.getElementById('ps-demo').addEventListener('click',()=>{
-        const d=`嚴X雯 賴X女 2025/09/01 AA05 補助 $100
-嚴X雯 賴X女 2025/09/02 AA05 補助 $200
-嚴X雯 張X進 2025/09/02 AA06 自費 $200
-嚴X雯 王X明 2025/09/03 AA07 補助 $760
-嚴X雯 OO先生 2025/09/03 AA08 自費 $385
-嚴X雯 賴X女 2025/09/06 AA09 補助 $770
-嚴X雯 江X輝 2025/09/01 AA11 補助 $50
-嚴X雯 范X殷 2025-09-05 BA01 補助 1 $260
-嚴X雯 江X輝 2025-09-01 BA07 補助 1 $325
-嚴X雯 張X進 2025-09-02 BA11 自費 2 $195
-嚴X雯 王X美 2025-09-10 BA15-1 補助 1 $195
-嚴X雯 王X美 2025-09-11 BA05-1 補助 2 $310
-嚴X雯 王X美 2025-09-12 BA15-2 補助 1 $195
-嚴X雯 李OO 2025-09-03 GA09 補助 3
-嚴X雯 王OO 2025-09-04 SC09 自費 1`;
-        const r=analyze(d); renderAll(r); last=r; setBar(100);
-        if(statusEl) statusEl.textContent='示範資料已載入';
-        document.getElementById('ps-apply').disabled=false;
-        document.getElementById('ps-csv').disabled=false;
-        document.getElementById('ps-json').disabled=false;
-        if (autoSyncEl && autoSyncEl.checked){ applyToPayroll(last); showSyncBar(false); } else { showSyncBar(true); }
-      });
-    })();
-  </script>
-</body>
-</html>
+      if (syncNoBtn){ syncNoBtn.addEventListener
