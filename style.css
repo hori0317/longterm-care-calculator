@@ -595,7 +595,7 @@ img,a img{
     font-variant-numeric:tabular-nums;
   }
 
-  /* 手機上輸入框：靠右貼齊 */
+  /* 手機上輸入框：靠右貼齊（之後再縮小一點） */
   body[data-page="index"] #tables tbody td:nth-child(3) input[type="number"],
   body[data-page="index"] #tables tbody td:nth-child(4) input[type="number"],
   body[data-page="index"] #tables tbody td:nth-child(5) input[type="number"]{
@@ -611,4 +611,53 @@ img,a img{
   body[data-page="index"] #tables tbody td{
     font-size:13px;
   }
+}
+
+/* =========================================================
+   index 手機版：服務表單輸入框再縮小一點
+========================================================= */
+@media (max-width:860px){
+  body[data-page="index"] #tables tbody td:nth-child(3) input[type="number"],
+  body[data-page="index"] #tables tbody td:nth-child(4) input[type="number"],
+  body[data-page="index"] #tables tbody td:nth-child(5) input[type="number"]{
+    width:52px !important;
+    height:28px !important;
+    font-size:12px !important;
+    padding:0 4px !important;
+  }
+}
+
+/* =========================================================
+   payroll：Σ支數、出現筆數與數字對齊，格式一致
+========================================================= */
+body[data-page="payroll"] .kv .kv-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+}
+body[data-page="payroll"] .kv .kv-row span{
+  flex:0 0 auto;
+}
+body[data-page="payroll"] .kv .kv-row b{
+  min-width:3.5ch;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+/* =========================================================
+   payroll：代碼 / 代碼+名稱 與內容對齊
+========================================================= */
+body[data-page="payroll"] #tables th:nth-child(1),
+body[data-page="payroll"] #tables td:nth-child(1),
+body[data-page="payroll"] #tables th:nth-child(2),
+body[data-page="payroll"] #tables td:nth-child(2){
+  text-align:left !important;
+  padding-left:18px !important;
+}
+body[data-page="payroll"] #tables th:nth-child(n+3),
+body[data-page="payroll"] #tables td:nth-child(n+3){
+  text-align:right !important;
+  padding-right:14px !important;
+  font-variant-numeric:tabular-nums !important;
 }
