@@ -30,6 +30,7 @@
     .tbl{width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--line);
       border-radius:12px; overflow:hidden;}
     .tbl th{background:#f6f1d9; color:#5b5534; padding:10px; font-weight:800; border-bottom:1px solid var(--line);}
+    .tbl th.month-col{text-align:center;}
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
@@ -62,6 +63,29 @@
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
+    .month-col{text-align:center;}
+    @media (min-width:861px){
+      :is(#tblAA,#tblBA,#tblGA,#tblSC){table-layout:fixed;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price{width:130px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month{width:170px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:160px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{text-align:center;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin:0 auto; text-align:center;}
+    }
+    @media (max-width:860px){
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{align-items:center;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{flex:0 0 auto;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{
+        display:block;
+        margin-left:auto;
+        margin-right:0;
+        width:52px;
+        height:28px;
+        font-size:12px;
+        padding:0 4px;
+        text-align:right;
+      }
+    }
 
     /* PDF 支數小工具（ps- 前綴） */
     .ps-muted{color:#5b6b81}.ps-small{font-size:.86rem}.ps-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
@@ -235,7 +259,13 @@
     <section class="card">
       <h2 class="card-title">② AA 本月支數</h2>
       <table class="tbl" id="tblAA">
-        <thead><tr><th style="min-width:220px;">代碼</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:220px;">代碼</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">AA 小計</th><th class="right" id="sumAA">0</th></tr></tfoot>
       </table>
@@ -246,7 +276,13 @@
     <section class="card">
       <h2 class="card-title">③ BA 本月支數</h2>
       <table class="tbl" id="tblBA">
-        <thead><tr><th style="min-width:260px;">代碼＋名稱</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:260px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">BA 小計</th><th class="right" id="sumBA">0</th></tr></tfoot>
       </table>
@@ -256,7 +292,13 @@
     <section class="card">
       <h2 class="card-title">④ GA 本月支數</h2>
       <table class="tbl" id="tblGA">
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">GA 小計</th><th class="right" id="sumGA">0</th></tr></tfoot>
       </table>
@@ -266,7 +308,13 @@
     <section class="card">
       <h2 class="card-title">⑤ SC 本月支數</h2>
       <table class="tbl" id="tblSC">
-        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="right">本月支數</th><th class="right">小計</th></tr></thead>
+        <colgroup>
+          <col class="col-code">
+          <col class="col-price">
+          <col class="col-month">
+          <col class="col-sum">
+        </colgroup>
+        <thead><tr><th style="min-width:220px;">代碼＋名稱</th><th class="right">單價</th><th class="month-col">本月支數</th><th class="right">小計</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><th colspan="3" class="right">SC 小計</th><th class="right" id="sumSC">0</th></tr></tfoot>
       </table>
@@ -417,7 +465,7 @@
           tr.innerHTML = `
             <td data-label="代碼">${code}</td>
             <td class="right mono" data-label="單價">${F(price)}</td>
-            <td class="right" data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
+            <td data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
             <td class="right mono" data-label="小計" data-aa-sum="${code}">0</td>
           `;
           host.appendChild(tr);
@@ -433,7 +481,7 @@
           tr.innerHTML = `
             <td data-label="代碼＋名稱">${item.code}${item.name ? ' ' + item.name : ''}</td>
             <td class="right mono" data-label="單價">${F(item.price)}</td>
-            <td class="right" data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
+            <td data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
             <td class="right mono" data-label="小計" data-${k}-sum="${item.code}">0</td>
           `;
           host.appendChild(tr);
@@ -765,28 +813,30 @@ function findGradeBySalary(sal){
 
       // 渲染 & 匯出
       const tb={BA:$('#ps-t-BA tbody'),AA:$('#ps-t-AA tbody'),GA:$('#ps-t-GA tbody'),SC:$('#ps-t-SC tbody')};
+      const fmtCount = v => Math.round(Number(v) || 0);
       function renderRows(tbody, rows){
         if(!tbody) return;
         tbody.innerHTML='';
         for(const r of rows){
+          const sum = fmtCount(r.sum);
           const tr=document.createElement('tr');
           tr.innerHTML=`
             <td><span class="ps-pill">${r.code}</span></td>
             <td class="ps-right">${r.occ}</td>
-            <td class="ps-right">${r.sum.toFixed(1)}</td>
+            <td class="ps-right">${sum}</td>
           `;
           tbody.appendChild(tr);
         }
       }
       function renderAll(res){ renderRows(tb.BA,res.BA); renderRows(tb.AA,res.AA); renderRows(tb.GA,res.GA); renderRows(tb.SC,res.SC); }
       function exportCSV(res){
-        const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${r.sum.toFixed(1)}`).join('\n')+'\n\n';
+        const blk=(t,rows)=>`${t}\n碼別,出現筆數,Σ支數\n`+rows.map(r=>`${r.code},${r.occ},${fmtCount(r.sum)}`).join('\n')+'\n\n';
         const csv=blk('【BA】',res.BA)+blk('【AA】',res.AA)+blk('【GA】',res.GA)+blk('【SC】',res.SC);
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob);
         const a=document.createElement('a'); a.href=url; a.download='pdf-stat.csv'; a.click(); URL.revokeObjectURL(url);
       }
       function exportJSON(res){
-        const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:Number(r.sum.toFixed(1))}));
+        const pick=rows=>rows.map(r=>({code:r.code,occ:r.occ,sum:fmtCount(r.sum)}));
         const payload={BA:pick(res.BA),AA:pick(res.AA),GA:pick(res.GA),SC:pick(res.SC),meta:{generatedAt:new Date().toISOString()}};
         const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}), url=URL.createObjectURL(blob);
         const a=document.createElement('a'); a.href=url; a.download='pdf-stat.json'; a.click(); URL.revokeObjectURL(url);
