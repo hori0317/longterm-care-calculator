@@ -198,6 +198,11 @@ function renderTables(){
         const tdGrp = document.createElement("td");
         const tdAmt = document.createElement("td");
 
+        tdItem.dataset.label = "服務項目";
+        tdPrice.dataset.label = "單價(每組)";
+        tdGrp.dataset.label = "每月組數";
+        tdAmt.dataset.label = "總金額";
+
         tdItem.textContent = `${item.code} ${item.name}`;
         tdPrice.className = "cell-price";
         tdPrice.textContent = (Number(item.price)||0).toLocaleString();
@@ -229,6 +234,13 @@ function renderTables(){
         const tdMon = document.createElement("td");
         const tdTot = document.createElement("td");
         const tdAmt = document.createElement("td");
+
+        tdItem.dataset.label = "服務項目";
+        tdPrice.dataset.label = "單價";
+        tdWk.dataset.label = "週次數";
+        tdMon.dataset.label = "月次數";
+        tdTot.dataset.label = "總次數";
+        tdAmt.dataset.label = "總金額";
 
         tdItem.textContent = `${item.code} ${item.name}`;
         tdPrice.className = "cell-price";
@@ -538,52 +550,3 @@ function adjustTopbarPadding(){
   document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
 
-/* ---- 導覽：依當前網址自動高亮（支援多頁 + 錨點） ---- */
-(function(){
-  function normPath(pathname){
-    // 移除結尾斜線 → 把 / 或 /index.html 視為 /index → 去掉 .html
-    let p = String(pathname || '/').trim();
-    if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
-    p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
-    const seg = p.split('/').pop() || 'index';
-    return seg.toLowerCase();
-  }
-
-  function setActiveNav(){
-    const herePath = normPath(location.pathname);
-    const hereHash = (location.hash || '').toLowerCase();
-
-    // 先清除舊的 active
-    document.querySelectorAll('.nav-links a.active').forEach(a=>a.classList.remove('active'));
-
-    document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-      const raw = (a.getAttribute('href') || '').trim();
-      if (!raw) return;
-
-      let active = false;
-
-      if (raw.startsWith('#')){
-        // 單頁錨點：僅當前 hash 完全相同才亮（避免全部 # 錨點同時亮）
-        active = (raw.toLowerCase() === hereHash && hereHash !== '');
-      } else {
-        // 多頁：以檔名比對（/page、/page.html、/ 皆可）
-        try{
-          const url = new URL(raw, location.origin);
-          const targetPath = normPath(url.pathname);
-          active = (targetPath === herePath) ||
-                   (targetPath === 'index' && (herePath === '' || herePath === 'index'));
-        }catch(e){
-          // 相對連結 fallback
-          const hrefClean = raw.replace(/^\.\//,'').replace(/\.html?$/i,'').replace(/\/$/,'') || 'index';
-          active = (hrefClean.toLowerCase() === herePath);
-        }
-      }
-
-      if (active) a.classList.add('active');
-    });
-  }
-
-  window.addEventListener('DOMContentLoaded', setActiveNav);
-  window.addEventListener('hashchange', setActiveNav);
-  window.addEventListener('popstate', setActiveNav); // 處理前進/後退
-})();

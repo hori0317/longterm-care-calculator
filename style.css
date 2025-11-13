@@ -127,8 +127,32 @@ a:hover{ text-decoration:underline; }
 .nav-links a.active{ color:var(--orange); }
 .nav-links a.active::after{
   content:"";
-  position:absolute; left:0; right:0; bottom:-6px;
+  position:absolute; left:0; right:0; bottom:0;
   height:3px; background:var(--orange); border-radius:3px;
+}
+
+body[data-page="index"] .nav-links a[href="index.html"],
+body[data-page="payroll"] .nav-links a[href="payroll.html"],
+body[data-page="care-info"] .nav-links a[href="care-info.html"],
+body[data-page="news"] .nav-links a[href="news.html"],
+body[data-page="contact"] .nav-links a[href="contact.html"],
+body[data-page="about"] .nav-links a[href="about.html"]{
+  color:var(--orange);
+  transform:translateY(-1px);
+}
+
+body[data-page="index"] .nav-links a[href="index.html"]::after,
+body[data-page="payroll"] .nav-links a[href="payroll.html"]::after,
+body[data-page="care-info"] .nav-links a[href="care-info.html"]::after,
+body[data-page="news"] .nav-links a[href="news.html"]::after,
+body[data-page="contact"] .nav-links a[href="contact.html"]::after,
+body[data-page="about"] .nav-links a[href="about.html"]::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height:3px;
+  background:var(--orange);
+  border-radius:3px;
 }
 
 /* 右側按鈕區 */
@@ -357,23 +381,80 @@ a:hover{ text-decoration:underline; }
   .topbar{ padding:14px 16px; }
   .footerbar{ padding-bottom:max(10px, env(safe-area-inset-bottom)); }
   #tables{
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
     padding-bottom:calc(var(--dock-h) + 14px);
-    display:block;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
   }
   #tables table{
-    min-width:780px;
-    table-layout:fixed;
-    width:max-content;
+    width:100%;
+    border:0;
+    border-radius:0;
+    background:none;
+    table-layout:auto;
   }
-  #tables th,#tables td{
-    padding:10px 12px;
-    font-size:14px;
-    line-height:1.2;
-    white-space:nowrap;
+  #tables thead{ display:none; }
+  #tables tbody{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
   }
-  #tables input[type="number"]{ width:58px; height:32px; font-size:14px; }
+  #tables tbody tr{
+    display:flex;
+    flex-direction:column;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.05);
+  }
+  #tables tbody tr:nth-child(even){ background:#fff; }
+  #tables tbody tr.hidden{ display:none !important; }
+  #tables td{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    padding:6px 0;
+    border:none;
+    font-size:15px;
+    line-height:1.45;
+    white-space:normal;
+  }
+  #tables td[data-label]::before{
+    content:attr(data-label);
+    font-weight:700;
+    color:#5b5534;
+    text-align:left;
+    flex:0 0 120px;
+  }
+  #tables td[data-label="服務項目"]{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  #tables td[data-label="服務項目"]::before{
+    margin-bottom:2px;
+    flex:1;
+  }
+  #tables td input[type="number"]{
+    width:100%;
+    max-width:none;
+    height:38px;
+    font-size:15px;
+    text-align:right;
+  }
+  #tables td input[readonly]{
+    background:#f9f7ee;
+    color:#5f5a41;
+  }
+  #tables td.cell-price,
+  #tables td.cell-amount{
+    justify-content:space-between;
+  }
+  #tables td.cell-amount{
+    font-weight:800;
+    color:#2e7d32;
+  }
   .foot{ gap:12px; font-size:14px; }
 }
 
