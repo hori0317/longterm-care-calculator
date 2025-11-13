@@ -474,11 +474,13 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables .svc-name{ display:block; font-weight:600; }
   #tables td input[type="number"]{
     width:auto;
-    min-width:calc(3ch + 14px);
-    max-width:calc(6ch + 18px);
-    height:36px;
+    min-width:calc(2ch + 12px);
+    max-width:calc(5ch + 16px);
+    height:34px;
     font-size:15px;
-    text-align:right;
+    text-align:right !important;
+    font-variant-numeric:tabular-nums;
+    padding-right:4px;
     margin-left:auto;
     margin-right:0;
     display:block;
