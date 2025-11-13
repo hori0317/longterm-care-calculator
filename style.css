@@ -454,7 +454,7 @@ img,a img{
 }
 #tables th:not(:first-child),
 #tables td:not(:first-child){
-  text-align:center !important;
+  text-align:center !重要;
   font-variant-numeric:tabular-nums !important;
 }
 #tables input[type="number"]{
@@ -512,3 +512,50 @@ img,a img{
 .text-right{ text-align:right; }
 .bold{ font-weight:800; }
 .orange{ color:var(--orange); }
+
+/* =========================================================
+   手機版 index.html 專用：表格不要左右滑動
+========================================================= */
+@media (max-width:860px){
+  body[data-page="index"] #tables{
+    overflow-x:visible !important;
+    padding-bottom:14px !important;
+    display:block;
+  }
+  body[data-page="index"] #tables table{
+    min-width:100% !important;
+    width:100% !important;
+    table-layout:fixed;
+  }
+  body[data-page="index"] #tables th,
+  body[data-page="index"] #tables td{
+    padding:8px 6px !important;
+    font-size:13px !important;
+    white-space:nowrap;
+  }
+}
+
+/* =========================================================
+   數字欄位對齊：單價 / 次數輸入 / 總金額
+========================================================= */
+#tables th:nth-child(2),
+#tables td:nth-child(2),
+#tables th:nth-child(6),
+#tables td:nth-child(6),
+#tables th:nth-child(7),
+#tables td:nth-child(7),
+#tables th:nth-child(8),
+#tables td:nth-child(8){
+  text-align:right !important;
+  padding-right:14px !important;
+  font-variant-numeric:tabular-nums !important;
+}
+
+#tables td:nth-child(3) input[type="number"],
+#tables td:nth-child(4) input[type="number"],
+#tables td:nth-child(5) input[type="number"]{
+  margin-left:auto !important;
+  margin-right:0 !important;
+  display:block !important;
+  text-align:right !important;
+}
