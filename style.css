@@ -379,6 +379,11 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   gap:6px;
 }
 
+#tables .cell-price{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
 #tables .svc-code{
   font-weight:800;
   color:#5b5534;
@@ -409,6 +414,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     border-radius:0;
     background:none;
     table-layout:auto;
+    display:block;
   }
   #tables thead{ display:none; }
   #tables tbody{
@@ -474,7 +480,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     flex-direction:column;
     align-items:flex-start;
     gap:2px;
-    margin-left:-6px;
+    margin-left:0;
   }
   #tables td[data-label="服務項目"] .svc-code,
   #tables td[data-label*="碼"] .svc-code,
@@ -509,6 +515,11 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     justify-content:flex-end;
   }
   #tables td:last-child{ padding-right:4px; }
+  #tables th:first-child,
+  #tables td:first-child{
+    min-width:0 !important;
+  }
+  .service-card{ overflow:hidden; }
   .foot{ gap:12px; font-size:14px; }
 }
 
