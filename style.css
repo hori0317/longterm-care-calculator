@@ -426,20 +426,20 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     display:flex;
     flex-direction:column;
     border:1px solid var(--line);
-    border-radius:12px;
-    padding:12px 4px 12px 12px;
+    border-radius:14px;
+    padding:0;
     background:#fff;
-    box-shadow:0 1px 2px rgba(0,0,0,.05);
+    box-shadow:0 2px 6px rgba(74,64,16,.12);
+    overflow:hidden;
   }
   #tables tbody tr:nth-child(even){ background:#fff; }
   #tables tbody tr.hidden{ display:none !important; }
   #tables td{
-    display:flex;
-    flex-wrap:wrap;
+    display:grid;
+    grid-template-columns:var(--mobile-label-width) 1fr;
     align-items:center;
-    justify-content:flex-start;
-    gap:8px;
-    padding:12px 10px 12px 10px;
+    gap:10px;
+    padding:12px 14px;
     border:none;
     font-size:15px;
     line-height:1.45;
@@ -448,40 +448,38 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     min-height:48px;
     width:100%;
   }
-  #tables{ --mobile-label-width:108px; }
+  #tables tbody tr > td + td{
+    border-top:1px solid var(--line);
+  }
+  #tables{ --mobile-label-width:96px; }
   #tables td[data-label]::before{
     content:attr(data-label);
     font-weight:700;
     color:#5b5534;
     text-align:left;
-    flex:0 0 var(--mobile-label-width);
-    min-width:var(--mobile-label-width);
-    margin-right:12px;
+    display:block;
+    grid-column:1;
   }
   #tables td .cell-value{
-    margin-left:auto;
+    grid-column:2;
+    justify-self:end;
     text-align:right;
     font-variant-numeric:tabular-nums;
   }
   #tables td[data-label="服務項目"],
   #tables td[data-label*="碼"]{
-    flex-direction:column;
     align-items:flex-start;
-    justify-content:flex-start;
-    text-align:left;
-    gap:6px;
-    flex-wrap:nowrap;
+    grid-auto-rows:auto;
+    padding-top:14px;
+    padding-bottom:10px;
   }
   #tables td[data-label="服務項目"]::before,
   #tables td[data-label*="碼"]::before{
-    flex:0 0 auto;
-    width:100%;
-    margin:0 0 4px 0;
+    margin-bottom:6px;
   }
   #tables td[data-label="服務項目"] .svc-text,
   #tables td[data-label*="碼"] .svc-text{
-    flex:1 1 auto;
-    min-width:0;
+    grid-column:1 / span 2;
     width:100%;
     display:flex;
     flex-direction:column;
@@ -489,33 +487,30 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     gap:2px;
   }
   #tables td[data-label="服務項目"] .svc-code,
-  #tables td[data-label*="碼"] .svc-code,
+  #tables td[data-label*="碼"] .svc-code{
+    font-size:15px;
+  }
   #tables td[data-label="服務項目"] .svc-name,
   #tables td[data-label*="碼"] .svc-name{
-    text-align:left;
-    width:100%;
+    font-size:14px;
+    color:#4a4426;
   }
   #tables td input[type="number"]{
     width:auto;
-    min-width:calc(2ch + 12px);
-    max-width:calc(5ch + 16px);
+    min-width:calc(2ch + 8px);
+    max-width:calc(4.5ch + 12px);
     height:34px;
     font-size:15px;
     text-align:right !important;
     font-variant-numeric:tabular-nums;
-    padding-right:4px;
-    margin-left:auto;
-    margin-right:0;
-    display:block;
-  }
-  #tables td[data-label$="次數"] input[type="number"]{
-    margin-right:-12px;
-    padding-right:0;
+    padding:0 2px 0 0;
+    margin:0;
+    justify-self:end;
   }
   #tables td[data-label$="次數"],
   #tables td[data-label="單價"],
   #tables td[data-label="單價(每組)"]{
-    padding-right:0;
+    padding-right:12px;
   }
   #tables td input[readonly]{
     background:#f9f7ee;
