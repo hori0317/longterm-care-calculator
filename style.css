@@ -425,9 +425,9 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     display:flex;
     flex-wrap:wrap;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:12px 10px;
+    justify-content:flex-end;
+    gap:8px;
+    padding:12px 8px 12px 10px;
     border:none;
     font-size:15px;
     line-height:1.45;
@@ -442,6 +442,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     text-align:left;
     flex:1 1 auto;
     min-width:90px;
+    margin-right:10px;
   }
   #tables td[data-label="服務項目"],
   #tables td[data-label*="碼"]{
@@ -473,9 +474,9 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables .svc-name{ display:block; font-weight:600; }
   #tables td input[type="number"]{
     width:auto;
-    min-width:calc(4ch + 20px);
-    max-width:calc(8ch + 26px);
-    height:38px;
+    min-width:calc(3ch + 14px);
+    max-width:calc(6ch + 18px);
+    height:36px;
     font-size:15px;
     text-align:right;
     margin-left:auto;
