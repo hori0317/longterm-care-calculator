@@ -503,15 +503,21 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     font-size:15px;
     text-align:right !important;
     font-variant-numeric:tabular-nums;
-    padding:0 2px 0 0;
+    padding:0 4px 0 0;
     margin:0;
     justify-self:end;
+  }
+  #tables td .cell-value{
+    padding-right:6px;
+  }
+  #tables td input[type="number"]{
+    margin-right:6px;
   }
   #tables td[data-label$="次數"],
   #tables td[data-label="單價"],
   #tables td[data-label="單價(每組)"],
   #tables td.cell-amount{
-    padding-right:4px;
+    padding-right:12px;
   }
   #tables td input[readonly]{
     background:#f9f7ee;
@@ -520,9 +526,9 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables td.cell-amount{
     font-weight:800;
     color:#2e7d32;
-    padding-right:0;
+    padding-right:12px;
   }
-  #tables td:last-child{ padding-right:2px; }
+  #tables td:last-child{ padding-right:12px; }
   #tables th:first-child,
   #tables td:first-child{
     min-width:0 !important;
