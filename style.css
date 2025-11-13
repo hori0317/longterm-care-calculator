@@ -518,7 +518,6 @@ img,a img{
    卡片式服務列排版
 ========================================================= */
 @media (max-width:860px){
-  /* 只改 index 頁面 */
   body[data-page="index"] #tables{
     overflow-x:visible !important;
     padding-bottom:14px !important;
@@ -621,7 +620,7 @@ img,a img{
 }
 
 /* =========================================================
-   payroll：上方 KV 區 Σ支數、出現筆數 字型與對齊
+   payroll：上方 KV 區 Σ支數、出現筆數 對齊
 ========================================================= */
 body[data-page="payroll"] .kv .kv-row{
   display:flex;
@@ -639,39 +638,45 @@ body[data-page="payroll"] .kv .kv-row b{
 }
 
 /* =========================================================
-   payroll：所有表格欄位對齊
-   - 第 1 欄：代碼 → 靠左
-   - 第 2 欄：代碼＋名稱 或其他文字欄 → 靠左
-   - 第 3 欄以後多半是數字欄 → 靠右、使用等寬數字
+   payroll：表格欄位對齊
+   1 欄：代碼 → 左
+   2 欄：代碼＋名稱 → 左
+   3 欄以後：出現筆數、Σ支數、本月支數等 → 右
 ========================================================= */
 body[data-page="payroll"] table th,
 body[data-page="payroll"] table td{
   vertical-align:middle;
 }
 
+/* 代碼欄 */
 body[data-page="payroll"] table th:first-child,
 body[data-page="payroll"] table td:first-child{
   text-align:left !important;
   padding-left:18px !important;
 }
 
+/* 代碼＋名稱欄 */
 body[data-page="payroll"] table th:nth-child(2),
 body[data-page="payroll"] table td:nth-child(2){
   text-align:left !important;
 }
 
-/* 3 欄之後多半是數字：Σ支數、出現筆數、本月支數等 */
+/* 數字欄（含 Σ支數、出現筆數、本月支數、金額⋯） */
 body[data-page="payroll"] table th:nth-child(n+3),
 body[data-page="payroll"] table td:nth-child(n+3){
   text-align:right !important;
   padding-right:14px !important;
   font-variant-numeric:tabular-nums !important;
+  min-width:3.5ch;
 }
 
-/* 若代碼／代碼+名稱也在 #tables 內，再加一道保險 */
+/* 專門覆寫 #tables 的表頭置中設定，避免影響 payroll 對齊 */
 body[data-page="payroll"] #tables thead th:first-child,
 body[data-page="payroll"] #tables thead th:nth-child(2){
   text-align:left !important;
+}
+body[data-page="payroll"] #tables thead th:nth-child(n+3){
+  text-align:right !important;
 }
 
 /* =========================================================
