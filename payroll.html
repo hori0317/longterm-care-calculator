@@ -32,6 +32,30 @@
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
+    @media (max-width:860px){
+      .tbl{display:block; font-size:15px; border:0; background:none; overflow:visible;}
+      .tbl thead{display:none;}
+      .tbl tbody,.tbl tfoot{display:block; width:100%;}
+      .tbl tbody tr{display:block; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+        margin-bottom:12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05);}
+      .tbl tbody tr:nth-child(even){background:#fff;}
+      .tbl td{display:flex; gap:12px; justify-content:space-between; align-items:center; padding:6px 0; line-height:1.45;
+        white-space:normal; border-top:none;}
+      .tbl td[data-label]{text-align:left;}
+      .tbl td[data-label]::before{content:attr(data-label); font-weight:700; color:#5b5534; flex:1; text-align:left;}
+      .tbl td[data-label="代碼＋名稱"],
+      .tbl td[data-label="代碼"]{flex-direction:column; align-items:flex-start;}
+      .tbl td[data-label="代碼＋名稱"]::before,
+      .tbl td[data-label="代碼"]::before{margin-bottom:2px;}
+      .tbl td.right{justify-content:space-between;}
+      .tbl input[type="number"],
+      .tbl select{width:100%; max-width:none; height:38px;}
+      .tbl td[data-label="設定"]{flex-direction:column; align-items:flex-start; gap:6px;}
+      .tbl tfoot{border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 12px;}
+      .tbl tfoot tr{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;}
+      .tbl tfoot th{flex:1 1 auto; background:none; border:none; padding:0; text-align:right;}
+      .tbl tfoot th:last-child{flex:0 0 auto; min-width:90px; font-size:18px;}
+    }
     .right{text-align:right;} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
@@ -59,7 +83,7 @@
     .ps-syncbar{border-color:#c7e7c7;background:#f6fff6}
   </style>
 </head>
-<body>
+<body data-page="payroll">
   <!-- 浮水印 -->
   <div class="watermark" aria-hidden="true">
     <span class="wm-item" style="top:5%; left:5%;  --dur:9s;">@hori版權所有</span>
@@ -85,7 +109,7 @@
       <a href="index.html" class="logo-link" aria-label="回首頁">
         <img src="org-logo.png" alt="logo" onerror="this.style.opacity=0.2" />
       </a>
-      <span class="site-title" id="siteTitle">薪資計算機</span>
+      <span class="site-title" id="siteTitle" data-sync-title>薪資計算機</span>
     </div>
     <nav class="nav-links" aria-label="主選單">
       <a href="index.html">額度計算機</a>
@@ -281,11 +305,11 @@
             </thead>
             <tbody>
               <tr>
-                <td><select id="insGrade" style="height:34px;min-width:140px;"></select></td>
-                <td class="right"><input id="insLabor" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
-                <td class="right"><input id="insHealth" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
-                <td class="right mono" id="insSum">0</td>
-                <td>
+                <td data-label="投保級距"><select id="insGrade" style="height:34px;min-width:140px;"></select></td>
+                <td class="right" data-label="勞保（員工）"><input id="insLabor" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
+                <td class="right" data-label="健保（員工）"><input id="insHealth" type="number" min="0" step="1" value="0" style="height:34px;width:110px;text-align:right;"></td>
+                <td class="right mono" id="insSum" data-label="合計">0</td>
+                <td data-label="設定">
                   <label class="chip" style="cursor:pointer;">
                     <input id="insAuto" type="checkbox" checked> 自動帶入金額
                   </label>
@@ -390,10 +414,10 @@
           const price = PRICE.AA[code];
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${code}</td>
-            <td class="right mono">${F(price)}</td>
-            <td class="right"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
-            <td class="right mono" data-aa-sum="${code}">0</td>
+            <td data-label="代碼">${code}</td>
+            <td class="right mono" data-label="單價">${F(price)}</td>
+            <td class="right" data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[code]||0)}" data-aa="${code}"></td>
+            <td class="right mono" data-label="小計" data-aa-sum="${code}">0</td>
           `;
           host.appendChild(tr);
         });
@@ -406,10 +430,10 @@
         PRICE[key].forEach(item=>{
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${item.code}${item.name ? ' ' + item.name : ''}</td>
-            <td class="right mono">${F(item.price)}</td>
-            <td class="right"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
-            <td class="right mono" data-${k}-sum="${item.code}">0</td>
+            <td data-label="代碼＋名稱">${item.code}${item.name ? ' ' + item.name : ''}</td>
+            <td class="right mono" data-label="單價">${F(item.price)}</td>
+            <td class="right" data-label="本月支數"><input type="number" min="0" step="1" value="${N(saved[item.code]||0)}" data-${k}="${item.code}"></td>
+            <td class="right mono" data-label="小計" data-${k}-sum="${item.code}">0</td>
           `;
           host.appendChild(tr);
         });
@@ -586,31 +610,6 @@ function findGradeBySalary(sal){
       restore();
       wire();
       updateAll();
-
-      // 導覽高亮
-      (function(){
-        function norm(href){
-          try{
-            const u=new URL(href, location.origin);
-            let p=u.pathname.trim();
-            if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
-            p = p.replace(/\/(index\.html?)?$/i, '/index').replace(/\.html?$/i, '');
-            return p.split('/').pop().toLowerCase();
-          }catch(e){return '';}
-        }
-        const here = norm(location.href);
-        document.querySelectorAll('.nav-links a[href]').forEach(a=>{
-          const target = norm(a.getAttribute('href'));
-          if (target && target === here) a.classList.add('active');
-        });
-        // 同步頁面標題
-        const map = { index:'額度計算機', payroll:'薪資計算機', 'care-info':'長照相關資訊', news:'最新公告', contact:'聯繫方式', about:'關於我們' };
-        const slug = here || 'payroll';
-        const pageName = map[slug] || '薪資計算機';
-        const st = document.getElementById('siteTitle');
-        if (st) st.textContent = pageName;
-        document.title = `${pageName}｜長照工具`;
-      })();
 
       // 防拷
       document.addEventListener('contextmenu', e => e.preventDefault());

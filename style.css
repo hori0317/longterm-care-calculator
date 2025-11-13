@@ -127,8 +127,32 @@ a:hover{ text-decoration:underline; }
 .nav-links a.active{ color:var(--orange); }
 .nav-links a.active::after{
   content:"";
-  position:absolute; left:0; right:0; bottom:-6px;
+  position:absolute; left:0; right:0; bottom:0;
   height:3px; background:var(--orange); border-radius:3px;
+}
+
+body[data-page="index"] .nav-links a[href="index.html"],
+body[data-page="payroll"] .nav-links a[href="payroll.html"],
+body[data-page="care-info"] .nav-links a[href="care-info.html"],
+body[data-page="news"] .nav-links a[href="news.html"],
+body[data-page="contact"] .nav-links a[href="contact.html"],
+body[data-page="about"] .nav-links a[href="about.html"]{
+  color:var(--orange);
+  transform:translateY(-1px);
+}
+
+body[data-page="index"] .nav-links a[href="index.html"]::after,
+body[data-page="payroll"] .nav-links a[href="payroll.html"]::after,
+body[data-page="care-info"] .nav-links a[href="care-info.html"]::after,
+body[data-page="news"] .nav-links a[href="news.html"]::after,
+body[data-page="contact"] .nav-links a[href="contact.html"]::after,
+body[data-page="about"] .nav-links a[href="about.html"]::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height:3px;
+  background:var(--orange);
+  border-radius:3px;
 }
 
 /* 右側按鈕區 */
