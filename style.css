@@ -662,7 +662,7 @@ body[data-page="payroll"] table td:first-child{
 /* 第二欄：出現筆數（GA/SC）或其他數字欄 → 靠右 */
 body[data-page="payroll"] table th:nth-child(2),
 body[data-page="payroll"] table td:nth-child(2){
-  text-align:right !important;
+  text-align:right !重要;
   padding-left:14px !important;
   padding-right:14px !important;
   font-variant-numeric:tabular-nums !important;
@@ -708,14 +708,15 @@ body[data-page="payroll"] #tables thead th:nth-child(n+3){
 }
 
 /* =========================================================
-   payroll 手機版：本月支數輸入框縮小＋靠右
+   payroll 手機版：本月支數輸入框縮小＋靠右（所有表格）
 ========================================================= */
 @media (max-width:860px){
-  body[data-page="payroll"] input[type="number"]{
+  body[data-page="payroll"] table input[type="number"]{
     width:52px;
     height:28px;
     font-size:12px;
     padding:0 4px;
+    display:block;
     margin-left:auto !important;
     margin-right:0 !important;
     text-align:right !important;
@@ -731,6 +732,9 @@ body[data-page="payroll"] table.triple-cols{
 }
 body[data-page="payroll"] table.triple-cols th,
 body[data-page="payroll"] table.triple-cols td{
-  width:33.3333%;
-  text-align:center;
+  width:33.3333% !important;
+  text-align:center !important;
+}
+body[data-page="payroll"] table.triple-cols thead th:first-child{
+  padding-left:24px; /* 想再往右就加大，例如 28px、32px */
 }
