@@ -508,6 +508,11 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     margin-right:0;
     display:block;
   }
+  #tables td[data-label$="次數"],
+  #tables td[data-label="單價"],
+  #tables td[data-label="單價(每組)"]{
+    padding-right:0;
+  }
   #tables td input[readonly]{
     background:#f9f7ee;
     color:#5f5a41;
