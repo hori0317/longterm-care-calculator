@@ -34,6 +34,8 @@
     .tbl td{padding:10px; border-top:1px solid var(--line);}
     .tbl tbody tr:nth-child(even){background:#fffef9;}
     .tbl input[type="number"]{width:90px; height:34px; text-align:right;}
+
+    /* 手機版：卡片式表格＋輸入框靠右 */
     @media (max-width:860px){
       .tbl{display:block; font-size:15px; border:0; background:none; overflow:visible;}
       .tbl thead{display:none;}
@@ -50,28 +52,52 @@
       .tbl td[data-label="代碼＋名稱"]::before,
       .tbl td[data-label="代碼"]::before{margin-bottom:2px;}
       .tbl td.right{justify-content:space-between;}
+
+      /* 🔧 手機版：所有 .tbl 數字輸入與 select 都靠右的小框 */
       .tbl input[type="number"],
-      .tbl select{width:100%; max-width:none; height:38px;}
+      .tbl select{
+        width:auto;
+        min-width:80px;
+        max-width:120px;
+        height:32px;
+        margin-left:auto;
+        margin-right:0;
+        text-align:right;
+      }
+
       .tbl td[data-label="設定"]{flex-direction:column; align-items:flex-start; gap:6px;}
       .tbl tfoot{border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 12px;}
       .tbl tfoot tr{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;}
       .tbl tfoot th{flex:1 1 auto; background:none; border:none; padding:0; text-align:right;}
       .tbl tfoot th:last-child{flex:0 0 auto; min-width:90px; font-size:18px;}
     }
+
     .right{text-align:right;} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     @media (max-width:860px){.grid-2{grid-template-columns:1fr;}}
     .row-mid{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill-note{display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:#fff; font-weight:700; color:#333;}
     .month-col{text-align:center;}
+
+    /* 🔧 桌機版：AA / BA / GA / SC 表頭「單價／本月支數／小計」三欄等寬，單價右對齊 */
     @media (min-width:861px){
       :is(#tblAA,#tblBA,#tblGA,#tblSC){table-layout:fixed;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price{width:130px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month{width:170px;}
-      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:160px;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-code{width:40%;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-price,
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-month,
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) col.col-sum{width:20%;}
+
+      /* 表頭對齊：單價右、本月支數中、小計右 */
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(2){text-align:right;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(3){text-align:center;}
+      :is(#tblAA,#tblBA,#tblGA,#tblSC) thead th:nth-child(4){text-align:right;}
+
+      /* 本月支數儲存格與輸入框置中 */
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{text-align:center;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"] input{margin:0 auto; text-align:center;}
     }
+
+    /* 🔧 手機版：四張主表的「本月支數」欄，標籤在左、輸入框靠右小框 */
     @media (max-width:860px){
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]{align-items:center;}
       :is(#tblAA,#tblBA,#tblGA,#tblSC) td[data-label="本月支數"]::before{flex:0 0 auto;}
