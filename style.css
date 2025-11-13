@@ -435,14 +435,15 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
     text-align:right;
     min-height:48px;
   }
+  #tables{ --mobile-label-width:108px; }
   #tables td[data-label]::before{
     content:attr(data-label);
     font-weight:700;
     color:#5b5534;
     text-align:left;
-    flex:1 1 auto;
-    min-width:90px;
-    margin-right:10px;
+    flex:0 0 var(--mobile-label-width);
+    min-width:var(--mobile-label-width);
+    margin-right:12px;
   }
   #tables td[data-label="服務項目"],
   #tables td[data-label*="碼"]{
@@ -456,8 +457,7 @@ body[data-page="about"] .nav-links a[href="about.html"]::after{
   #tables td[data-label="服務項目"]::before,
   #tables td[data-label*="碼"]::before{
     margin-bottom:4px;
-    min-width:auto;
-    width:auto;
+    flex-basis:var(--mobile-label-width);
   }
   #tables td[data-label*="碼"] .svc-code,
   #tables td[data-label="服務項目"] .svc-code{
@@ -554,7 +554,7 @@ img,a img{
 }
 #tables th:not(:first-child),
 #tables td:not(:first-child){
-  text-align:center !important;
+  text-align:right !important;
   font-variant-numeric:tabular-nums !important;
 }
 #tables input[type="number"]{
@@ -594,9 +594,9 @@ img,a img{
   color:var(--muted);
   font-size:13px;
 }
-#tables thead th{ text-align:center !important; }
+#tables thead th{ text-align:right !important; }
 #tables td,#tables th{
-  text-align:center;
+  text-align:right;
   vertical-align:middle;
   font-variant-numeric:tabular-nums;
 }

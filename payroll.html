@@ -48,7 +48,12 @@
       .tbl td[data-label="代碼＋名稱"]::before,
       .tbl td[data-label="代碼"]::before{margin-bottom:2px;}
       .tbl td.right{justify-content:space-between;}
-      .tbl input[type="number"],
+      .tbl input[type="number"]{
+        width:auto;
+        min-width:calc(3ch + 20px);
+        max-width:110px;
+        height:34px;
+      }
       .tbl select{width:100%; max-width:none; height:38px;}
       .tbl td[data-label="設定"]{flex-direction:column; align-items:flex-start; gap:6px;}
       .tbl tfoot{border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 12px;}
