@@ -721,3 +721,16 @@ body[data-page="payroll"] #tables thead th:nth-child(n+3){
     text-align:right !important;
   }
 }
+
+/* =========================================================
+   payroll：三欄表頭「單價／本月支數／小計」平均分配
+   使用方式：讓那張表加上 class="triple-cols"
+========================================================= */
+body[data-page="payroll"] table.triple-cols{
+  table-layout:fixed;
+}
+body[data-page="payroll"] table.triple-cols th,
+body[data-page="payroll"] table.triple-cols td{
+  width:33.3333%;
+  text-align:center;
+}
